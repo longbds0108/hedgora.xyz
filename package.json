@@ -1,0 +1,20 @@
+{
+  "name": "localmate-circle-wallet",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:circle": "vite build --config vite.circle.config.js",
+    "start:circle": "node --env-file-if-exists=.env circle-server.mjs"
+  },
+  "dependencies": {
+    "@circle-fin/user-controlled-wallets": "10.8.0",
+    "@circle-fin/w3s-pw-web-sdk": "1.1.11",
+    "@hono/node-server": "2.1.1",
+    "hono": "4.13.8"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "vite": "^7.1.9",
+    "vite-plugin-node-polyfills": "^0.24.0"
+  }
+}

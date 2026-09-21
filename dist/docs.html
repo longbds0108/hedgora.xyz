@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#071a18" />
+  <meta name="description" content="Hướng dẫn sử dụng LocalMate: đăng nhập Circle Wallet bằng Google, nhận USDC testnet, khám phá Vũng Tàu và thanh toán trên Arc Testnet." />
+  <title>LocalMate Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+:root{--bg:#061513;--mint:#70efc0;--ink:#ecf7f3;--muted:#91aaa2;--line:rgba(255,255,255,.09);--paper:#f3f4ee;--text:#10211e;--body:#3d4f4a;--soft:#64736f;--rule:#dce3dc;--card:#dfe5df;--green:#08795a}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:96px}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+.glow{position:fixed;width:520px;height:520px;border-radius:50%;filter:blur(120px);opacity:.1;pointer-events:none}.glow-one{background:#28d7a4;top:-260px;right:-100px}.glow-two{background:#2ca9ff;bottom:-300px;left:-200px}
+.topbar{height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(6,21,19,.85);backdrop-filter:blur(18px);z-index:20}.brand{color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px;font:800 20px Manrope}.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:var(--mint);color:#06221c;border-radius:10px;transform:rotate(-6deg)}.brand small{font:500 10px DM Sans;color:var(--muted);display:block;margin-left:2px}.topbar nav{display:flex;gap:32px}.topbar nav a{color:#a7bbb5;text-decoration:none;font-size:14px}.topbar nav a.active{color:var(--mint);font-weight:700}.app-btn{padding:11px 16px;border-radius:12px;background:#12312b;color:#dffff4;border:1px solid #295047;text-decoration:none;font-weight:700;font-size:14px;white-space:nowrap}
+.docs-hero{max-width:1440px;margin:auto;padding:64px 7vw 52px}.eyebrow{color:var(--mint);font-size:11px;font-weight:800;letter-spacing:2px}.docs-hero h1{font:800 clamp(40px,5.4vw,68px)/1 Manrope;margin:20px 0 18px}.docs-hero h1 em{font-style:normal;color:var(--mint)}.docs-hero p{color:#a7bbb5;font-size:17px;line-height:1.7;max-width:640px;margin:0}.hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.hero-links a{padding:10px 14px;border-radius:12px;border:1px solid #25423d;background:#0b211e;color:#dffff4;text-decoration:none;font-size:14px;font-weight:600}.hero-links a.primary{background:var(--mint);border-color:var(--mint);color:#08231c;font-weight:700}
+.docs{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1440px;margin:auto;background:var(--paper);color:var(--text);border-radius:34px 34px 0 0}.toc{padding:44px 20px;border-right:1px solid var(--rule)}.toc nav{position:sticky;top:110px;display:flex;flex-direction:column;gap:4px}.toc small{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#84918d;padding:0 12px 8px}.toc a{padding:10px 12px;border-radius:10px;color:var(--soft);text-decoration:none;font-size:14px}.toc a:hover{color:var(--green)}.toc a.active{background:#dff7ee;color:#087b5a;font-weight:700}
+article{padding:52px 56px 84px;max-width:880px;min-width:0}article section{padding-bottom:44px;margin-bottom:44px;border-bottom:1px solid var(--rule)}article section:last-child{border:0;margin-bottom:0}.kicker{color:#188b69;font-size:11px;font-weight:800;letter-spacing:2px}article h2{font:800 30px Manrope;margin:6px 0 14px;color:var(--text)}article h3{font:700 18px Manrope;margin:30px 0 10px;color:var(--text)}article p,article li{font-size:15px;line-height:1.7;color:var(--body)}article a{color:var(--green);font-weight:600;text-decoration:none}article a:hover{text-decoration:underline}article ul{padding-left:20px}article li{margin:4px 0}article b{color:var(--text)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:#e3ebe5;border-radius:6px;padding:2px 6px;color:#0b3026;overflow-wrap:anywhere}pre{background:#0a231e;color:#d9eee7;border-radius:14px;padding:16px 18px;overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0}pre code{background:none;padding:0;color:inherit;font-size:inherit;overflow-wrap:normal}pre .c{color:#7fa69a}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}.pillar{background:#fff;border:1px solid var(--card);border-radius:16px;padding:18px}.pillar span,.feature span{width:36px;height:36px;border-radius:10px;background:#d9fbed;color:#087454;display:grid;place-items:center;font-size:17px}.pillar b{display:block;font:700 15px Manrope;margin:12px 0 4px}.pillar p{margin:0;font-size:13px;line-height:1.6}
+.steps{list-style:none;padding:0;margin:18px 0;counter-reset:step;display:grid;gap:12px}.steps li{counter-increment:step;position:relative;background:#fff;border:1px solid var(--card);border-radius:14px;padding:14px 16px 14px 60px;margin:0}.steps li::before{content:counter(step);position:absolute;left:16px;top:14px;width:30px;height:30px;border-radius:9px;background:#d9fbed;color:#087454;display:grid;place-items:center;font:800 13px Manrope}
+.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}.feature{background:#fff;border:1px solid var(--card);border-radius:16px;padding:18px}.feature h3{margin:12px 0 6px;font-size:16px}.feature p{margin:0;font-size:14px;line-height:1.6}
+.note{background:#e5f7f0;color:#31655a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;margin:18px 0}.note.warn{background:#fff0c9;color:#725714}.note b{color:inherit}
+.table-wrap{overflow-x:auto;border:1px solid var(--card);border-radius:14px;background:#fff;margin:16px 0}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #e7ece7;vertical-align:top;line-height:1.55;color:var(--body)}th{font-size:11px;letter-spacing:1px;color:#84918d;text-transform:uppercase;white-space:nowrap}tr:last-child td{border-bottom:0}td code{white-space:nowrap;overflow-wrap:normal}.table-wrap table{min-width:560px}td:first-child{color:var(--text);font-weight:600}.status{display:inline-block;padding:3px 8px;border-radius:7px;font-size:11px;font-weight:800;letter-spacing:.5px;white-space:nowrap}.status.live{background:#d9fbed;color:#087454}.status.demo{background:#fff0c9;color:#7d5912}
+details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:0 16px;margin-bottom:10px}summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--text);font-size:15px}details p{margin:0 0 15px}
+.docs-footer{max-width:1440px;margin:auto;background:var(--paper);color:var(--soft);border-top:1px solid var(--rule);padding:24px 7vw;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.docs-footer a{color:var(--green);text-decoration:none;font-weight:600}.docs-footer div{display:flex;gap:18px;flex-wrap:wrap}
+@media(max-width:900px){.topbar nav a:not(.active){display:none}.docs{grid-template-columns:1fr;border-radius:24px 24px 0 0}.toc{border-right:0;border-bottom:1px solid var(--rule);padding:18px 24px}.toc nav{position:static;flex-direction:row;flex-wrap:wrap}.toc small{width:100%;padding-bottom:4px}.toc a{padding:7px 10px;font-size:13px}article{padding:36px 24px 64px}.pillars,.feature-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.topbar{padding:0 16px}.brand small{display:none}.topbar nav{gap:0}.app-btn{padding:9px 12px;font-size:13px}.docs-hero{padding:40px 16px 34px}.docs-hero p{font-size:16px}.toc{padding:16px}article{padding:30px 16px 56px}article h2{font-size:26px}.steps li{padding-left:56px}.docs-footer{padding:22px 16px}}
+  </style>
+</head>
+<body>
+  <div class="glow glow-one"></div><div class="glow glow-two"></div>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">L</span><span>LocalMate</span><small>AI local companion</small></a>
+    <nav><a href="index.html#explore">Explore</a><a href="index.html#itinerary">Trips</a><a href="docs.html" class="active">Docs</a></nav>
+    <a class="app-btn" href="index.html">Open app →</a>
+  </header>
+
+  <main>
+    <section class="docs-hero">
+      <div class="eyebrow">✦ DOCUMENTATION</div>
+      <h1>LocalMate <em>Docs</em></h1>
+      <p>Mọi thứ bạn cần để khám phá Vũng Tàu cùng LocalMate: đăng nhập ví Circle bằng Google, nhận USDC thử nghiệm, tìm địa điểm và thanh toán trên Arc Testnet.</p>
+      <div class="hero-links"><a class="primary" href="#quick-start">Bắt đầu nhanh →</a><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Nhận USDC testnet ↗</a><a href="#developers">Dành cho lập trình viên</a></div>
+    </section>
+
+    <div class="docs">
+      <aside class="toc">
+        <nav aria-label="Mục lục">
+          <small>MỤC LỤC</small>
+          <a href="#overview">Tổng quan</a>
+          <a href="#quick-start">Bắt đầu nhanh</a>
+          <a href="#features">Tính năng</a>
+          <a href="#payments">Thanh toán &amp; bảo mật</a>
+          <a href="#demo-status">Trạng thái bản demo</a>
+          <a href="#faq">Câu hỏi thường gặp</a>
+          <a href="#developers">Lập trình viên</a>
+        </nav>
+      </aside>
+
+      <article>
+        <section id="overview">
+          <div class="kicker">TỔNG QUAN</div>
+          <h2>LocalMate là gì?</h2>
+          <p>LocalMate là người bạn đồng hành du lịch dùng AI tại Vũng Tàu. Ứng dụng giúp bạn tìm nơi đáng đến, lên lịch trình theo ngân sách và thanh toán dịch vụ địa phương bằng USDC trên mạng <b>Arc Testnet</b>, nhưng chỉ khi chính bạn phê duyệt.</p>
+          <div class="pillars">
+            <div class="pillar"><span>⌖</span><b>Khám phá như người địa phương</b><p>Quán ngon, điểm ngắm hoàng hôn, trải nghiệm ít người biết, kèm bản đồ và chỉ đường.</p></div>
+            <div class="pillar"><span>◈</span><b>Ví không lưu ký</b><p>Ví do Circle tạo và bảo vệ. LocalMate không bao giờ giữ khóa riêng của bạn.</p></div>
+            <div class="pillar"><span>◇</span><b>Bạn luôn phê duyệt</b><p>LocalMate chỉ chuẩn bị thanh toán. Không khoản nào được gửi đi nếu bạn chưa xác nhận.</p></div>
+          </div>
+        </section>
+
+        <section id="quick-start">
+          <div class="kicker">BẮT ĐẦU NHANH</div>
+          <h2>Kết nối ví trong một phút</h2>
+          <ol class="steps">
+            <li>Mở LocalMate và bấm <b>Get Start</b> ở góc trên bên phải.</li>
+            <li>Chọn <b>Continue with Google</b> rồi đăng nhập tài khoản Google. Trang sẽ chuyển sang Google, sau đó quay lại LocalMate.</li>
+            <li>Circle tự tạo ví trên Arc Testnet cho bạn. Nếu cửa sổ bảo mật của Circle hiện lên, hãy xác nhận để hoàn tất.</li>
+            <li>Khi nút góc trên hiện địa chỉ ví dạng <code>0x…</code>, bạn đã sẵn sàng. Lần sau đăng nhập cùng tài khoản Google sẽ mở lại đúng ví đó.</li>
+            <li>Cần USDC để thử? Vào <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>, chọn <b>Arc Testnet</b> và dán địa chỉ ví để nhận token thử nghiệm miễn phí.</li>
+          </ol>
+          <div class="note">Token trên Arc Testnet chỉ dùng để thử nghiệm và không có giá trị thật.</div>
+        </section>
+
+        <section id="features">
+          <div class="kicker">TÍNH NĂNG</div>
+          <h2>Bạn làm được gì với LocalMate</h2>
+          <div class="feature-grid">
+            <div class="feature"><span>✦</span><h3>Hỏi LocalMate</h3><p>Gõ câu hỏi vào ô <b>Where should we go next?</b> hoặc chọn gợi ý nhanh như <b>Local food</b>, <b>Near me</b>, <b>Plan my afternoon</b> để nhận đề xuất lịch trình.</p></div>
+            <div class="feature"><span>▣</span><h3>Khám phá gần bạn</h3><p>Các thẻ địa điểm chọn lọc có đánh giá, khoảng cách và chi phí ước tính. Bấm ♡ để lưu, bấm nút đặt chỗ để xem trước thanh toán.</p></div>
+            <div class="feature"><span>⌖</span><h3>Bản đồ &amp; chỉ đường</h3><p>Bấm <b>View map</b> để tìm nhà hàng, khách sạn, điểm tham quan trong bán kính 5 km. Chọn một nơi để xem quãng đường và thời gian đi ô tô, đi bộ, xe đạp hoặc xe máy.</p></div>
+            <div class="feature"><span>☀</span><h3>Thời tiết</h3><p>Nhiệt độ và tình trạng thời tiết hiện tại ở Vũng Tàu. Bấm <b>Update</b> cạnh vị trí của bạn để làm mới.</p></div>
+            <div class="feature"><span>◷</span><h3>Lịch trình thông minh</h3><p>Một buổi chiều gợi ý gồm ăn uống, trải nghiệm và ngắm hoàng hôn, kèm tổng chi phí so với ngân sách 30 USDC.</p></div>
+            <div class="feature"><span>◎</span><h3>Vị trí của bạn</h3><p>Trong bản đồ, bấm <b>Use my location</b> để tìm quanh vị trí thật. Nếu bạn không cho phép, LocalMate dùng trung tâm Vũng Tàu làm điểm xuất phát.</p></div>
+          </div>
+        </section>
+
+        <section id="payments">
+          <div class="kicker">THANH TOÁN &amp; BẢO MẬT</div>
+          <h2>Thanh toán luôn cần bạn phê duyệt</h2>
+          <ol class="steps">
+            <li>Bấm nút đặt chỗ trên một thẻ địa điểm: <b>Reserve a table</b>, <b>Book local ride</b> hoặc <b>Book experience</b>.</li>
+            <li>Màn hình <b>Payment preview</b> hiện tên dịch vụ, số tiền USDC, mạng Arc Testnet, địa chỉ ví và phí mạng ước tính.</li>
+            <li>Kiểm tra kỹ rồi bấm <b>Approve payment</b>. Nếu chưa kết nối ví, nút này sẽ đưa bạn tới bước đăng nhập trước.</li>
+          </ol>
+          <div class="note warn"><b>Lưu ý:</b> thanh toán hiện là giao dịch demo. LocalMate chỉ ghi nhận biên nhận mẫu và không chuyển tiền.</div>
+          <h3>Cách LocalMate bảo vệ bạn</h3>
+          <ul>
+            <li><b>Ví không lưu ký.</b> Ví do Circle tạo và bảo vệ. LocalMate không có quyền truy cập khóa riêng của bạn.</li>
+            <li><b>Xác nhận trong cửa sổ của Circle.</b> Các bước nhạy cảm diễn ra trong giao diện bảo mật do Circle cung cấp, không phải trên trang LocalMate.</li>
+            <li><b>Đăng nhập qua Google.</b> LocalMate không bao giờ thấy mật khẩu Google của bạn.</li>
+            <li><b>API key nằm ở máy chủ.</b> Khóa API của Circle chỉ nằm trên backend, không bao giờ được gửi xuống trình duyệt.</li>
+          </ul>
+        </section>
+
+        <section id="demo-status">
+          <div class="kicker">TRẠNG THÁI</div>
+          <h2>Phần nào đang chạy thật?</h2>
+          <p>LocalMate đang ở giai đoạn demo. Bảng dưới cho biết phần nào dùng dữ liệu thật và phần nào còn là dữ liệu mẫu.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Phần</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead>
+            <tbody>
+              <tr><td>Đăng nhập Google &amp; ví Circle</td><td><span class="status live">THẬT</span></td><td>Ví SCA thật trên Arc Testnet</td></tr>
+              <tr><td>Thời tiết</td><td><span class="status live">THẬT</span></td><td>Open-Meteo</td></tr>
+              <tr><td>Bản đồ, tìm địa điểm, chỉ đường</td><td><span class="status live">THẬT</span></td><td>OpenStreetMap, Overpass, OSRM</td></tr>
+              <tr><td>Ảnh địa điểm</td><td><span class="status live">THẬT</span></td><td>Wikimedia Commons, có ảnh dự phòng</td></tr>
+              <tr><td>Câu trả lời của LocalMate AI</td><td><span class="status demo">MẪU</span></td><td>Câu trả lời cố định, chưa kết nối mô hình AI</td></tr>
+              <tr><td>Lịch trình buổi chiều</td><td><span class="status demo">MẪU</span></td><td>Lịch trình cố định</td></tr>
+              <tr><td>Số dư USDC ở thanh bên</td><td><span class="status demo">MẪU</span></td><td>Chưa đọc số dư ví thật</td></tr>
+              <tr><td>Thanh toán</td><td><span class="status demo">MẪU</span></td><td>Mô phỏng, không chuyển tiền</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section id="faq">
+          <div class="kicker">HỎI ĐÁP</div>
+          <h2>Câu hỏi thường gặp</h2>
+          <details><summary>LocalMate có dùng tiền thật không?</summary><p>Không. LocalMate chạy trên Arc Testnet. USDC ở đây là token thử nghiệm, không có giá trị thật, và thanh toán hiện chỉ là mô phỏng.</p></details>
+          <details><summary>Tôi nhận USDC thử nghiệm ở đâu?</summary><p>Vào <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>, chọn Arc Testnet và dán địa chỉ ví LocalMate của bạn. Đường link này cũng nằm cuối cửa sổ đăng nhập Circle.</p></details>
+          <details><summary>Vì sao phải đăng nhập bằng Google?</summary><p>Circle dùng tài khoản Google để xác minh bạn và gắn ví với bạn. Nhờ vậy bạn không phải nhớ thêm mật khẩu nào, và cùng một tài khoản Google luôn mở lại cùng một ví.</p></details>
+          <details><summary>Đăng nhập xong nhưng chưa thấy địa chỉ ví?</summary><p>Ví mới có thể mất vài giây để xuất hiện. Hãy đợi một chút rồi bấm <b>Get Start</b> để đăng nhập lại. Nếu vẫn lỗi, dòng thông báo trong cửa sổ Circle sẽ cho biết nguyên nhân.</p></details>
+          <details><summary>Đăng nhập Google báo bị hủy hoặc lỗi?</summary><p>Thường là do cửa sổ Google bị đóng giữa chừng. Hãy thử lại. Khi ứng dụng Google của LocalMate còn ở chế độ thử nghiệm, chỉ những tài khoản Google đã được cấp quyền mới đăng nhập được.</p></details>
+          <details><summary>Có bắt buộc cho phép truy cập vị trí không?</summary><p>Không. Vị trí chỉ dùng để tìm địa điểm quanh bạn trên bản đồ. Nếu bạn từ chối, LocalMate dùng trung tâm Vũng Tàu.</p></details>
+        </section>
+
+        <section id="developers">
+          <div class="kicker">LẬP TRÌNH VIÊN</div>
+          <h2>Kiến trúc &amp; chạy local</h2>
+          <p>LocalMate gồm một frontend tĩnh và một backend nhỏ giữ khóa API của Circle.</p>
+          <ul>
+            <li><b>Frontend</b> (<code>dist/</code>): <code>index.html</code>, <code>docs.html</code>, <code>circle-config.js</code>, và <code>circle-wallet-client.js</code> là bundle Circle Web SDK build bằng Vite.</li>
+            <li><b>Backend</b> (<code>circle-server.mjs</code>): Hono trên Node, giữ <code>CIRCLE_API_KEY</code> và gọi Circle User-Controlled Wallets API.</li>
+          </ul>
+
+          <h3>Luồng đăng nhập</h3>
+          <ol class="steps">
+            <li>Trình duyệt lấy <code>deviceId</code> từ Circle Web SDK, gọi <code>POST /api/social/token</code> để nhận <code>deviceToken</code> và <code>deviceEncryptionKey</code>.</li>
+            <li>SDK chuyển hướng sang Google. Google trả <code>id_token</code> về trang qua URL.</li>
+            <li>SDK xác minh token với Circle và nhận <code>userToken</code>, <code>encryptionKey</code>.</li>
+            <li><code>POST /api/user/initialize</code> tạo ví SCA trên <code>ARC-TESTNET</code> và trả về <code>challengeId</code> để SDK thực thi. Nếu người dùng đã có ví, giá trị này là <code>null</code>.</li>
+            <li><code>POST /api/wallets/list</code> lấy địa chỉ ví để hiển thị.</li>
+          </ol>
+
+          <h3>Chạy trên máy</h3>
+<pre><code>npm install
+cp .env.example .env        <span class="c"># điền CIRCLE_API_KEY</span>
+npm run build:circle        <span class="c"># build dist/circle-wallet-client.js</span>
+npm run start:circle        <span class="c"># backend: http://localhost:8787</span>
+npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://localhost:5173</span></code></pre>
+
+          <h3>Cấu hình</h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Khóa</th><th>Nơi đặt</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+              <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Khóa API Circle. Bí mật, chỉ nằm trên backend.</td></tr>
+              <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Cổng backend, mặc định <code>8787</code>.</td></tr>
+              <tr><td><code>appId</code></td><td><code>dist/circle-config.js</code></td><td>App ID công khai trong Circle Console → Wallets → User Controlled → Configurator.</td></tr>
+              <tr><td><code>googleClientId</code></td><td><code>dist/circle-config.js</code></td><td>OAuth Client ID (Web application) trong Google Cloud Console.</td></tr>
+              <tr><td><code>googleRedirectUri</code></td><td><code>dist/circle-config.js</code></td><td>Tùy chọn. Mặc định là origin của trang, ví dụ <code>http://localhost:5173</code>.</td></tr>
+              <tr><td><code>apiBase</code></td><td><code>dist/circle-config.js</code></td><td>Địa chỉ backend.</td></tr>
+            </tbody>
+          </table></div>
+
+          <h3>Cài đặt dịch vụ bên ngoài</h3>
+          <ul>
+            <li><b>Google Cloud Console:</b> tạo OAuth Client ID loại <i>Web application</i>, thêm origin của trang vào cả <i>Authorized JavaScript origins</i> và <i>Authorized redirect URIs</i>.</li>
+            <li><b>Circle Console:</b> Configurator → Authentication Methods → Social Logins → Google, dán Client ID ở trên.</li>
+          </ul>
+
+          <h3>API backend</h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Endpoint</th><th>Body</th><th>Trả về</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured }</code></td></tr>
+              <tr><td><code>POST /api/social/token</code></td><td><code>{ deviceId }</code></td><td><code>{ deviceToken, deviceEncryptionKey }</code></td></tr>
+              <tr><td><code>POST /api/user/initialize</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code>, là <code>null</code> nếu đã có ví</td></tr>
+              <tr><td><code>POST /api/wallets/list</code></td><td><code>{ userToken }</code></td><td><code>{ wallets }</code></td></tr>
+              <tr><td><code>POST /api/wallets/balances</code></td><td><code>{ userToken, walletId }</code></td><td>Số dư token của ví</td></tr>
+            </tbody>
+          </table></div>
+
+          <h3>Khi deploy</h3>
+          <ul>
+            <li>Đổi <code>apiBase</code> sang địa chỉ backend thật.</li>
+            <li>Thêm domain thật vào redirect URI của Google.</li>
+            <li>Giới hạn CORS của backend về domain của bạn, vì hiện backend chấp nhận mọi origin.</li>
+            <li>Không bao giờ đặt <code>CIRCLE_API_KEY</code> trong <code>circle-config.js</code> hay bất kỳ file nào gửi xuống trình duyệt.</li>
+          </ul>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="docs-footer">
+    <span>LocalMate · Circle Wallets trên Arc Testnet · Dữ liệu bản đồ © OpenStreetMap contributors</span>
+    <div><a href="index.html">Mở ứng dụng</a><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a></div>
+  </footer>
+
+  <script>
+const tocLinks=[...document.querySelectorAll('.toc a')];
+const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)tocLinks.forEach(link=>link.classList.toggle('active',link.getAttribute('href')==='#'+entry.target.id))})},{rootMargin:'-25% 0px -65% 0px'});
+document.querySelectorAll('article section[id]').forEach(section=>observer.observe(section));
+  </script>
+</body>
+</html>
