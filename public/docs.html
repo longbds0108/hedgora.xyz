@@ -33,6 +33,34 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
 @media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.topbar nav{gap:0}.app-btn{padding:9px 12px;font-size:13px}.docs-hero{padding:40px 16px 34px}.docs-hero p{font-size:16px}.toc{padding:16px}article{padding:30px 16px 56px}article h2{font-size:26px}.steps li{padding-left:56px}}
   /* Site footer (same on every page) */.site-footer{background:#040f0d;border-top:1px solid rgba(255,255,255,.08);color:#a7bbb5;font-family:'DM Sans',sans-serif}.sf-inner{max-width:1440px;margin:auto;padding:56px 7vw 28px}.sf-top{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px}.sf-brand img{display:block;height:34px;width:auto}.sf-brand p{margin:16px 0 18px;font-size:14px;line-height:1.7;max-width:330px;color:#91aaa2}.sf-social{display:flex;gap:10px}.sf-social a{width:40px;height:40px;display:grid;place-items:center;border:1px solid #1f3a35;border-radius:12px;background:#0b1d1a;color:#c5d8d1;transition:.2s}.sf-social a:hover{color:#06221c;background:#70efc0;border-color:#70efc0}.sf-social svg{width:18px;height:18px;fill:currentColor}.sf-col h4{margin:4px 0 14px;font:800 11px 'DM Sans',sans-serif;letter-spacing:1.8px;color:#70efc0;text-transform:uppercase}.sf-col a{display:block;width:max-content;color:#c5d8d1;text-decoration:none;font-size:14px;padding:6px 0}.sf-col a:hover{color:#fff}.sf-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8aa39b}.sf-bottom a{color:#b8cbc4;text-decoration:none}.sf-credits a{white-space:nowrap}.sf-bottom a:hover{color:#fff}.sf-up{white-space:nowrap}@media(max-width:900px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-brand{grid-column:1/-1}}@media(max-width:620px){.sf-inner{padding:40px 16px 24px}.sf-top{grid-template-columns:1fr 1fr;gap:28px}.sf-bottom{flex-direction:column;align-items:flex-start}}
 /* Mobile menu: the nav collapses behind a hamburger button below 900px */.menu-btn{display:none;width:42px;height:42px;flex:none;border:1px solid #295047;border-radius:12px;background:#12312b;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0}.menu-btn span{display:block;width:18px;height:2px;border-radius:2px;background:#dffff4;transition:transform .2s,opacity .2s}.menu-btn[aria-expanded="true"] span:nth-child(1){transform:translateY(6px) rotate(45deg)}.menu-btn[aria-expanded="true"] span:nth-child(2){opacity:0}.menu-btn[aria-expanded="true"] span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}@media(max-width:900px){.topbar{justify-content:flex-start;gap:10px}.topbar .brand{margin-right:auto}.menu-btn{display:flex}.topbar nav{display:none;position:absolute;top:78px;left:0;right:0;flex-direction:column;gap:0;padding:6px 16px 14px;background:#071a17;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 24px 48px #0009;z-index:30}.topbar nav.open{display:flex}.topbar nav a{display:block;padding:15px 6px;font-size:16px;color:#dffff4;border-bottom:1px solid rgba(255,255,255,.06)}.topbar nav a:last-child{border-bottom:0}.topbar nav a.active{color:#70efc0}}
+/* Motion (same on every page): content rises into view like arriving somewhere new. Off for people who prefer reduced motion. */
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes drift{50%{transform:translate(80px,60px) scale(1.15)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97)}}
+@keyframes pop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.12)}100%{transform:none}}
+.glow{will-change:transform}.glow-one{animation:drift 28s ease-in-out infinite}.glow-two{animation:drift 34s ease-in-out -12s infinite reverse}
+[data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+[data-reveal].is-in{opacity:1;transform:none}
+.topbar nav a{position:relative;transition:color .2s}
+.topbar nav a::after{content:'';position:absolute;left:0;right:0;bottom:-7px;height:2px;border-radius:2px;background:var(--mint);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.topbar nav a:hover{color:#fff}.topbar nav a.active:hover{color:var(--mint)}
+.topbar nav a:hover::after,.topbar nav a.active::after{transform:scaleX(1)}
+:focus-visible{outline:2px solid #1a9d76;outline-offset:3px}
+.toast{opacity:0;transition:transform .35s cubic-bezier(.2,.7,.2,1),opacity .25s}.toast.show{opacity:1}
+.circle-modal.open{animation:fade .25s ease}.circle-modal.open .circle-card{animation:cardIn .35s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:900px){.topbar nav a::after{display:none}.topbar nav.open{animation:fadeUp .25s cubic-bezier(.2,.7,.2,1)}}
+@media print{[data-reveal]{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}[data-reveal]{opacity:1;transform:none}}
+/* Docs motion: the hero arrives in sequence, sections rise in as you read, FAQ answers slide open */
+.docs-hero>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) backwards}
+.docs-hero>:nth-child(2){animation-delay:.1s}.docs-hero>:nth-child(3){animation-delay:.2s}.docs-hero>:nth-child(4){animation-delay:.3s}
+.hero-links a,.app-btn{transition:transform .2s,border-color .2s,filter .2s}
+.hero-links a:hover,.app-btn:hover{transform:translateY(-2px);border-color:#3b6a5e}.hero-links a.primary:hover{filter:brightness(1.06)}
+.toc a{transition:background .25s,color .25s}
+details{transition:border-color .2s}details:hover,details[open]{border-color:#b9e6d4}
+details[open]>:not(summary){animation:fadeUp .35s ease}
 </style>
 </head>
 <body>
@@ -270,6 +298,22 @@ document.querySelectorAll('article section[id]').forEach(section=>observer.obser
   document.addEventListener('click', (e) => { if (!nav.contains(e.target)) setOpen(false) })
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false) })
   matchMedia('(min-width: 901px)').addEventListener('change', (e) => { if (e.matches) setOpen(false) })
+})()
+// Scroll reveals: blocks below the fold rise into view the first time they are scrolled to.
+// Blocks already on screen, or every block when IntersectionObserver is missing, simply show.
+;(() => {
+  const blocks = [...document.querySelectorAll('article section')]
+  if (!('IntersectionObserver' in window)) return blocks.forEach((el) => el.classList.add('is-in'))
+  const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
+    if (!entry.isIntersecting) return
+    entry.target.classList.add('is-in')
+    observer.unobserve(entry.target)
+  }), { rootMargin: '0px 0px -8% 0px' })
+  blocks.forEach((el) => {
+    if (el.getBoundingClientRect().top < innerHeight) return el.classList.add('is-in')
+    el.dataset.reveal = ''
+    observer.observe(el)
+  })
 })()
   </script>
 </body>
