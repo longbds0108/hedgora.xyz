@@ -49,7 +49,7 @@ function ensureAppId() {
   if (config.appId) return true
   byId('circleSetup').hidden = false
   byId('circleGoogle').disabled = true
-  setStatus('Thêm Circle App ID vào dist/circle-config.js trước khi kết nối.', true)
+  setStatus('Thêm Circle App ID vào public/circle-config.js trước khi kết nối.', true)
   return false
 }
 
@@ -82,7 +82,7 @@ async function finishLogin(walletSdk, userToken, encryptionKey) {
 }
 
 async function connectWithGoogle() {
-  if (!config.googleClientId) return setStatus('Thêm googleClientId vào dist/circle-config.js trước khi đăng nhập Google.', true)
+  if (!config.googleClientId) return setStatus('Thêm googleClientId vào public/circle-config.js trước khi đăng nhập Google.', true)
   const button = byId('circleGoogle')
   button.disabled = true
   try {

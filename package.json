@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:circle": "vite build --config vite.circle.config.js",
-    "start:circle": "node --env-file-if-exists=.env circle-server.mjs"
+    "build": "vite build --config vite.circle.config.js",
+    "start": "node --env-file-if-exists=.env circle-server.mjs"
   },
   "dependencies": {
     "@circle-fin/user-controlled-wallets": "10.8.0",

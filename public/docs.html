@@ -150,8 +150,8 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
           <h2>Kiến trúc &amp; chạy local</h2>
           <p>LocalMate gồm một frontend tĩnh và một backend nhỏ giữ khóa API của Circle.</p>
           <ul>
-            <li><b>Frontend</b> (<code>dist/</code>): <code>index.html</code>, <code>docs.html</code>, <code>circle-config.js</code>, và <code>circle-wallet-client.js</code> là bundle Circle Web SDK build bằng Vite.</li>
-            <li><b>Backend</b> (<code>circle-server.mjs</code>): Hono trên Node, giữ <code>CIRCLE_API_KEY</code> và <code>DEEPSEEK_API_KEY</code>, gọi Circle User-Controlled Wallets API và DeepSeek API.</li>
+            <li><b>Frontend</b> (<code>public/</code>): <code>index.html</code>, <code>docs.html</code>, <code>circle-config.js</code>, và <code>circle-wallet-client.js</code> là bundle Circle Web SDK build bằng Vite.</li>
+            <li><b>Backend</b> (<code>server.js</code>): Hono trên Node, giữ <code>CIRCLE_API_KEY</code> và <code>DEEPSEEK_API_KEY</code>, gọi Circle User-Controlled Wallets API và DeepSeek API.</li>
           </ul>
 
           <h3>Luồng đăng nhập</h3>
@@ -165,10 +165,9 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
 
           <h3>Chạy trên máy</h3>
 <pre><code>npm install
-cp .env.example .env        <span class="c"># điền CIRCLE_API_KEY</span>
-npm run build:circle        <span class="c"># build dist/circle-wallet-client.js</span>
-npm run start:circle        <span class="c"># backend: http://localhost:8787</span>
-npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://localhost:5173</span></code></pre>
+cp .env.example .env   <span class="c"># điền CIRCLE_API_KEY, DEEPSEEK_API_KEY</span>
+npm run build          <span class="c"># build public/circle-wallet-client.js</span>
+npm start              <span class="c"># trang web + API: http://localhost:5173</span></code></pre>
 
           <h3>Cấu hình</h3>
           <div class="table-wrap"><table>
@@ -176,11 +175,11 @@ npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://
             <tbody>
               <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Khóa API Circle. Bí mật, chỉ nằm trên backend.</td></tr>
               <tr><td><code>DEEPSEEK_API_KEY</code></td><td><code>.env</code></td><td>Khóa API DeepSeek cho LocalMate AI. Bí mật, chỉ nằm trên backend.</td></tr>
-              <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Cổng backend, mặc định <code>8787</code>.</td></tr>
-              <tr><td><code>appId</code></td><td><code>dist/circle-config.js</code></td><td>App ID công khai trong Circle Console → Wallets → User Controlled → Configurator.</td></tr>
-              <tr><td><code>googleClientId</code></td><td><code>dist/circle-config.js</code></td><td>OAuth Client ID (Web application) trong Google Cloud Console.</td></tr>
-              <tr><td><code>googleRedirectUri</code></td><td><code>dist/circle-config.js</code></td><td>Tùy chọn. Mặc định là origin của trang, ví dụ <code>http://localhost:5173</code>.</td></tr>
-              <tr><td><code>apiBase</code></td><td><code>dist/circle-config.js</code></td><td>Địa chỉ backend.</td></tr>
+              <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Cổng khi chạy trên máy, mặc định <code>5173</code>.</td></tr>
+              <tr><td><code>appId</code></td><td><code>public/circle-config.js</code></td><td>App ID công khai trong Circle Console → Wallets → User Controlled → Configurator.</td></tr>
+              <tr><td><code>googleClientId</code></td><td><code>public/circle-config.js</code></td><td>OAuth Client ID (Web application) trong Google Cloud Console.</td></tr>
+              <tr><td><code>googleRedirectUri</code></td><td><code>public/circle-config.js</code></td><td>Tùy chọn. Mặc định là origin của trang, ví dụ <code>http://localhost:5173</code>.</td></tr>
+              <tr><td><code>apiBase</code></td><td><code>public/circle-config.js</code></td><td>Địa chỉ API. Để trống khi trang web và API cùng một domain (mặc định, cả trên máy lẫn Vercel).</td></tr>
             </tbody>
           </table></div>
 
@@ -203,12 +202,16 @@ npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://
             </tbody>
           </table></div>
 
-          <h3>Khi deploy</h3>
+          <h3>Deploy lên Vercel</h3>
+          <ol class="steps">
+            <li>Import repo GitHub vào Vercel. File <code>vercel.json</code> đã chọn sẵn framework <b>Hono</b> và lệnh build <code>npm run build</code>, bạn không cần chỉnh gì thêm.</li>
+            <li>Trong <b>Settings → Environment Variables</b>, thêm <code>CIRCLE_API_KEY</code> và <code>DEEPSEEK_API_KEY</code>, rồi deploy lại.</li>
+            <li>Trong Google Cloud Console, thêm domain Vercel (ví dụ <code>https://hedgora-xyz.vercel.app</code>) vào cả <i>Authorized JavaScript origins</i> và <i>Authorized redirect URIs</i>.</li>
+          </ol>
           <ul>
-            <li>Đổi <code>apiBase</code> sang địa chỉ backend thật.</li>
-            <li>Thêm domain thật vào redirect URI của Google.</li>
-            <li>Giới hạn CORS của backend về domain của bạn, vì hiện backend chấp nhận mọi origin.</li>
-            <li>Không bao giờ đặt <code>CIRCLE_API_KEY</code> trong <code>circle-config.js</code> hay bất kỳ file nào gửi xuống trình duyệt.</li>
+            <li>Vercel phục vụ <code>public/</code> qua CDN, còn <code>server.js</code> chạy thành Vercel Function cho mọi đường dẫn <code>/api/*</code>.</li>
+            <li>API không bật CORS: chỉ trang cùng domain gọi được, nên website khác không thể dùng ké endpoint AI.</li>
+            <li>Không bao giờ đặt API key trong <code>circle-config.js</code> hay bất kỳ file nào trong <code>public/</code>.</li>
           </ul>
         </section>
       </article>

@@ -10,7 +10,7 @@ export default defineConfig({
       formats: ['iife'],
       fileName: () => 'circle-wallet-client.js',
     },
-    outDir: 'dist',
+    outDir: 'public',
     emptyOutDir: false,
   },
 })
