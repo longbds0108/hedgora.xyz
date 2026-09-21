@@ -88,8 +88,8 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
           <div class="kicker">TÍNH NĂNG</div>
           <h2>Bạn làm được gì với LocalMate</h2>
           <div class="feature-grid">
-            <div class="feature"><span>✦</span><h3>Hỏi LocalMate</h3><p>Gõ câu hỏi vào ô <b>Where should we go next?</b> hoặc chọn gợi ý nhanh như <b>Local food</b>, <b>Near me</b>, <b>Plan my afternoon</b> để nhận đề xuất lịch trình.</p></div>
-            <div class="feature"><span>▣</span><h3>Khám phá gần bạn</h3><p>Các thẻ địa điểm chọn lọc có đánh giá, khoảng cách và chi phí ước tính. Bấm ♡ để lưu, bấm nút đặt chỗ để xem trước thanh toán.</p></div>
+            <div class="feature"><span>✦</span><h3>Hỏi LocalMate AI</h3><p>Gõ câu hỏi vào ô <b>Where should we go next?</b> hoặc chọn gợi ý nhanh như <b>Local food</b>, <b>Plan my afternoon</b>. DeepSeek trả lời dựa trên vị trí, giờ địa phương, thời tiết và các địa điểm thật quanh bạn.</p></div>
+            <div class="feature"><span>▣</span><h3>Khám phá gần bạn</h3><p>6 địa điểm thật quanh vị trí của bạn từ OpenStreetMap: điểm tham quan, quán ăn, cà phê và chỗ ở, kèm khoảng cách thật. Bấm <b>Update</b> ở ô vị trí để làm mới, <b>Directions</b> để chỉ đường, <b>Pay</b> để thanh toán.</p></div>
             <div class="feature"><span>⌖</span><h3>Bản đồ &amp; chỉ đường</h3><p>Bấm <b>View map</b> để tìm nhà hàng, khách sạn, điểm tham quan trong bán kính 5 km. Chọn một nơi để xem quãng đường và thời gian đi ô tô, đi bộ, xe đạp hoặc xe máy.</p></div>
             <div class="feature"><span>☀</span><h3>Thời tiết</h3><p>Nhiệt độ và tình trạng thời tiết hiện tại ở Vũng Tàu. Bấm <b>Update</b> cạnh vị trí của bạn để làm mới.</p></div>
             <div class="feature"><span>◷</span><h3>Lịch trình thông minh</h3><p>Một buổi chiều gợi ý gồm ăn uống, trải nghiệm và ngắm hoàng hôn, kèm tổng chi phí so với ngân sách 30 USDC.</p></div>
@@ -101,8 +101,8 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
           <div class="kicker">THANH TOÁN &amp; BẢO MẬT</div>
           <h2>Thanh toán luôn cần bạn phê duyệt</h2>
           <ol class="steps">
-            <li>Bấm nút đặt chỗ trên một thẻ địa điểm: <b>Reserve a table</b>, <b>Book local ride</b> hoặc <b>Book experience</b>.</li>
-            <li>Màn hình <b>Payment preview</b> hiện tên dịch vụ, số tiền USDC, mạng Arc Testnet, địa chỉ ví và phí mạng ước tính.</li>
+            <li>Bấm <b>Pay</b> trên một thẻ địa điểm trong mục Discover nearby.</li>
+            <li>Màn hình <b>Payment preview</b> hiện tên địa điểm, mạng Arc Testnet, địa chỉ ví và phí mạng ước tính. Nhập số USDC trên hóa đơn của bạn.</li>
             <li>Kiểm tra kỹ rồi bấm <b>Approve payment</b>. Nếu chưa kết nối ví, nút này sẽ đưa bạn tới bước đăng nhập trước.</li>
           </ol>
           <div class="note warn"><b>Lưu ý:</b> thanh toán hiện là giao dịch demo. LocalMate chỉ ghi nhận biên nhận mẫu và không chuyển tiền.</div>
@@ -125,8 +125,8 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
               <tr><td>Đăng nhập Google &amp; ví Circle</td><td><span class="status live">THẬT</span></td><td>Ví SCA thật trên Arc Testnet</td></tr>
               <tr><td>Thời tiết</td><td><span class="status live">THẬT</span></td><td>Open-Meteo</td></tr>
               <tr><td>Bản đồ, tìm địa điểm, chỉ đường</td><td><span class="status live">THẬT</span></td><td>OpenStreetMap, Overpass, OSRM</td></tr>
-              <tr><td>Ảnh địa điểm</td><td><span class="status live">THẬT</span></td><td>Wikimedia Commons, có ảnh dự phòng</td></tr>
-              <tr><td>Câu trả lời của LocalMate AI</td><td><span class="status demo">MẪU</span></td><td>Câu trả lời cố định, chưa kết nối mô hình AI</td></tr>
+              <tr><td>Gợi ý Discover nearby</td><td><span class="status live">THẬT</span></td><td>Địa điểm từ OpenStreetMap (Photon). Ảnh Wikimedia Commons chỉ hiện khi khớp tên và vị trí.</td></tr>
+              <tr><td>LocalMate AI</td><td><span class="status live">THẬT</span></td><td>DeepSeek (<code>deepseek-flash</code>), dựa trên địa điểm OpenStreetMap quanh bạn. Không đưa ra giá hay giờ mở cửa.</td></tr>
               <tr><td>Lịch trình buổi chiều</td><td><span class="status demo">MẪU</span></td><td>Lịch trình cố định</td></tr>
               <tr><td>Số dư USDC ở thanh bên</td><td><span class="status demo">MẪU</span></td><td>Chưa đọc số dư ví thật</td></tr>
               <tr><td>Thanh toán</td><td><span class="status demo">MẪU</span></td><td>Mô phỏng, không chuyển tiền</td></tr>
@@ -151,7 +151,7 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
           <p>LocalMate gồm một frontend tĩnh và một backend nhỏ giữ khóa API của Circle.</p>
           <ul>
             <li><b>Frontend</b> (<code>dist/</code>): <code>index.html</code>, <code>docs.html</code>, <code>circle-config.js</code>, và <code>circle-wallet-client.js</code> là bundle Circle Web SDK build bằng Vite.</li>
-            <li><b>Backend</b> (<code>circle-server.mjs</code>): Hono trên Node, giữ <code>CIRCLE_API_KEY</code> và gọi Circle User-Controlled Wallets API.</li>
+            <li><b>Backend</b> (<code>circle-server.mjs</code>): Hono trên Node, giữ <code>CIRCLE_API_KEY</code> và <code>DEEPSEEK_API_KEY</code>, gọi Circle User-Controlled Wallets API và DeepSeek API.</li>
           </ul>
 
           <h3>Luồng đăng nhập</h3>
@@ -175,6 +175,7 @@ npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://
             <thead><tr><th>Khóa</th><th>Nơi đặt</th><th>Ý nghĩa</th></tr></thead>
             <tbody>
               <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Khóa API Circle. Bí mật, chỉ nằm trên backend.</td></tr>
+              <tr><td><code>DEEPSEEK_API_KEY</code></td><td><code>.env</code></td><td>Khóa API DeepSeek cho LocalMate AI. Bí mật, chỉ nằm trên backend.</td></tr>
               <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Cổng backend, mặc định <code>8787</code>.</td></tr>
               <tr><td><code>appId</code></td><td><code>dist/circle-config.js</code></td><td>App ID công khai trong Circle Console → Wallets → User Controlled → Configurator.</td></tr>
               <tr><td><code>googleClientId</code></td><td><code>dist/circle-config.js</code></td><td>OAuth Client ID (Web application) trong Google Cloud Console.</td></tr>
@@ -197,6 +198,7 @@ npx vite preview --outDir dist --port 5173   <span class="c"># frontend: http://
               <tr><td><code>POST /api/social/token</code></td><td><code>{ deviceId }</code></td><td><code>{ deviceToken, deviceEncryptionKey }</code></td></tr>
               <tr><td><code>POST /api/user/initialize</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code>, là <code>null</code> nếu đã có ví</td></tr>
               <tr><td><code>POST /api/wallets/list</code></td><td><code>{ userToken }</code></td><td><code>{ wallets }</code></td></tr>
+              <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>Luồng NDJSON: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Giới hạn 10 câu/phút mỗi IP.</td></tr>
               <tr><td><code>POST /api/wallets/balances</code></td><td><code>{ userToken, walletId }</code></td><td>Số dư token của ví</td></tr>
             </tbody>
           </table></div>
