@@ -1,14 +1,24 @@
-import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
-
 const config = window.CIRCLE_CONFIG || {}
 const apiBase = String(config.apiBase || '').replace(/\/$/, '')
 const byId = (id) => document.getElementById(id)
 // Google redirects away and back, so the device credentials must survive the reload.
 const googleDeviceKey = 'localmate.circleGoogleDevice'
+// The connected wallet is shared across pages in this tab. Circle user tokens last 60 minutes.
+const sessionKey = 'localmate.circleSession'
+const sessionTtl = 55 * 60 * 1000
+// Google always returns to the site origin, so remember which page started the login.
+const returnKey = 'localmate.returnTo'
 let sdk
+let sdkModule
 
 function apiUrl(path) {
   return `${apiBase}${path}`
+}
+
+// The Circle Web SDK is ~1 MB, so it is only downloaded when a Circle window is actually needed.
+function loadSdkModule() {
+  sdkModule ||= import('@circle-fin/w3s-pw-web-sdk')
+  return sdkModule
 }
 
 function setStatus(message, error = false) {
@@ -22,6 +32,7 @@ function setStatus(message, error = false) {
 function setOpen(open) {
   const modal = byId('circleModal')
   if (!modal) return
+  if (open) renderModal()
   modal.classList.toggle('open', open)
   modal.setAttribute('aria-hidden', String(!open))
 }
@@ -41,8 +52,44 @@ async function postJson(path, body) {
   const text = await response.text()
   let data = null
   try { data = text ? JSON.parse(text) : null } catch { data = { message: text } }
-  if (!response.ok) throw new Error(data?.message || `Circle request failed (${response.status})`)
+  if (!response.ok) {
+    // Keep Circle's error code so pages can show a specific, friendly message.
+    throw Object.assign(new Error(data?.message || `Circle request failed (${response.status})`), { code: data?.code, status: response.status })
+  }
   return data
+}
+
+function loadSession() {
+  try {
+    const session = JSON.parse(sessionStorage.getItem(sessionKey) || 'null')
+    if (session && session.expiresAt > Date.now()) return session
+    sessionStorage.removeItem(sessionKey)
+  } catch {}
+  return null
+}
+
+function announceWallet(session) {
+  window.localMateWallet?.setConnected(Boolean(session), session?.address)
+  const detail = session ? { address: session.address, walletId: session.walletId, blockchain: session.blockchain, expiresAt: session.expiresAt } : null
+  window.dispatchEvent(new CustomEvent('localmate:wallet', { detail }))
+}
+
+// When a wallet is connected the modal shows it with a Disconnect button instead of the login.
+function renderModal() {
+  const session = loadSession()
+  const connected = byId('circleConnected')
+  if (connected) connected.hidden = !session
+  if (byId('circleConnectedAddress')) byId('circleConnectedAddress').textContent = session?.address || ''
+  const login = byId('circleGoogle')?.closest('.circle-actions')
+  if (login) login.hidden = Boolean(session)
+  if (session) setStatus('Ví Circle đang được kết nối trong tab này.')
+}
+
+function signOut() {
+  try { sessionStorage.removeItem(sessionKey) } catch {}
+  announceWallet(null)
+  renderModal()
+  setStatus('Đã ngắt kết nối ví. Đăng nhập Google để kết nối lại.')
 }
 
 function ensureAppId() {
@@ -56,8 +103,34 @@ function ensureAppId() {
 async function getSdk() {
   if (!ensureAppId()) throw new Error('Circle App ID is not configured')
   if (sdk) return sdk
+  const { W3SSdk } = await loadSdkModule()
   sdk = new W3SSdk({ appSettings: { appId: config.appId } }, handleGoogleLogin)
   return sdk
+}
+
+// Circle's SDK never calls back when the traveler closes its window, which left pages waiting forever.
+// Treat the removal of its iframe as a cancel. On success the SDK removes the iframe and then calls back
+// synchronously, so by the time this check runs the promise is already settled.
+function executeChallenge(walletSdk, challengeId) {
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const observer = new MutationObserver((records) => {
+      const removed = records.some((record) => [...record.removedNodes].some((node) => node.id === 'sdkIframe'))
+      if (!removed) return
+      setTimeout(() => {
+        if (settled || document.getElementById('sdkIframe')) return
+        finish(reject, Object.assign(new Error('Bạn đã đóng cửa sổ Circle. Chưa có tiền nào được gửi.'), { code: 'CANCELLED' }))
+      }, 50)
+    })
+    function finish(settle, value) {
+      if (settled) return
+      settled = true
+      observer.disconnect()
+      settle(value)
+    }
+    observer.observe(document.body, { childList: true })
+    walletSdk.execute(challengeId, (error, result) => (error ? finish(reject, Object.assign(new Error(formatError(error)), { code: error?.code })) : finish(resolve, result)))
+  })
 }
 
 function googleLoginConfigs(device) {
@@ -76,9 +149,9 @@ async function finishLogin(walletSdk, userToken, encryptionKey) {
   const { challengeId } = await postJson('/api/user/initialize', { userToken })
   if (challengeId) {
     setStatus('Xác nhận tạo ví trong cửa sổ Circle…')
-    await new Promise((resolve, reject) => walletSdk.execute(challengeId, (error, result) => error ? reject(error) : resolve(result)))
+    await executeChallenge(walletSdk, challengeId)
   }
-  await showWallet(userToken)
+  await showWallet(userToken, encryptionKey)
 }
 
 async function connectWithGoogle() {
@@ -92,6 +165,7 @@ async function connectWithGoogle() {
     const { deviceToken, deviceEncryptionKey } = await postJson('/api/social/token', { deviceId })
     const device = { deviceToken, deviceEncryptionKey }
     sessionStorage.setItem(googleDeviceKey, JSON.stringify(device))
+    if (!['/', '/index.html'].includes(window.location.pathname)) sessionStorage.setItem(returnKey, window.location.pathname + window.location.search)
     walletSdk.updateConfigs({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
     // The SDK does not export its SocialLoginProvider enum; 'Google' is its value.
     await walletSdk.performLogin('Google')
@@ -112,7 +186,7 @@ async function handleGoogleLogin(error, result) {
   }
 }
 
-function resumeGoogleLogin() {
+async function resumeGoogleLogin() {
   let device = null
   try {
     device = JSON.parse(sessionStorage.getItem(googleDeviceKey) || 'null')
@@ -128,10 +202,11 @@ function resumeGoogleLogin() {
   }
   setStatus('Đang xác minh tài khoản Google…')
   // Constructing the SDK with the saved device credentials makes it verify the returned Google token.
+  const { W3SSdk } = await loadSdkModule()
   sdk = new W3SSdk({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
 }
 
-async function showWallet(userToken) {
+async function showWallet(userToken, encryptionKey) {
   setStatus('Đang tải ví Arc Testnet…')
   // A new wallet can take a few seconds to appear after the challenge completes.
   for (let attempt = 0; attempt < 10; attempt++) {
@@ -139,8 +214,13 @@ async function showWallet(userToken) {
     const wallet = wallets[0]
     if (wallet) {
       const address = wallet.address || 'Circle Wallet'
-      window.localMateWallet?.setConnected(true, address)
+      const session = { userToken, encryptionKey, walletId: wallet.id, address, blockchain: wallet.blockchain, expiresAt: Date.now() + sessionTtl }
+      try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch {}
+      announceWallet(session)
       setStatus(`Đã kết nối Circle Wallet trên ${wallet.blockchain || 'Arc Testnet'}: ${address}`)
+      let returnTo = null
+      try { returnTo = sessionStorage.getItem(returnKey); sessionStorage.removeItem(returnKey) } catch {}
+      if (returnTo) return window.location.replace(returnTo)
       setTimeout(() => setOpen(false), 1300)
       return
     }
@@ -151,9 +231,39 @@ async function showWallet(userToken) {
 
 byId('walletBtn')?.addEventListener('click', () => {
   setOpen(true)
-  ensureAppId()
+  if (!loadSession()) ensureAppId()
 })
 byId('closeCircle')?.addEventListener('click', () => setOpen(false))
 byId('circleModal')?.addEventListener('click', (event) => { if (event.target.id === 'circleModal') setOpen(false) })
 byId('circleGoogle')?.addEventListener('click', () => void connectWithGoogle())
-if (config.appId) resumeGoogleLogin()
+byId('circleDisconnect')?.addEventListener('click', signOut)
+if (config.appId) void resumeGoogleLogin()
+
+// Used by payments.html (and the homepage wallet card) to act on the connected wallet.
+window.LocalMateCircle = {
+  session() {
+    const session = loadSession()
+    return session && { address: session.address, walletId: session.walletId, blockchain: session.blockchain, expiresAt: session.expiresAt }
+  },
+  connect() {
+    setOpen(true)
+    ensureAppId()
+  },
+  signOut,
+  // Calls a wallet endpoint with the session's userToken and walletId filled in.
+  async post(path, body = {}) {
+    const session = loadSession()
+    if (!session) throw Object.assign(new Error('Wallet session expired. Connect again.'), { code: 'SESSION_EXPIRED' })
+    return postJson(path, { userToken: session.userToken, walletId: session.walletId, ...body })
+  },
+  // Opens Circle's hosted UI so the traveler approves (or rejects) the challenge.
+  async approve(challengeId) {
+    const session = loadSession()
+    if (!session) throw Object.assign(new Error('Wallet session expired. Connect again.'), { code: 'SESSION_EXPIRED' })
+    const walletSdk = await getSdk()
+    walletSdk.setAuthentication({ userToken: session.userToken, encryptionKey: session.encryptionKey })
+    return executeChallenge(walletSdk, challengeId)
+  },
+}
+const restored = loadSession()
+if (restored) announceWallet(restored)

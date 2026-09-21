@@ -86,6 +86,69 @@ app.post('/api/wallets/balances', async (c) => {
   }
 })
 
+// USDC is Arc's native gas token; Circle accepts its ERC-20 interface address for transfers (6 decimals).
+const ARC_USDC = { tokenAddress: '0x3600000000000000000000000000000000000000', blockchain: 'ARC-TESTNET' }
+const isAddress = (value) => /^0x[0-9a-fA-F]{40}$/.test(String(value ?? ''))
+const isAmount = (value) => /^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(String(value ?? '')) && Number(value) > 0
+
+// Pass Circle's 4xx errors (e.g. 155208 "execution reverted" on an empty wallet) through with their message.
+function circleError(c, error) {
+  const status = error?.status ?? error?.response?.status
+  return c.json({ message: error instanceof Error ? error.message : String(error), code: error?.code }, status >= 400 && status < 500 ? status : 502)
+}
+
+app.post('/api/transactions/list', async (c) => {
+  if (!client) return unavailable(c)
+  try {
+    const { userToken, walletId, pageAfter, destinationAddress, pageSize } = await c.req.json()
+    const { data } = await client.listTransactions({
+      userToken,
+      walletIds: walletId ? [walletId] : undefined,
+      // Circle paginates by transaction id (UUID); destinationAddress answers "have I paid this address before?".
+      pageAfter: /^[0-9a-f-]{36}$/i.test(String(pageAfter ?? '')) ? pageAfter : undefined,
+      destinationAddress: isAddress(destinationAddress) ? destinationAddress : undefined,
+      pageSize: Math.min(Math.max(Number(pageSize) || 20, 1), 50),
+      order: 'DESC',
+    })
+    return c.json(data)
+  } catch (error) {
+    return circleError(c, error)
+  }
+})
+
+app.post('/api/transfers/estimate', async (c) => {
+  if (!client) return unavailable(c)
+  try {
+    const { userToken, walletId, destinationAddress, amount } = await c.req.json()
+    if (!isAddress(destinationAddress) || !isAmount(amount)) return c.json({ message: 'Invalid recipient address or amount.' }, 400)
+    const { data } = await client.estimateTransferFee({ userToken, walletId, ...ARC_USDC, destinationAddress, amount: [String(amount)] })
+    return c.json(data)
+  } catch (error) {
+    return circleError(c, error)
+  }
+})
+
+// Creates a transfer challenge only; nothing moves until the traveler approves it in Circle's hosted UI.
+app.post('/api/transfers/create', async (c) => {
+  if (!client) return unavailable(c)
+  try {
+    const { userToken, walletId, destinationAddress, amount, note } = await c.req.json()
+    if (!isAddress(destinationAddress) || !isAmount(amount)) return c.json({ message: 'Invalid recipient address or amount.' }, 400)
+    const { data } = await client.createTransaction({
+      userToken,
+      walletId,
+      ...ARC_USDC,
+      destinationAddress,
+      amounts: [String(amount)],
+      fee: { type: 'level', config: { feeLevel: 'MEDIUM' } },
+      refId: String(note ?? '').trim().slice(0, 60) || undefined,
+    })
+    return c.json(data)
+  } catch (error) {
+    return circleError(c, error)
+  }
+})
+
 const AI_SYSTEM_PROMPT = `You are LocalMate, a friendly local travel companion inside a web app. Travelers ask you about food, places, culture, and how to plan their time.
 
 Each request includes the traveler's current location, local time, current weather, and a list of real places near them from OpenStreetMap (name, type, straight-line distance, address). Ground your suggestions in that list: prefer places from it and use their names exactly as given. You may also mention well-known landmarks of the area that you are confident exist.

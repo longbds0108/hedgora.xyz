@@ -33,7 +33,7 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
   <header class="topbar">
     <a class="brand" href="index.html"><span class="brand-mark">L</span><span>LocalMate</span><small>AI local companion</small></a>
-    <nav><a href="index.html#explore">Explore</a><a href="index.html#itinerary">Trips</a><a href="docs.html" class="active">Docs</a></nav>
+    <nav><a href="index.html#explore">Explore</a><a href="index.html#itinerary">Trips</a><a href="payments.html">Payments</a><a href="docs.html" class="active">Docs</a></nav>
     <a class="app-btn" href="index.html">Open app →</a>
   </header>
 
@@ -100,12 +100,14 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
         <section id="payments">
           <div class="kicker">THANH TOÁN &amp; BẢO MẬT</div>
           <h2>Thanh toán luôn cần bạn phê duyệt</h2>
+          <p>Trang <a href="payments.html">Payments</a> gửi và nhận USDC thử nghiệm trên Arc Testnet bằng ví Circle của bạn.</p>
           <ol class="steps">
-            <li>Bấm <b>Pay</b> trên một thẻ địa điểm trong mục Discover nearby.</li>
-            <li>Màn hình <b>Payment preview</b> hiện tên địa điểm, mạng Arc Testnet, địa chỉ ví và phí mạng ước tính. Nhập số USDC trên hóa đơn của bạn.</li>
-            <li>Kiểm tra kỹ rồi bấm <b>Approve payment</b>. Nếu chưa kết nối ví, nút này sẽ đưa bạn tới bước đăng nhập trước.</li>
+            <li>Kết nối ví bằng Google. Trang hiện số dư USDC (kèm quy đổi VND) và địa chỉ ví. Nút <b>Nhận USDC thử nghiệm</b> sao chép địa chỉ và mở <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>; số dư tự cập nhật khi bạn quay lại trang.</li>
+            <li>Nhập hoặc dán địa chỉ ví người nhận, số USDC và ghi chú, rồi bấm <b>Xem lại giao dịch</b>. LocalMate kiểm tra địa chỉ (định dạng, mã kiểm tra EIP-55, địa chỉ hủy), ước tính phí và tổng tiền với Circle, và báo nếu đây là lần đầu bạn gửi tới địa chỉ đó.</li>
+            <li>Bấm <b>Xác nhận trong Circle</b>. Nếu bạn đóng cửa sổ Circle, giao dịch được hủy và không có tiền nào rời ví. Khi Arc xác nhận, trang hiện biên nhận để sao chép hoặc chia sẻ.</li>
+            <li>Để nhận tiền, dùng khung <b>Nhận tiền bằng mã QR</b>: nhập số tiền và nội dung (tùy chọn), người trả quét mã bằng camera điện thoại và trang Payments mở ra với địa chỉ của bạn đã điền sẵn.</li>
           </ol>
-          <div class="note warn"><b>Lưu ý:</b> thanh toán hiện là giao dịch demo. LocalMate chỉ ghi nhận biên nhận mẫu và không chuyển tiền.</div>
+          <div class="note warn"><b>Lưu ý:</b> nút <b>Pay</b> trên thẻ địa điểm ở trang chủ mở trang Payments với tên địa điểm làm ghi chú. Các địa điểm OpenStreetMap không có ví, nên bạn cần mã QR LocalMate hoặc địa chỉ ví của người bán.</div>
           <h3>Cách LocalMate bảo vệ bạn</h3>
           <ul>
             <li><b>Ví không lưu ký.</b> Ví do Circle tạo và bảo vệ. LocalMate không có quyền truy cập khóa riêng của bạn.</li>
@@ -128,8 +130,9 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
               <tr><td>Gợi ý Discover nearby</td><td><span class="status live">THẬT</span></td><td>Địa điểm từ OpenStreetMap (Photon). Ảnh Wikimedia Commons chỉ hiện khi khớp tên và vị trí.</td></tr>
               <tr><td>LocalMate AI</td><td><span class="status live">THẬT</span></td><td>DeepSeek (<code>deepseek-flash</code>), dựa trên địa điểm OpenStreetMap quanh bạn. Không đưa ra giá hay giờ mở cửa.</td></tr>
               <tr><td>Lịch trình buổi chiều</td><td><span class="status demo">MẪU</span></td><td>Lịch trình cố định</td></tr>
-              <tr><td>Số dư USDC ở thanh bên</td><td><span class="status demo">MẪU</span></td><td>Chưa đọc số dư ví thật</td></tr>
-              <tr><td>Thanh toán</td><td><span class="status demo">MẪU</span></td><td>Mô phỏng, không chuyển tiền</td></tr>
+              <tr><td>Số dư USDC</td><td><span class="status live">THẬT</span></td><td>Đọc từ ví Circle khi đã kết nối</td></tr>
+              <tr><td>Trang Payments</td><td><span class="status live">THẬT</span></td><td>Gửi USDC trên Arc Testnet, lịch sử giao dịch từ Circle</td></tr>
+              <tr><td>Nút Pay trên thẻ địa điểm</td><td><span class="status live">THẬT</span></td><td>Mở trang Payments; cần mã QR hoặc địa chỉ ví của người bán</td></tr>
             </tbody>
           </table></div>
         </section>
@@ -198,6 +201,9 @@ npm start              <span class="c"># trang web + API: http://localhost:5173<
               <tr><td><code>POST /api/user/initialize</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code>, là <code>null</code> nếu đã có ví</td></tr>
               <tr><td><code>POST /api/wallets/list</code></td><td><code>{ userToken }</code></td><td><code>{ wallets }</code></td></tr>
               <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>Luồng NDJSON: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Giới hạn 10 câu/phút mỗi IP.</td></tr>
+              <tr><td><code>POST /api/transactions/list</code></td><td><code>{ userToken, walletId, pageAfter?, destinationAddress?, pageSize? }</code></td><td><code>{ transactions }</code>, mới nhất trước; <code>pageAfter</code> để tải thêm</td></tr>
+              <tr><td><code>POST /api/transfers/estimate</code></td><td><code>{ userToken, walletId, destinationAddress, amount }</code></td><td>Phí ước tính (<code>low / medium / high</code>)</td></tr>
+              <tr><td><code>POST /api/transfers/create</code></td><td><code>{ userToken, walletId, destinationAddress, amount, note }</code></td><td><code>{ challengeId }</code>. Tiền chỉ di chuyển sau khi người dùng xác nhận trong Circle.</td></tr>
               <tr><td><code>POST /api/wallets/balances</code></td><td><code>{ userToken, walletId }</code></td><td>Số dư token của ví</td></tr>
             </tbody>
           </table></div>
