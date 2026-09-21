@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#071a18" />
-  <meta name="description" content="Gửi và nhận USDC thử nghiệm trên Arc Testnet bằng ví Circle của bạn. Hedgora chuẩn bị giao dịch, bạn là người phê duyệt." />
+  <meta name="description" content="Send and receive test USDC on Arc Testnet with your Circle wallet. Hedgora prepares the payment, you approve it." />
   <title>Hedgora Payments</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -14,7 +18,7 @@
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:96px}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;overflow-x:hidden}
 button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid #25b78a;outline-offset:2px}
 .glow{position:fixed;width:520px;height:520px;border-radius:50%;filter:blur(120px);opacity:.1;pointer-events:none;z-index:-1}.glow-one{background:#28d7a4;top:-260px;right:-100px}.glow-two{background:#2ca9ff;bottom:-300px;left:-200px}
-.topbar{height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(6,21,19,.85);backdrop-filter:blur(18px);z-index:20}.brand{color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px;font:800 20px Manrope}.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:var(--mint);color:#06221c;border-radius:10px;transform:rotate(-6deg)}.brand small{font:500 10px DM Sans;color:var(--muted);display:block;margin-left:2px}.topbar nav{display:flex;gap:32px}.topbar nav a{color:#a7bbb5;text-decoration:none;font-size:14px}.topbar nav a.active{color:var(--mint);font-weight:700}.wallet-btn{padding:11px 16px;border-radius:12px;background:#12312b;color:#dffff4;border:1px solid #295047;font-weight:700;white-space:nowrap}.status-dot{display:inline-block;width:7px;height:7px;background:#667d76;border-radius:50%;margin-right:8px}
+.topbar{height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(6,21,19,.85);backdrop-filter:blur(18px);z-index:20}.brand{color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px;font:800 20px Manrope}.brand-logo{display:block;height:38px;width:auto}.brand small{font:500 10px DM Sans;color:var(--muted);display:block;margin-left:2px}.topbar nav{display:flex;gap:32px}.topbar nav a{color:#a7bbb5;text-decoration:none;font-size:14px}.topbar nav a.active{color:var(--mint);font-weight:700}.wallet-btn{padding:11px 16px;border-radius:12px;background:#12312b;color:#dffff4;border:1px solid #295047;font-weight:700;white-space:nowrap}.status-dot{display:inline-block;width:7px;height:7px;background:#667d76;border-radius:50%;margin-right:8px}
 .eyebrow,.kicker{font-size:11px;font-weight:800;letter-spacing:2px}.eyebrow{color:var(--mint)}.kicker{color:var(--green)}
 /* Hero: copy on the left, the wallet card on the right */
 .pay-hero{max-width:1440px;margin:auto;padding:52px 7vw 52px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:6vw;align-items:center}.pay-hero h1{font:800 clamp(40px,5.2vw,70px)/1 Manrope;margin:18px 0 18px}.pay-hero h1 em{font-style:normal;color:var(--mint)}.hero-desc{color:#a7bbb5;font-size:17px;line-height:1.7;max-width:560px;margin:0}.trust{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding:0;list-style:none}.trust li{padding:9px 12px;border:1px solid #25423d;background:#0b211e;border-radius:12px;color:#c5d8d1;font-size:13px}.trust b{color:var(--mint);margin-right:6px}
@@ -53,48 +57,48 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 [hidden]{display:none!important}
 @media(max-width:1000px){.pay-hero{grid-template-columns:minmax(0,1fr);gap:28px}.pay-workspace{grid-template-columns:1fr}.topbar nav a:not(.active){display:none}}
 /* Phones: skip the marketing copy so the wallet and the send form come first */
-@media(max-width:620px){.topbar{padding:0 16px}.brand small{display:none}.wallet-btn{padding:9px 12px;font-size:13px}.pay-hero{padding:24px 16px 28px;gap:18px}.pay-hero h1{font-size:34px;margin:10px 0 0}.hero-desc,.trust{display:none}.wallet-card{padding:20px;border-radius:22px;min-height:0}.wallet-empty h3{margin-top:14px}.pay-workspace{padding:20px 16px 56px;border-radius:24px 24px 0 0}.panel{padding:20px;border-radius:18px}.stepper li{padding:8px 6px;font-size:11px;gap:5px;justify-content:center}.actions{grid-template-columns:1fr}.tx summary{grid-template-columns:36px minmax(0,1fr) auto;gap:10px}.tx-icon{width:36px;height:36px}.tx-detail{margin-left:0}.req-fields{grid-template-columns:1fr}.pay-footer{padding:22px 16px}.toast{left:16px;right:16px;bottom:16px}}
+@media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.wallet-btn{padding:9px 12px;font-size:13px}.pay-hero{padding:24px 16px 28px;gap:18px}.pay-hero h1{font-size:34px;margin:10px 0 0}.hero-desc,.trust{display:none}.wallet-card{padding:20px;border-radius:22px;min-height:0}.wallet-empty h3{margin-top:14px}.pay-workspace{padding:20px 16px 56px;border-radius:24px 24px 0 0}.panel{padding:20px;border-radius:18px}.stepper li{padding:8px 6px;font-size:11px;gap:5px;justify-content:center}.actions{grid-template-columns:1fr}.tx summary{grid-template-columns:36px minmax(0,1fr) auto;gap:10px}.tx-icon{width:36px;height:36px}.tx-detail{margin-left:0}.req-fields{grid-template-columns:1fr}.pay-footer{padding:22px 16px}.toast{left:16px;right:16px;bottom:16px}}
   </style>
 </head>
 <body>
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
   <header class="topbar">
-    <a class="brand" href="/"><span class="brand-mark">H</span><span>Hedgora</span><small>AI local companion</small></a>
+    <a class="brand" href="/"><img class="brand-logo" src="/hedgora-logo.png" alt="Hedgora" width="134" height="38"><small>AI local companion</small></a>
     <nav><a href="/#explore">Explore</a><a href="/#itinerary">Trips</a><a href="/payments" class="active">Payments</a><a href="/docs">Docs</a></nav>
-    <button class="wallet-btn" id="walletBtn"><span class="status-dot"></span><span id="walletText">Kết nối ví</span></button>
+    <button class="wallet-btn" id="walletBtn"><span class="status-dot"></span><span id="walletText">Connect wallet</span></button>
   </header>
 
   <main>
     <section class="pay-hero">
       <div>
-        <div class="eyebrow">✦ THANH TOÁN</div>
-        <h1>Thanh toán<br>bằng <em>USDC</em>.</h1>
-        <p class="hero-desc">Gửi USDC tới ví của người bán hoặc bạn đồng hành, hoặc tạo mã QR để nhận tiền. Hedgora chuẩn bị giao dịch, còn bạn là người xác nhận trong cửa sổ bảo mật của Circle.</p>
+        <div class="eyebrow">✦ PAYMENTS</div>
+        <h1>Pay locals<br>in <em>USDC</em>.</h1>
+        <p class="hero-desc">Send USDC to a merchant or a travel buddy, or create a QR code to get paid. Hedgora prepares every payment; you confirm it in Circle’s secure window.</p>
         <ul class="trust">
-          <li><b>◇</b>Chỉ bạn phê duyệt</li>
-          <li><b>◈</b>Ví không lưu ký của Circle</li>
-          <li><b>⛓</b>Phí mạng trả bằng USDC</li>
+          <li><b>◇</b>Only you approve</li>
+          <li><b>◈</b>Non-custodial Circle wallet</li>
+          <li><b>⛓</b>Network fees paid in USDC</li>
         </ul>
       </div>
 
       <aside class="wallet-card" aria-live="polite">
-        <div class="wallet-top"><small>VÍ DU LỊCH</small><span class="net-pill"><i></i>Arc Testnet</span></div>
+        <div class="wallet-top"><small>TRAVEL WALLET</small><span class="net-pill"><i></i>Arc Testnet</span></div>
         <div class="wallet-empty" id="walletEmpty">
-          <h3>Chưa kết nối ví</h3>
-          <p>Đăng nhập Google để mở ví Circle của bạn. Lần sau dùng cùng tài khoản sẽ mở lại đúng ví đó.</p>
-          <button class="btn primary" id="connectBtn">Kết nối ví</button>
+          <h3>No wallet connected</h3>
+          <p>Sign in with Google to open your Circle wallet. The same Google account always opens the same wallet.</p>
+          <button class="btn primary" id="connectBtn">Connect wallet</button>
         </div>
         <div id="walletFull" hidden>
           <div class="balance"><b id="balance">—</b><span>USDC</span></div>
           <div class="balance-vnd" id="balanceVnd"></div>
-          <div class="balance-sub" id="balanceSub">Đang tải số dư…</div>
+          <div class="balance-sub" id="balanceSub">Loading balance…</div>
           <div class="session-note" id="sessionNote" hidden></div>
-          <div class="address-row"><code id="address"></code><button class="icon-btn" id="copyBtn" aria-label="Sao chép địa chỉ ví">Sao chép</button></div>
+          <div class="address-row"><code id="address"></code><button class="icon-btn" id="copyBtn" aria-label="Copy wallet address">Copy</button></div>
           <div class="wallet-actions">
-            <button class="icon-btn" id="faucetBtn">Nhận USDC thử nghiệm ↗</button>
+            <button class="icon-btn" id="faucetBtn">Get test USDC ↗</button>
             <a class="icon-btn" id="arcscanLink" target="_blank" rel="noreferrer">Arcscan ↗</a>
-            <button class="icon-btn" id="refreshBtn" aria-label="Làm mới số dư và lịch sử">↻</button>
-            <button class="icon-btn quiet" id="disconnectBtn">Ngắt kết nối</button>
+            <button class="icon-btn" id="refreshBtn" aria-label="Refresh balance and activity">↻</button>
+            <button class="icon-btn quiet" id="disconnectBtn">Disconnect</button>
           </div>
         </div>
       </aside>
@@ -102,120 +106,120 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 
     <div class="pay-workspace">
       <section class="panel" id="send" aria-labelledby="sendTitle">
-        <div class="kicker">GỬI USDC</div>
-        <h2 id="sendTitle">Gửi tiền</h2>
-        <p class="panel-lead">Nhập địa chỉ ví người nhận và số USDC trên hóa đơn.</p>
+        <div class="kicker">SEND USDC</div>
+        <h2 id="sendTitle">Send money</h2>
+        <p class="panel-lead">Enter the recipient’s wallet address and the USDC amount on the bill.</p>
         <div class="notice warn" id="requestBanner" hidden></div>
-        <div class="notice" id="connectNotice">Bạn cần kết nối ví trước khi gửi. Thông tin đã nhập được giữ lại khi đăng nhập.</div>
-        <ol class="stepper" aria-label="Các bước thanh toán">
-          <li class="active" data-step="1" aria-current="step"><span>1</span>Chi tiết</li>
-          <li data-step="2"><span>2</span>Xem lại</li>
-          <li data-step="3"><span>3</span>Xác nhận</li>
+        <div class="notice" id="connectNotice">Connect your wallet before sending. Anything you type here is kept while you sign in.</div>
+        <ol class="stepper" aria-label="Payment steps">
+          <li class="active" data-step="1" aria-current="step"><span>1</span>Details</li>
+          <li data-step="2"><span>2</span>Review</li>
+          <li data-step="3"><span>3</span>Confirm</li>
         </ol>
 
         <form id="detailsForm" novalidate>
           <div class="field">
-            <label for="toAddress">Địa chỉ ví người nhận</label>
-            <div class="input-row"><input id="toAddress" class="mono" autocomplete="off" spellcheck="false" placeholder="0x…" aria-describedby="toHint" /><button class="btn ghost small" type="button" id="pasteBtn">Dán</button></div>
-            <span class="hint" id="toHint">Địa chỉ 0x… trên Arc Testnet. Nếu người bán có mã QR Hedgora, quét bằng camera điện thoại để tự điền.</span>
+            <label for="toAddress">Recipient wallet address</label>
+            <div class="input-row"><input id="toAddress" class="mono" autocomplete="off" spellcheck="false" placeholder="0x…" aria-describedby="toHint" /><button class="btn ghost small" type="button" id="pasteBtn">Paste</button></div>
+            <span class="hint" id="toHint">A 0x… address on Arc Testnet. If the merchant shows a Hedgora QR code, scan it with your phone camera to fill this in.</span>
           </div>
           <div class="field">
-            <label for="amount">Số tiền</label>
+            <label for="amount">Amount</label>
             <div class="amount-box"><input id="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-describedby="amountVnd" /><span>USDC</span></div>
             <div class="amount-meta">
-              <div class="chips" aria-label="Chọn nhanh số tiền"><button type="button" data-amount="1">1</button><button type="button" data-amount="5">5</button><button type="button" data-amount="10">10</button><button type="button" data-amount="max">Tối đa</button></div>
+              <div class="chips" aria-label="Quick amounts"><button type="button" data-amount="1">1</button><button type="button" data-amount="5">5</button><button type="button" data-amount="10">10</button><button type="button" data-amount="max">Max</button></div>
               <span class="vnd" id="amountVnd"></span>
             </div>
           </div>
           <div class="field">
-            <label for="note">Ghi chú <span style="font-weight:500;color:var(--soft)">(không bắt buộc)</span></label>
-            <input id="note" maxlength="60" placeholder="Ví dụ: Bánh khọt Bà Hai" aria-describedby="noteHint" />
-            <span class="hint" id="noteHint">Lưu cùng giao dịch trên hệ thống Circle, không ghi lên blockchain. Đừng nhập thông tin nhạy cảm.</span>
+            <label for="note">Note <span style="font-weight:500;color:var(--soft)">(optional)</span></label>
+            <input id="note" maxlength="60" placeholder="e.g. Dinner at the night market" aria-describedby="noteHint" />
+            <span class="hint" id="noteHint">Stored with the transaction in Circle’s system, not on the blockchain. Don’t enter anything sensitive.</span>
           </div>
           <p class="form-error" id="formError" role="alert"></p>
-          <button class="btn dark" id="reviewBtn" type="submit" style="width:100%">Xem lại giao dịch →</button>
+          <button class="btn dark" id="reviewBtn" type="submit" style="width:100%">Review payment →</button>
         </form>
 
         <div id="reviewPanel" hidden>
           <div class="review-amount"><b id="reviewAmount">0.00</b><span id="reviewAmountSub">USDC</span></div>
           <dl class="details">
-            <div><dt>Người nhận</dt><dd class="mono" id="reviewTo"></dd></div>
-            <div><dt>Từ ví</dt><dd class="mono" id="reviewFrom"></dd></div>
-            <div><dt>Phí mạng (ước tính)</dt><dd id="reviewFee">Đang ước tính…</dd></div>
-            <div class="total"><dt>Tổng tối đa</dt><dd id="reviewTotal">…</dd></div>
-            <div id="reviewNoteRow"><dt>Ghi chú</dt><dd id="reviewNote"></dd></div>
+            <div><dt>Recipient</dt><dd class="mono" id="reviewTo"></dd></div>
+            <div><dt>From</dt><dd class="mono" id="reviewFrom"></dd></div>
+            <div><dt>Network fee (est.)</dt><dd id="reviewFee">Estimating…</dd></div>
+            <div class="total"><dt>Total (max)</dt><dd id="reviewTotal">…</dd></div>
+            <div id="reviewNoteRow"><dt>Note</dt><dd id="reviewNote"></dd></div>
           </dl>
           <div class="notice" id="recipientCheck" hidden></div>
           <div class="notice" id="reviewNotice" role="status"></div>
-          <div class="actions"><button class="btn ghost" id="editBtn" type="button">← Sửa</button><button class="btn dark" id="approveBtn" type="button" disabled>Xác nhận trong Circle</button></div>
+          <div class="actions"><button class="btn ghost" id="editBtn" type="button">← Edit</button><button class="btn dark" id="approveBtn" type="button" disabled>Confirm in Circle</button></div>
         </div>
 
         <div id="resultPanel" class="result" hidden aria-live="polite">
           <div class="badge-icon" id="resultIcon">↗</div>
-          <h3 id="resultTitle">Đã gửi giao dịch</h3>
+          <h3 id="resultTitle">Payment submitted</h3>
           <p id="resultText"></p>
           <dl class="details receipt" id="receipt" hidden></dl>
           <div class="receipt-actions" id="receiptActions" hidden>
-            <button class="btn ghost small" id="copyReceiptBtn" type="button">Sao chép biên nhận</button>
-            <button class="btn ghost small" id="shareReceiptBtn" type="button" hidden>Chia sẻ</button>
+            <button class="btn ghost small" id="copyReceiptBtn" type="button">Copy receipt</button>
+            <button class="btn ghost small" id="shareReceiptBtn" type="button" hidden>Share</button>
             <a class="btn ghost small" id="receiptArcscan" target="_blank" rel="noreferrer">Arcscan ↗</a>
           </div>
-          <button class="btn dark" id="newPaymentBtn" type="button">Giao dịch mới</button>
+          <button class="btn dark" id="newPaymentBtn" type="button">New payment</button>
         </div>
       </section>
 
       <aside class="side">
         <div class="panel" id="receive">
-          <h3>Nhận tiền bằng mã QR</h3>
-          <p id="receiveIntro">Kết nối ví để tạo mã QR. Người trả quét bằng camera điện thoại, trang này mở ra với địa chỉ của bạn đã điền sẵn.</p>
+          <h3>Get paid with a QR code</h3>
+          <p id="receiveIntro">Connect your wallet to create a QR code. The payer scans it with their phone camera and this page opens with your address filled in.</p>
           <div id="receiveBody" hidden>
             <div class="req-fields">
-              <input id="reqAmount" inputmode="decimal" placeholder="Số USDC (tùy chọn)" aria-label="Số USDC muốn nhận" />
-              <input id="reqNote" maxlength="60" placeholder="Nội dung (tùy chọn)" aria-label="Nội dung thanh toán" />
+              <input id="reqAmount" inputmode="decimal" placeholder="USDC amount (optional)" aria-label="USDC amount to request" />
+              <input id="reqNote" maxlength="60" placeholder="Note (optional)" aria-label="Payment note" />
             </div>
-            <div class="qr-box" id="qrBox" role="img" aria-label="Mã QR yêu cầu thanh toán"></div>
-            <input class="req-link" id="reqAddress" readonly aria-label="Địa chỉ ví nhận tiền của bạn" />
-            <div class="req-actions"><button class="btn ghost small" id="copyReqBtn" type="button">Sao chép ví</button></div>
+            <div class="qr-box" id="qrBox" role="img" aria-label="Payment request QR code"></div>
+            <input class="req-link" id="reqAddress" readonly aria-label="Your receiving wallet address" />
+            <div class="req-actions"><button class="btn ghost small" id="copyReqBtn" type="button">Copy wallet</button></div>
           </div>
         </div>
         <div class="panel">
-          <h3>Cách hoạt động</h3>
+          <h3>How it works</h3>
           <ol class="how">
-            <li>Hedgora kiểm tra địa chỉ, số tiền, phí mạng và cho biết bạn đã từng gửi tới địa chỉ này chưa.</li>
-            <li>Bạn xem lại tổng tiền (gồm phí) trước khi gửi.</li>
-            <li>Cửa sổ bảo mật của Circle mở ra. Chỉ khi bạn xác nhận, USDC mới rời ví.</li>
+            <li>Hedgora checks the address, amount and network fee, and tells you whether you have paid this address before.</li>
+            <li>You review the total, fee included, before anything is sent.</li>
+            <li>Circle’s secure window opens. USDC only leaves your wallet once you confirm there.</li>
           </ol>
         </div>
       </aside>
 
       <section class="panel activity" id="activity" aria-labelledby="activityTitle">
         <div class="activity-head">
-          <div><div class="kicker">LỊCH SỬ</div><h2 id="activityTitle">Giao dịch gần đây</h2></div>
+          <div><div class="kicker">ACTIVITY</div><h2 id="activityTitle">Recent transactions</h2></div>
           <div class="activity-tools">
-            <div class="filters" role="group" aria-label="Lọc giao dịch"><button type="button" data-filter="all" aria-pressed="true">Tất cả</button><button type="button" data-filter="out" aria-pressed="false">Đã gửi</button><button type="button" data-filter="in" aria-pressed="false">Đã nhận</button></div>
-            <button class="btn ghost small" id="activityRefresh" type="button">↻ Làm mới</button>
+            <div class="filters" role="group" aria-label="Filter transactions"><button type="button" data-filter="all" aria-pressed="true">All</button><button type="button" data-filter="out" aria-pressed="false">Sent</button><button type="button" data-filter="in" aria-pressed="false">Received</button></div>
+            <button class="btn ghost small" id="activityRefresh" type="button">↻ Refresh</button>
           </div>
         </div>
-        <div id="activityBody"><div class="empty">Kết nối ví để xem lịch sử giao dịch.</div></div>
+        <div id="activityBody"><div class="empty">Connect your wallet to see your transactions.</div></div>
       </section>
     </div>
   </main>
 
   <footer class="pay-footer">
-    <div><a href="/">Mở ứng dụng</a><a href="/docs#payments">Hướng dẫn thanh toán</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan ↗</a></div>
+    <div><a href="/">Open app</a><a href="/docs#payments">Payments guide</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan ↗</a></div>
   </footer>
 
   <div class="circle-modal" id="circleModal" aria-hidden="true">
     <div class="circle-card" role="dialog" aria-modal="true" aria-labelledby="circleTitle">
-      <button class="close" id="closeCircle" aria-label="Đóng">×</button>
+      <button class="close" id="closeCircle" aria-label="Close">×</button>
       <div class="pay-icon">◈</div><div class="step">CIRCLE WALLET</div>
-      <h2 id="circleTitle">Ví Circle của bạn</h2>
-      <p id="circleIntro">Đăng nhập Google để tạo hoặc mở ví không lưu ký của bạn. Mọi bước xác nhận đều diễn ra trong cửa sổ bảo mật của Circle.</p>
-      <div class="circle-setup" id="circleSetup" hidden>Circle Wallet chưa được cấu hình. Hãy thêm App ID từ Circle Console vào <code>public/circle-config.js</code>, và chạy backend Circle với API key.</div>
-      <div class="circle-actions"><button id="circleGoogle">Tiếp tục với Google</button></div>
-      <div class="circle-connected" id="circleConnected" hidden><small>Đang kết nối ví</small><code id="circleConnectedAddress"></code><button id="circleDisconnect" type="button">Ngắt kết nối</button></div>
-      <p class="circle-status" id="circleStatus">Đăng nhập Google để tạo ví mới hoặc mở lại ví đã có.</p>
-      <p>Cần USDC thử nghiệm? Circle Faucet (Arc Testnet)<br><a class="circle-console" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a></p>
+      <h2 id="circleTitle">Your Circle wallet</h2>
+      <p id="circleIntro">Sign in with Google to create or open your non-custodial wallet. Every approval happens in Circle’s secure window.</p>
+      <div class="circle-setup" id="circleSetup" hidden>Circle Wallet is not configured yet. Add your App ID from the Circle Console to <code>public/circle-config.js</code> and run the backend with an API key.</div>
+      <div class="circle-actions"><button id="circleGoogle">Continue with Google</button></div>
+      <div class="circle-connected" id="circleConnected" hidden><small>Connected wallet</small><code id="circleConnectedAddress"></code><button id="circleDisconnect" type="button">Disconnect</button></div>
+      <p class="circle-status" id="circleStatus">Sign in with Google to create a wallet or reopen yours.</p>
+      <p>Need test USDC? Circle Faucet (Arc Testnet)<br><a class="circle-console" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a></p>
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -241,7 +245,7 @@ const isAddress = (value) => /^0x[0-9a-fA-F]{40}$/.test(value)
 const normalizeAmount = (value) => String(value).trim().replace(',', '.')
 const isAmount = (value) => /^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(value) && Number(value) > 0
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const toVnd = (usdc) => (state.vnd && Number(usdc) > 0 ? '≈ ' + Math.round(Number(usdc) * state.vnd).toLocaleString('vi-VN') + ' ₫' : '')
+const toVnd = (usdc) => (state.vnd && Number(usdc) > 0 ? '≈ ' + Math.round(Number(usdc) * state.vnd).toLocaleString('en-US') + ' VND' : '')
 
 function toast(text) {
   const el = $('#toast')
@@ -266,18 +270,18 @@ function checksumValid(address) {
 function friendlyError(error) {
   const code = error?.code
   if (code === 'CANCELLED') return error.message
-  if (code === 'SESSION_EXPIRED') return 'Phiên ví đã hết hạn. Kết nối lại để tiếp tục, thông tin bạn nhập vẫn được giữ.'
-  if (code === 155208) return 'Circle mô phỏng thấy giao dịch này sẽ thất bại. Thường là do số dư không đủ cho số tiền cộng phí mạng.'
-  if (code === 155706) return 'Không mở được cửa sổ Circle do lỗi mạng. Hãy thử lại.'
-  if (error?.status === 401 || error?.status === 403) return 'Phiên ví không còn hợp lệ. Hãy ngắt kết nối rồi kết nối lại.'
-  if (/failed to fetch|networkerror|load failed/i.test(error?.message || '')) return 'Không kết nối được máy chủ Hedgora. Kiểm tra mạng rồi thử lại.'
-  return `Circle báo lỗi${code ? ` (mã ${code})` : ''}: ${error?.message || 'không rõ nguyên nhân'}.`
+  if (code === 'SESSION_EXPIRED') return 'Your wallet session expired. Connect again to continue; what you typed is kept.'
+  if (code === 155208) return 'Circle’s simulation says this payment would fail, usually because the balance can’t cover the amount plus the network fee.'
+  if (code === 155706) return 'Couldn’t open Circle’s window because of a network error. Please try again.'
+  if (error?.status === 401 || error?.status === 403) return 'Your wallet session is no longer valid. Disconnect, then connect again.'
+  if (/failed to fetch|networkerror|load failed/i.test(error?.message || '')) return 'Couldn’t reach the Hedgora server. Check your connection and try again.'
+  return `Circle returned an error${code ? ` (code ${code})` : ''}: ${error?.message || 'unknown cause'}.`
 }
 
 // Called by circle-wallet-client.js whenever the wallet connects or disconnects.
 window.hedgoraWallet = {
   setConnected(connected, address) {
-    $('#walletText').textContent = connected ? short(address) : 'Kết nối ví'
+    $('#walletText').textContent = connected ? short(address) : 'Connect wallet'
     $('.status-dot').style.background = connected ? '#70efc0' : '#667d76'
   },
 }
@@ -336,8 +340,8 @@ function renderWallet() {
   $('#walletEmpty').hidden = Boolean(wallet)
   $('#walletFull').hidden = !wallet
   $('#connectNotice').hidden = Boolean(wallet)
-  $('#reviewBtn').textContent = wallet ? 'Xem lại giao dịch →' : 'Kết nối ví để tiếp tục'
-  $('#receiveIntro').textContent = wallet ? 'Người trả quét mã bằng camera điện thoại, trang này mở ra với địa chỉ ví của bạn đã điền sẵn.' : 'Kết nối ví để tạo mã QR. Người trả quét bằng camera điện thoại, trang này mở ra với địa chỉ của bạn đã điền sẵn.'
+  $('#reviewBtn').textContent = wallet ? 'Review payment →' : 'Connect wallet to continue'
+  $('#receiveIntro').textContent = wallet ? 'The payer scans it with their phone camera and this page opens with your wallet address filled in.' : 'Connect your wallet to create a QR code. The payer scans it with their phone camera and this page opens with your address filled in.'
   $('#receiveBody').hidden = !wallet
   if (!wallet) return
   $('#address').textContent = wallet.address
@@ -348,13 +352,13 @@ function renderWallet() {
 }
 
 async function loadBalance() {
-  $('#balanceSub').textContent = 'Đang tải số dư…'
+  $('#balanceSub').textContent = 'Loading balance…'
   try {
     const { tokenBalances = [] } = await walletPost('/api/wallets/balances')
     tokenBalances.forEach((b) => { if (b.token?.id) state.symbols[b.token.id] = b.token.symbol })
     const usdc = tokenBalances.find((b) => b.token?.symbol === 'USDC')
     state.balance = usdc ? usdc.amount : '0'
-    $('#balanceSub').textContent = Number(state.balance) > 0 ? 'Số dư khả dụng · tự cập nhật khi bạn quay lại trang' : 'Ví chưa có USDC. Bấm "Nhận USDC thử nghiệm", số dư sẽ tự cập nhật khi bạn quay lại.'
+    $('#balanceSub').textContent = Number(state.balance) > 0 ? 'Available balance · refreshes when you come back to this tab' : 'No USDC yet. Tap "Get test USDC"; the balance refreshes when you come back.'
   } catch (error) {
     state.balance = null
     $('#balanceSub').textContent = friendlyError(error)
@@ -368,13 +372,13 @@ function checkSession() {
   const session = window.HedgoraCircle?.session()
   if (!session) {
     window.HedgoraCircle?.signOut()
-    toast('Phiên ví đã hết hạn. Kết nối lại để tiếp tục.')
+    toast('Your wallet session expired. Connect again to continue.')
     return
   }
   const minutes = Math.ceil((session.expiresAt - Date.now()) / 60000)
   const note = $('#sessionNote')
   note.hidden = minutes > 5
-  if (!note.hidden) note.innerHTML = `Phiên ví hết hạn sau ${minutes} phút. <button type="button" id="renewBtn">Kết nối lại</button>`
+  if (!note.hidden) note.innerHTML = `Your wallet session expires in ${minutes} min. <button type="button" id="renewBtn">Reconnect</button>`
 }
 
 function txRow(tx) {
@@ -382,34 +386,34 @@ function txRow(tx) {
   const counterparty = outbound ? tx.destinationAddress : tx.sourceAddress
   const symbol = state.symbols[tx.tokenId] || 'USDC'
   const tone = FINAL_OK.includes(tx.state) ? 'ok' : FINAL_BAD.includes(tx.state) ? 'bad' : 'wait'
-  const label = { COMPLETE: 'HOÀN TẤT', CONFIRMED: 'ĐÃ XÁC NHẬN', FAILED: 'THẤT BẠI', DENIED: 'BỊ TỪ CHỐI', CANCELLED: 'ĐÃ HỦY' }[tx.state] || 'ĐANG XỬ LÝ'
+  const label = { COMPLETE: 'COMPLETE', CONFIRMED: 'CONFIRMED', FAILED: 'FAILED', DENIED: 'DENIED', CANCELLED: 'CANCELLED' }[tx.state] || 'PENDING'
   const date = tx.createDate ? new Date(tx.createDate) : null
-  const when = date ? date.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''
-  const hash = tx.txHash ? `<a href="${ARCSCAN}/tx/${escapeHtml(tx.txHash)}" target="_blank" rel="noreferrer">${escapeHtml(short(tx.txHash))} ↗</a>` : 'Chưa có'
+  const when = date ? date.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+  const hash = tx.txHash ? `<a href="${ARCSCAN}/tx/${escapeHtml(tx.txHash)}" target="_blank" rel="noreferrer">${escapeHtml(short(tx.txHash))} ↗</a>` : 'Not yet'
   return `<li><details class="tx"><summary>
     <div class="tx-icon ${outbound ? 'out' : 'in'}" aria-hidden="true">${outbound ? '↗' : '↙'}</div>
-    <div class="tx-main"><b>${outbound ? 'Gửi tới' : 'Nhận từ'} ${escapeHtml(short(counterparty) || 'không rõ')}</b><span>${escapeHtml(tx.refId ? tx.refId + ' · ' : '')}${escapeHtml(when)}</span></div>
+    <div class="tx-main"><b>${outbound ? 'Sent to' : 'Received from'} ${escapeHtml(short(counterparty) || 'unknown')}</b><span>${escapeHtml(tx.refId ? tx.refId + ' · ' : '')}${escapeHtml(when)}</span></div>
     <div class="tx-end"><b>${outbound ? '−' : '+'}${escapeHtml(formatUsdc(tx.amounts?.[0]))} ${escapeHtml(symbol)}</b><span class="state ${tone}">${label}</span></div>
   </summary><dl class="tx-detail">
-    <div><dt>Từ</dt><dd class="mono">${escapeHtml(tx.sourceAddress || '—')}</dd></div>
-    <div><dt>Đến</dt><dd class="mono">${escapeHtml(tx.destinationAddress || '—')}</dd></div>
-    <div><dt>Phí mạng</dt><dd>${tx.networkFee ? escapeHtml(formatUsdc(tx.networkFee)) + ' USDC' : '—'}</dd></div>
-    <div><dt>Trạng thái</dt><dd>${escapeHtml(tx.state)}${tx.errorReason ? ' · ' + escapeHtml(tx.errorReason) : ''}</dd></div>
-    <div><dt>Thời gian</dt><dd>${date ? escapeHtml(date.toLocaleString('vi-VN')) : '—'}</dd></div>
-    <div><dt>Mã giao dịch</dt><dd>${hash}</dd></div>
+    <div><dt>From</dt><dd class="mono">${escapeHtml(tx.sourceAddress || '—')}</dd></div>
+    <div><dt>To</dt><dd class="mono">${escapeHtml(tx.destinationAddress || '—')}</dd></div>
+    <div><dt>Network fee</dt><dd>${tx.networkFee ? escapeHtml(formatUsdc(tx.networkFee)) + ' USDC' : '—'}</dd></div>
+    <div><dt>Status</dt><dd>${escapeHtml(tx.state)}${tx.errorReason ? ' · ' + escapeHtml(tx.errorReason) : ''}</dd></div>
+    <div><dt>Time</dt><dd>${date ? escapeHtml(date.toLocaleString('en-GB')) : '—'}</dd></div>
+    <div><dt>Transaction hash</dt><dd>${hash}</dd></div>
   </dl></details></li>`
 }
 
 function renderActivity() {
   const body = $('#activityBody')
   if (!state.wallet) {
-    body.innerHTML = '<div class="empty">Kết nối ví để xem lịch sử giao dịch.</div>'
+    body.innerHTML = '<div class="empty">Connect your wallet to see your transactions.</div>'
     return
   }
   const shown = state.txs.filter((tx) => state.filter === 'all' || (state.filter === 'out') === (tx.transactionType === 'OUTBOUND'))
-  const emptyText = state.txs.length ? 'Không có giao dịch nào trong mục này.' : 'Chưa có giao dịch nào. Nhận USDC thử nghiệm để bắt đầu.'
+  const emptyText = state.txs.length ? 'No transactions in this view.' : 'No transactions yet. Get some test USDC to start.'
   body.innerHTML = (shown.length ? `<ul class="tx-list">${shown.map(txRow).join('')}</ul>` : `<div class="empty">${emptyText}</div>`)
-    + (state.hasMore ? '<button class="btn ghost small more" id="moreBtn" type="button">Tải thêm</button>' : '')
+    + (state.hasMore ? '<button class="btn ghost small more" id="moreBtn" type="button">Load more</button>' : '')
 }
 
 async function loadActivity({ more = false } = {}) {
@@ -427,7 +431,7 @@ async function loadActivity({ more = false } = {}) {
     schedulePendingRefresh()
   } catch (error) {
     if (more) toast(friendlyError(error))
-    else $('#activityBody').innerHTML = `<div class="empty">Không tải được lịch sử. ${escapeHtml(friendlyError(error))}</div>`
+    else $('#activityBody').innerHTML = `<div class="empty">Couldn’t load your transactions. ${escapeHtml(friendlyError(error))}</div>`
   }
   return state.txs
 }
@@ -462,7 +466,7 @@ function renderRequest() {
   const link = requestLink()
   $('#reqAddress').value = state.wallet.address
   if (typeof window.qrcode !== 'function') {
-    $('#qrBox').textContent = 'Không tải được thư viện QR. Hãy gửi link bên dưới.'
+    $('#qrBox').textContent = 'Couldn’t load the QR library. Share your wallet address below instead.'
     return
   }
   const qr = window.qrcode(0, 'M')
@@ -494,12 +498,12 @@ function validateDetails() {
   const to = $('#toAddress').value.trim()
   const amount = normalizeAmount($('#amount').value)
   const note = $('#note').value.trim()
-  if (!isAddress(to)) return { error: 'Địa chỉ ví không hợp lệ. Cần dạng 0x + 40 ký tự hex.' }
-  if (BURN_ADDRESSES.includes(to.toLowerCase())) return { error: 'Đây là địa chỉ hủy (burn): tiền gửi tới sẽ mất vĩnh viễn.' }
-  if (!checksumValid(to)) return { error: 'Địa chỉ có vẻ bị gõ sai: chữ hoa/thường không khớp mã kiểm tra (EIP-55). Hãy sao chép lại từ người nhận.' }
-  if (to.toLowerCase() === state.wallet.address.toLowerCase()) return { error: 'Đây là địa chỉ ví của chính bạn.' }
-  if (!isAmount(amount)) return { error: 'Số tiền phải lớn hơn 0 và tối đa 6 chữ số thập phân.' }
-  if (state.balance != null && Number(amount) > Number(state.balance)) return { error: `Số dư không đủ: bạn có ${formatUsdc(state.balance)} USDC.` }
+  if (!isAddress(to)) return { error: 'That isn’t a valid wallet address. It should be 0x followed by 40 hex characters.' }
+  if (BURN_ADDRESSES.includes(to.toLowerCase())) return { error: 'This is a burn address: anything sent there is lost forever.' }
+  if (!checksumValid(to)) return { error: 'This address looks mistyped: its upper/lower case doesn’t match its checksum (EIP-55). Copy it again from the recipient.' }
+  if (to.toLowerCase() === state.wallet.address.toLowerCase()) return { error: 'That’s your own wallet address.' }
+  if (!isAmount(amount)) return { error: 'The amount must be greater than 0 with at most 6 decimal places.' }
+  if (state.balance != null && Number(amount) > Number(state.balance)) return { error: `Not enough balance: you have ${formatUsdc(state.balance)} USDC.` }
   return { to, amount, note }
 }
 
@@ -519,10 +523,10 @@ async function review(event) {
   $('#reviewFrom').textContent = state.wallet.address
   $('#reviewNoteRow').hidden = !note
   $('#reviewNote').textContent = note
-  $('#reviewFee').textContent = 'Đang ước tính…'
+  $('#reviewFee').textContent = 'Estimating…'
   $('#reviewTotal').textContent = '…'
   setNotice($('#recipientCheck'), '', '')
-  setNotice($('#reviewNotice'), '', 'Đang kiểm tra giao dịch với Circle…')
+  setNotice($('#reviewNotice'), '', 'Checking this payment with Circle…')
   $('#approveBtn').disabled = true
   setStep(2)
 
@@ -533,28 +537,28 @@ async function review(event) {
   if (state.pending !== details) return
 
   if (history.status === 'fulfilled' && history.value.transactions?.length) {
-    setNotice($('#recipientCheck'), '', '✓ Bạn đã từng gửi tới địa chỉ này.')
+    setNotice($('#recipientCheck'), '', '✓ You have paid this address before.')
   } else {
-    setNotice($('#recipientCheck'), 'warn', `Lần đầu bạn gửi tới địa chỉ này. Đối chiếu 4 ký tự cuối <b>${escapeHtml(to.slice(-4))}</b> với người nhận trước khi xác nhận.`)
+    setNotice($('#recipientCheck'), 'warn', `First payment to this address. Check the last 4 characters <b>${escapeHtml(to.slice(-4))}</b> with the recipient before you confirm.`)
   }
 
   if (estimate.status === 'rejected') {
-    $('#reviewFee').textContent = 'Không ước tính được'
+    $('#reviewFee').textContent = 'Couldn’t estimate'
     $('#reviewTotal').textContent = '—'
-    setNotice($('#reviewNotice'), 'bad', `${escapeHtml(friendlyError(estimate.reason))}<br><button class="btn ghost small" type="button" id="retryBtn">Thử kiểm tra lại</button>`)
+    setNotice($('#reviewNotice'), 'bad', `${escapeHtml(friendlyError(estimate.reason))}<br><button class="btn ghost small" type="button" id="retryBtn">Check again</button>`)
     return
   }
   const fee = Number(estimate.value?.medium?.networkFee ?? 0)
   const total = Number(amount) + fee
-  $('#reviewFee').textContent = fee > 0 ? `≈ ${fee.toLocaleString('en-US', { maximumFractionDigits: 6 })} USDC` : 'Không mất phí'
+  $('#reviewFee').textContent = fee > 0 ? `≈ ${fee.toLocaleString('en-US', { maximumFractionDigits: 6 })} USDC` : 'No fee'
   $('#reviewTotal').textContent = `${formatUsdc(total)} USDC`
   if (state.balance != null && total > Number(state.balance)) {
     const max = floor6(Number(state.balance) - fee)
-    setNotice($('#reviewNotice'), 'bad', `Số dư ${formatUsdc(state.balance)} USDC không đủ cho số tiền cộng phí mạng.`
-      + (max > 0 ? `<br><button class="btn ghost small" type="button" id="adjustBtn" data-amount="${max}">Gửi tối đa ${formatUsdc(max)} USDC</button>` : ''))
+    setNotice($('#reviewNotice'), 'bad', `Your balance of ${formatUsdc(state.balance)} USDC can’t cover the amount plus the network fee.`
+      + (max > 0 ? `<br><button class="btn ghost small" type="button" id="adjustBtn" data-amount="${max}">Send max ${formatUsdc(max)} USDC</button>` : ''))
     return
   }
-  setNotice($('#reviewNotice'), '', '◇ Bấm xác nhận để mở cửa sổ bảo mật của Circle. Hedgora không thể tự gửi tiền; bạn có thể hủy trong cửa sổ đó.')
+  setNotice($('#reviewNotice'), '', '◇ Confirming opens Circle’s secure window. Hedgora can’t send money on its own, and you can still cancel there.')
   $('#approveBtn').disabled = false
 }
 
@@ -564,7 +568,7 @@ async function trackTransfer(pending, startedAt) {
     const transactions = await loadActivity()
     const tx = transactions.find((t) => t.transactionType === 'OUTBOUND' && t.destinationAddress?.toLowerCase() === pending.to.toLowerCase() && Date.parse(t.createDate) >= startedAt - 60000)
     if (tx && (FINAL_OK.includes(tx.state) || FINAL_BAD.includes(tx.state))) return tx
-    if (tx) $('#resultText').textContent = `Trạng thái: ${tx.state}. Đang chờ Arc xác nhận…`
+    if (tx) $('#resultText').textContent = `Status: ${tx.state}. Waiting for Arc to confirm…`
     await sleep(3000)
   }
   return null
@@ -572,13 +576,13 @@ async function trackTransfer(pending, startedAt) {
 
 function receiptRows(pending, tx) {
   return [
-    ['Số tiền', `${formatUsdc(pending.amount)} USDC`],
-    ['Người nhận', pending.to],
-    ...(pending.note ? [['Ghi chú', pending.note]] : []),
-    ['Thời gian', new Date(tx?.firstConfirmDate || tx?.updateDate || Date.now()).toLocaleString('vi-VN')],
-    ['Mạng', 'Arc Testnet (USDC thử nghiệm)'],
-    ...(tx?.networkFee ? [['Phí mạng', `${formatUsdc(tx.networkFee)} USDC`]] : []),
-    ...(tx?.txHash ? [['Mã giao dịch', tx.txHash]] : []),
+    ['Amount', `${formatUsdc(pending.amount)} USDC`],
+    ['Recipient', pending.to],
+    ...(pending.note ? [['Note', pending.note]] : []),
+    ['Time', new Date(tx?.firstConfirmDate || tx?.updateDate || Date.now()).toLocaleString('en-GB')],
+    ['Network', 'Arc Testnet (test USDC)'],
+    ...(tx?.networkFee ? [['Network fee', `${formatUsdc(tx.networkFee)} USDC`]] : []),
+    ...(tx?.txHash ? [['Transaction hash', tx.txHash]] : []),
   ]
 }
 
@@ -590,12 +594,12 @@ function showReceipt(pending, tx) {
   const url = tx?.txHash ? `${ARCSCAN}/tx/${tx.txHash}` : ''
   $('#receiptArcscan').hidden = !url
   if (url) $('#receiptArcscan').href = url
-  const text = ['Biên nhận Hedgora', ...rows.map(([k, v]) => `${k}: ${v}`), url].filter(Boolean).join('\n')
+  const text = ['Hedgora receipt', ...rows.map(([k, v]) => `${k}: ${v}`), url].filter(Boolean).join('\n')
   $('#copyReceiptBtn').onclick = async () => {
-    try { await navigator.clipboard.writeText(text); toast('Đã sao chép biên nhận') } catch { toast('Không sao chép được biên nhận') }
+    try { await navigator.clipboard.writeText(text); toast('Receipt copied') } catch { toast('Couldn’t copy the receipt') }
   }
   $('#shareReceiptBtn').hidden = !navigator.share
-  $('#shareReceiptBtn').onclick = () => navigator.share({ title: 'Biên nhận Hedgora', text }).catch(() => {})
+  $('#shareReceiptBtn').onclick = () => navigator.share({ title: 'Hedgora receipt', text }).catch(() => {})
 }
 
 async function approve() {
@@ -603,26 +607,26 @@ async function approve() {
   if (!pending) return
   $('#approveBtn').disabled = true
   $('#editBtn').disabled = true
-  $('#approveBtn').textContent = 'Đang tạo giao dịch…'
+  $('#approveBtn').textContent = 'Creating payment…'
   const startedAt = Date.now()
   try {
     const { challengeId } = await walletPost('/api/transfers/create', { destinationAddress: pending.to, amount: pending.amount, note: pending.note })
-    $('#approveBtn').textContent = 'Chờ bạn xác nhận trong cửa sổ Circle…'
+    $('#approveBtn').textContent = 'Waiting for you in Circle’s window…'
     await window.HedgoraCircle.approve(challengeId)
   } catch (error) {
     setNotice($('#reviewNotice'), error.code === 'CANCELLED' ? 'warn' : 'bad', escapeHtml(friendlyError(error)))
     $('#approveBtn').disabled = false
     $('#editBtn').disabled = false
-    $('#approveBtn').textContent = 'Xác nhận trong Circle'
+    $('#approveBtn').textContent = 'Confirm in Circle'
     return
   }
-  $('#approveBtn').textContent = 'Xác nhận trong Circle'
+  $('#approveBtn').textContent = 'Confirm in Circle'
   $('#editBtn').disabled = false
   clearDraft()
   $('#resultIcon').className = 'badge-icon'
   $('#resultIcon').textContent = '↗'
-  $('#resultTitle').textContent = 'Đã gửi giao dịch'
-  $('#resultText').textContent = `${formatUsdc(pending.amount)} USDC tới ${short(pending.to)}. Đang chờ Arc xác nhận…`
+  $('#resultTitle').textContent = 'Payment submitted'
+  $('#resultText').textContent = `${formatUsdc(pending.amount)} USDC to ${short(pending.to)}. Waiting for Arc to confirm…`
   $('#receipt').hidden = true
   $('#receiptActions').hidden = true
   setStep(3)
@@ -631,17 +635,17 @@ async function approve() {
   state.tracking = false
   if (tx && FINAL_OK.includes(tx.state)) {
     $('#resultIcon').textContent = '✓'
-    $('#resultTitle').textContent = 'Thanh toán thành công'
-    $('#resultText').textContent = 'Đưa biên nhận này cho người nhận nếu họ cần.'
+    $('#resultTitle').textContent = 'Payment complete'
+    $('#resultText').textContent = 'Show this receipt to the recipient if they need it.'
     showReceipt(pending, tx)
-    toast('Thanh toán thành công ✓')
+    toast('Payment complete ✓')
   } else if (tx) {
     $('#resultIcon').className = 'badge-icon bad'
     $('#resultIcon').textContent = '!'
-    $('#resultTitle').textContent = 'Thanh toán thất bại'
-    $('#resultText').textContent = `Giao dịch kết thúc với trạng thái ${tx.state}${tx.errorReason ? ` (${tx.errorReason})` : ''}. Tiền chưa rời ví, trừ phí mạng nếu có.`
+    $('#resultTitle').textContent = 'Payment failed'
+    $('#resultText').textContent = `The payment ended as ${tx.state}${tx.errorReason ? ` (${tx.errorReason})` : ''}. Your USDC did not leave the wallet, apart from any network fee.`
   } else {
-    $('#resultText').textContent = 'Giao dịch đã được gửi nhưng Arc chưa xác nhận xong. Mục lịch sử bên dưới sẽ tự cập nhật.'
+    $('#resultText').textContent = 'The payment was sent but Arc hasn’t confirmed it yet. The activity list below updates on its own.'
     schedulePendingRefresh()
   }
   loadBalance()
@@ -668,7 +672,7 @@ window.addEventListener('hedgora:wallet', (event) => {
 })
 
 $('#connectBtn').onclick = () => window.HedgoraCircle?.connect()
-$('#disconnectBtn').onclick = () => { window.HedgoraCircle?.signOut(); toast('Đã ngắt kết nối ví') }
+$('#disconnectBtn').onclick = () => { window.HedgoraCircle?.signOut(); toast('Wallet disconnected') }
 $('#detailsForm').addEventListener('submit', review)
 $('#detailsForm').addEventListener('input', () => { saveDraft(); renderAmountVnd(); $('#formError').textContent = '' })
 $('#editBtn').onclick = () => setStep(1)
@@ -677,23 +681,23 @@ $('#newPaymentBtn').onclick = resetForm
 $('#refreshBtn').onclick = () => { state.lastRefresh = Date.now(); loadBalance(); loadActivity() }
 $('#activityRefresh').onclick = () => loadActivity()
 $('#copyBtn').onclick = async () => {
-  try { await navigator.clipboard.writeText(state.wallet.address); toast('Đã sao chép địa chỉ ví') } catch { toast('Không sao chép được, hãy chọn và copy thủ công') }
+  try { await navigator.clipboard.writeText(state.wallet.address); toast('Wallet address copied') } catch { toast('Couldn’t copy. Select the address and copy it manually.') }
 }
 // Copy first (clipboard needs this tab focused), then open the faucet.
 $('#faucetBtn').onclick = async () => {
-  try { await navigator.clipboard.writeText(state.wallet.address); toast('Đã sao chép địa chỉ ví. Dán vào faucet và chọn Arc Testnet.') } catch { toast('Dán địa chỉ ví ở thẻ ví vào faucet và chọn Arc Testnet.') }
+  try { await navigator.clipboard.writeText(state.wallet.address); toast('Wallet address copied. Paste it into the faucet and pick Arc Testnet.') } catch { toast('Paste your wallet address into the faucet and pick Arc Testnet.') }
   window.open('https://faucet.circle.com', '_blank', 'noopener')
 }
 $('#pasteBtn').onclick = async () => {
   try {
     $('#toAddress').value = (await navigator.clipboard.readText()).trim()
     saveDraft()
-  } catch { toast('Trình duyệt không cho đọc clipboard. Hãy dán thủ công (giữ để dán).') }
+  } catch { toast('Your browser blocked clipboard access. Paste manually (long-press to paste).') }
 }
 $$('.chips button').forEach((button) => {
   button.onclick = () => {
     if (button.dataset.amount === 'max') {
-      if (state.balance == null) return toast('Kết nối ví để dùng số dư tối đa')
+      if (state.balance == null) return toast('Connect your wallet to use your full balance')
       $('#amount').value = String(floor6(state.balance))
     } else $('#amount').value = button.dataset.amount
     saveDraft()
@@ -719,7 +723,7 @@ document.addEventListener('click', (event) => {
 $('#reqAmount').addEventListener('input', renderRequest)
 $('#reqNote').addEventListener('input', renderRequest)
 $('#copyReqBtn').onclick = async () => {
-  try { await navigator.clipboard.writeText(state.wallet.address); toast('Đã sao chép địa chỉ ví') } catch { toast('Không sao chép được, hãy chọn và copy thủ công') }
+  try { await navigator.clipboard.writeText(state.wallet.address); toast('Wallet address copied') } catch { toast('Couldn’t copy. Select the address and copy it manually.') }
 }
 window.addEventListener('focus', refreshSoon)
 document.addEventListener('visibilitychange', refreshSoon)
@@ -733,11 +737,11 @@ if (params.get('to')) {
   $('#toAddress').value = params.get('to')
   $('#amount').value = params.get('amount') || ''
   $('#note').value = (params.get('note') || '').slice(0, 60)
-  const parts = [params.get('amount') && `${escapeHtml(params.get('amount'))} USDC`, `tới <b>${escapeHtml(short(params.get('to')))}</b>`, params.get('note') && escapeHtml(params.get('note'))].filter(Boolean)
-  setNotice($('#requestBanner'), 'warn', `Bạn đang mở một yêu cầu thanh toán: ${parts.join(' · ')}. Kiểm tra kỹ người nhận trước khi xác nhận.`)
+  const parts = [params.get('amount') && `${escapeHtml(params.get('amount'))} USDC`, `to <b>${escapeHtml(short(params.get('to')))}</b>`, params.get('note') && escapeHtml(params.get('note'))].filter(Boolean)
+  setNotice($('#requestBanner'), 'warn', `You opened a payment request: ${parts.join(' · ')}. Double-check the recipient before you confirm.`)
 } else if (params.get('note')) {
   $('#note').value = params.get('note').slice(0, 60)
-  setNotice($('#requestBanner'), 'warn', `Thanh toán cho <b>${escapeHtml(params.get('note'))}</b>: hỏi người bán mã QR Hedgora hoặc địa chỉ ví của họ, rồi quét bằng camera điện thoại hoặc dán vào ô bên dưới.`)
+  setNotice($('#requestBanner'), 'warn', `Paying <b>${escapeHtml(params.get('note'))}</b>: ask the merchant for their Hedgora QR code or wallet address, then scan it with your phone camera or paste it below.`)
 }
 renderAmountVnd()
 loadRate()

@@ -82,21 +82,21 @@ function renderModal() {
   if (byId('circleConnectedAddress')) byId('circleConnectedAddress').textContent = session?.address || ''
   const login = byId('circleGoogle')?.closest('.circle-actions')
   if (login) login.hidden = Boolean(session)
-  if (session) setStatus('Ví Circle đang được kết nối trong tab này.')
+  if (session) setStatus('Your Circle wallet is connected in this tab.')
 }
 
 function signOut() {
   try { sessionStorage.removeItem(sessionKey) } catch {}
   announceWallet(null)
   renderModal()
-  setStatus('Đã ngắt kết nối ví. Đăng nhập Google để kết nối lại.')
+  setStatus('Wallet disconnected. Sign in with Google to connect again.')
 }
 
 function ensureAppId() {
   if (config.appId) return true
   byId('circleSetup').hidden = false
   byId('circleGoogle').disabled = true
-  setStatus('Thêm Circle App ID vào public/circle-config.js trước khi kết nối.', true)
+  setStatus('Add your Circle App ID to public/circle-config.js before connecting.', true)
   return false
 }
 
@@ -119,7 +119,7 @@ function executeChallenge(walletSdk, challengeId) {
       if (!removed) return
       setTimeout(() => {
         if (settled || document.getElementById('sdkIframe')) return
-        finish(reject, Object.assign(new Error('Bạn đã đóng cửa sổ Circle. Chưa có tiền nào được gửi.'), { code: 'CANCELLED' }))
+        finish(reject, Object.assign(new Error('You closed Circle’s window. No money was sent.'), { code: 'CANCELLED' }))
       }, 50)
     })
     function finish(settle, value) {
@@ -148,18 +148,18 @@ async function finishLogin(walletSdk, userToken, encryptionKey) {
   walletSdk.setAuthentication({ userToken, encryptionKey })
   const { challengeId } = await postJson('/api/user/initialize', { userToken })
   if (challengeId) {
-    setStatus('Xác nhận tạo ví trong cửa sổ Circle…')
+    setStatus('Confirm wallet creation in Circle’s window…')
     await executeChallenge(walletSdk, challengeId)
   }
   await showWallet(userToken, encryptionKey)
 }
 
 async function connectWithGoogle() {
-  if (!config.googleClientId) return setStatus('Thêm googleClientId vào public/circle-config.js trước khi đăng nhập Google.', true)
+  if (!config.googleClientId) return setStatus('Add googleClientId to public/circle-config.js before signing in with Google.', true)
   const button = byId('circleGoogle')
   button.disabled = true
   try {
-    setStatus('Đang chuẩn bị đăng nhập Google…')
+    setStatus('Preparing Google sign-in…')
     const walletSdk = await getSdk()
     const deviceId = await walletSdk.getDeviceId()
     const { deviceToken, deviceEncryptionKey } = await postJson('/api/social/token', { deviceId })
@@ -170,19 +170,19 @@ async function connectWithGoogle() {
     // The SDK does not export its SocialLoginProvider enum; 'Google' is its value.
     await walletSdk.performLogin('Google')
   } catch (error) {
-    setStatus(`Không thể đăng nhập Google: ${formatError(error)}`, true)
+    setStatus(`Couldn’t sign in with Google: ${formatError(error)}`, true)
     button.disabled = !config.appId
   }
 }
 
 async function handleGoogleLogin(error, result) {
   if (error || !result?.userToken || !result.encryptionKey) {
-    return setStatus(`Đăng nhập Google thất bại: ${formatError(error || 'Circle không trả về phiên người dùng hợp lệ.')}`, true)
+    return setStatus(`Google sign-in failed: ${formatError(error || 'Circle did not return a valid user session.')}`, true)
   }
   try {
     await finishLogin(sdk, result.userToken, result.encryptionKey)
   } catch (walletError) {
-    setStatus(`Không thể kết nối Circle Wallet: ${formatError(walletError)}`, true)
+    setStatus(`Couldn’t connect your Circle wallet: ${formatError(walletError)}`, true)
   }
 }
 
@@ -198,16 +198,16 @@ async function resumeGoogleLogin() {
   setOpen(true)
   if (hash.has('error')) {
     history.replaceState(null, '', window.location.href.split('#')[0])
-    return setStatus(`Đăng nhập Google bị hủy hoặc lỗi: ${hash.get('error')}`, true)
+    return setStatus(`Google sign-in was cancelled or failed: ${hash.get('error')}`, true)
   }
-  setStatus('Đang xác minh tài khoản Google…')
+  setStatus('Verifying your Google account…')
   // Constructing the SDK with the saved device credentials makes it verify the returned Google token.
   const { W3SSdk } = await loadSdkModule()
   sdk = new W3SSdk({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
 }
 
 async function showWallet(userToken, encryptionKey) {
-  setStatus('Đang tải ví Arc Testnet…')
+  setStatus('Loading your Arc Testnet wallet…')
   // A new wallet can take a few seconds to appear after the challenge completes.
   for (let attempt = 0; attempt < 10; attempt++) {
     const { wallets = [] } = await postJson('/api/wallets/list', { userToken })
@@ -217,7 +217,7 @@ async function showWallet(userToken, encryptionKey) {
       const session = { userToken, encryptionKey, walletId: wallet.id, address, blockchain: wallet.blockchain, expiresAt: Date.now() + sessionTtl }
       try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch {}
       announceWallet(session)
-      setStatus(`Đã kết nối Circle Wallet trên ${wallet.blockchain || 'Arc Testnet'}: ${address}`)
+      setStatus(`Circle wallet connected on ${wallet.blockchain || 'Arc Testnet'}: ${address}`)
       let returnTo = null
       try { returnTo = sessionStorage.getItem(returnKey); sessionStorage.removeItem(returnKey) } catch {}
       if (returnTo) return window.location.replace(returnTo)
@@ -226,7 +226,7 @@ async function showWallet(userToken, encryptionKey) {
     }
     await new Promise((resolve) => setTimeout(resolve, 1500))
   }
-  setStatus('Circle chưa trả về địa chỉ ví. Thử lại sau ít giây.', true)
+  setStatus('Circle hasn’t returned a wallet address yet. Try again in a few seconds.', true)
 }
 
 byId('walletBtn')?.addEventListener('click', () => {
