@@ -28,10 +28,11 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;bac
 .note{background:#e5f7f0;color:#31655a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;margin:18px 0}.note.warn{background:#fff0c9;color:#725714}.note b{color:inherit}
 .table-wrap{overflow-x:auto;border:1px solid var(--card);border-radius:14px;background:#fff;margin:16px 0}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #e7ece7;vertical-align:top;line-height:1.55;color:var(--body)}th{font-size:11px;letter-spacing:1px;color:#84918d;text-transform:uppercase;white-space:nowrap}tr:last-child td{border-bottom:0}td code{white-space:nowrap;overflow-wrap:normal}.table-wrap table{min-width:560px}td:first-child{color:var(--text);font-weight:600}.status{display:inline-block;padding:3px 8px;border-radius:7px;font-size:11px;font-weight:800;letter-spacing:.5px;white-space:nowrap}.status.live{background:#d9fbed;color:#087454}.status.demo{background:#fff0c9;color:#7d5912}
 details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:0 16px;margin-bottom:10px}summary{cursor:pointer;padding:15px 0;font-weight:700;color:var(--text);font-size:15px}details p{margin:0 0 15px}
-.docs-footer{max-width:1440px;margin:auto;background:var(--paper);color:var(--soft);border-top:1px solid var(--rule);padding:24px 7vw;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.docs-footer a{color:var(--green);text-decoration:none;font-weight:600}.docs-footer div{display:flex;gap:18px;flex-wrap:wrap}
+
 @media(max-width:900px){.topbar nav a:not(.active){display:none}.docs{grid-template-columns:1fr;border-radius:24px 24px 0 0}.toc{border-right:0;border-bottom:1px solid var(--rule);padding:18px 24px}.toc nav{position:static;flex-direction:row;flex-wrap:wrap}.toc small{width:100%;padding-bottom:4px}.toc a{padding:7px 10px;font-size:13px}article{padding:36px 24px 64px}.pillars,.feature-grid{grid-template-columns:1fr}}
-@media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.topbar nav{gap:0}.app-btn{padding:9px 12px;font-size:13px}.docs-hero{padding:40px 16px 34px}.docs-hero p{font-size:16px}.toc{padding:16px}article{padding:30px 16px 56px}article h2{font-size:26px}.steps li{padding-left:56px}.docs-footer{padding:22px 16px}}
-  </style>
+@media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.topbar nav{gap:0}.app-btn{padding:9px 12px;font-size:13px}.docs-hero{padding:40px 16px 34px}.docs-hero p{font-size:16px}.toc{padding:16px}article{padding:30px 16px 56px}article h2{font-size:26px}.steps li{padding-left:56px}}
+  /* Site footer (same on every page) */.site-footer{background:#040f0d;border-top:1px solid rgba(255,255,255,.08);color:#a7bbb5;font-family:'DM Sans',sans-serif}.sf-inner{max-width:1440px;margin:auto;padding:56px 7vw 28px}.sf-top{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px}.sf-brand img{display:block;height:34px;width:auto}.sf-brand p{margin:16px 0 18px;font-size:14px;line-height:1.7;max-width:330px;color:#91aaa2}.sf-chips{display:flex;flex-wrap:wrap;gap:8px}.sf-chips span{padding:6px 10px;border:1px solid #1f3a35;border-radius:999px;font-size:12px;color:#c5d8d1;background:#0b1d1a}.sf-col h4{margin:4px 0 14px;font:800 11px 'DM Sans',sans-serif;letter-spacing:1.8px;color:#70efc0;text-transform:uppercase}.sf-col a{display:block;width:max-content;color:#c5d8d1;text-decoration:none;font-size:14px;padding:6px 0}.sf-col a:hover{color:#fff}.sf-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8aa39b}.sf-bottom a{color:#b8cbc4;text-decoration:none}.sf-credits a{white-space:nowrap}.sf-bottom a:hover{color:#fff}.sf-up{white-space:nowrap}@media(max-width:900px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-brand{grid-column:1/-1}}@media(max-width:620px){.sf-inner{padding:40px 16px 24px}.sf-top{grid-template-columns:1fr 1fr;gap:28px}.sf-bottom{flex-direction:column;align-items:flex-start}}
+</style>
 </head>
 <body>
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
@@ -230,9 +231,24 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
     </div>
   </main>
 
-  <footer class="docs-footer">
-    <span>Hedgora · Circle Wallets on Arc Testnet · Map data © OpenStreetMap contributors</span>
-    <div><a href="/">Open app</a><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a></div>
+  <footer class="site-footer">
+    <div class="sf-inner">
+      <div class="sf-top">
+        <div class="sf-brand">
+          <a href="/" aria-label="Hedgora home"><img src="/hedgora-logo.png" alt="Hedgora" width="120" height="34" loading="lazy"></a>
+          <p>Your AI local companion. Discover real places nearby, plan your next few hours, and pay locals in USDC, only when you approve.</p>
+          <div class="sf-chips"><span>◈ Circle Wallets</span><span>⛓ Arc Testnet</span><span>✦ AI itineraries</span></div>
+        </div>
+        <nav class="sf-col" aria-label="Product"><h4>Product</h4><a href="/#explore">Discover nearby</a><a href="/#itinerary">Smart itinerary</a><a href="/payments">Payments</a><a href="/payments#receive">Get paid with QR</a></nav>
+        <nav class="sf-col" aria-label="Resources"><h4>Resources</h4><a href="/docs">Docs</a><a href="/docs#quick-start">Quick start</a><a href="/docs#payments">Payments guide</a><a href="/docs#faq">FAQ</a><a href="/docs#developers">For developers</a></nav>
+        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
+      </div>
+      <div class="sf-bottom">
+        <span>© 2026 Hedgora. All rights reserved.</span>
+        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a></span>
+        <a class="sf-up" href="#">Back to top ↑</a>
+      </div>
+    </div>
   </footer>
 
   <script>
