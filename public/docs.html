@@ -124,11 +124,12 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <h2>What you can do with Hedgora</h2>
           <div class="feature-grid">
             <div class="feature"><span>✦</span><h3>Ask Hedgora AI</h3><p>Type a question in <b>Where should we go next?</b> or tap a quick prompt such as <b>Local food</b> or <b>Plan my afternoon</b>. DeepSeek answers using your location, local time, weather and the real places around you.</p></div>
-            <div class="feature"><span>▣</span><h3>Discover nearby</h3><p>Six real places around you from OpenStreetMap: sights, food, a café and a place to stay, with real distances. Use <b>Update</b> to refresh, <b>Directions</b> for a route and <b>Pay</b> to open the Payments page.</p></div>
+            <div class="feature"><span>▣</span><h3>Discover nearby</h3><p>Up to six real places around you from OpenStreetMap: sights, food, a café and a place to stay, with real distances. Landmarks show a Wikimedia Commons photo when one matches the place. Use <b>Update</b> to refresh, <b>Directions</b> for a route and <b>Pay</b> to open the Payments page.</p></div>
             <div class="feature"><span>⌖</span><h3>Map &amp; directions</h3><p>Click <b>View map</b> to find restaurants, hotels and attractions within 5 km. Pick one to see the distance and travel time by car, on foot, by bike or by motorbike.</p></div>
-            <div class="feature"><span>☀</span><h3>Weather</h3><p>Current temperature and conditions for your location. It refreshes when you update your location.</p></div>
+            <div class="feature"><span>☀</span><h3>Weather &amp; sunset</h3><p>Current temperature and conditions for your location, plus the time of the next sunset (or sunrise after dark) and how long until it. Both refresh when you update your location.</p></div>
             <div class="feature"><span>◷</span><h3>Smart itinerary</h3><p>Hedgora AI plans your next few hours from real places around you, fitted to the local time and weather. Every stop shows the real distance and a <b>Directions</b> button; <b>New plan</b> asks for another.</p></div>
-            <div class="feature"><span>◎</span><h3>Your location</h3><p>Click <b>Update</b> next to “Your location”, or <b>Use my location</b> on the map. If you decline, Hedgora starts from central Vũng Tàu.</p></div>
+            <div class="feature"><span>◎</span><h3>Your location</h3><p>Click <b>Update</b> next to “Your location”, or <b>Use my location</b> on the map. Until you share it, Hedgora uses central Vũng Tàu.</p></div>
+            <div class="feature"><span>♡</span><h3>Saved places</h3><p>Tap <b>♡</b> on a place card to save it. <b>Saved places</b> lists them with <b>Directions</b>, <b>Pay</b> and <b>Remove</b>. They are stored in this browser only and don’t sync to other devices.</p></div>
           </div>
         </section>
 
@@ -138,9 +139,10 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <p>The <a href="/payments">Payments</a> page sends and receives test USDC on Arc Testnet with your Circle wallet.</p>
           <ol class="steps">
             <li>Connect your wallet with Google. The page shows your USDC balance (with a VND estimate) and your address. <b>Get test USDC</b> copies your address and opens <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>; the balance refreshes when you come back.</li>
-            <li>Enter or paste the recipient’s address, the amount and an optional note, then click <b>Review payment</b>. Hedgora checks the address (format, EIP-55 checksum, burn addresses), asks Circle for the fee and total, and warns you if this is your first payment to that address.</li>
-            <li>Click <b>Confirm in Circle</b> and approve in Circle’s secure window. If you close that window, nothing is sent. Once Arc confirms, you get a receipt you can copy or share.</li>
+            <li>Enter or paste the recipient’s address, the amount and an optional note, then click <b>Review payment</b>. Hedgora checks the address (format, EIP-55 checksum, burn addresses), asks Circle for the fee and total, and warns you if this is your first payment to that address or if the amount is over 100 USDC.</li>
+            <li>Click <b>Confirm in Circle</b> and approve in Circle’s secure window. If you close that window, nothing is sent. When the transfer is complete, you get a receipt you can copy, share (on devices that support sharing) or open on Arc Explorer.</li>
             <li>To get paid, use <b>Get paid with a QR code</b>: add an amount and note if you like. The payer scans the code with their phone camera and the Payments page opens with your address filled in.</li>
+            <li><b>Recent transactions</b> lists what you sent and received, with <b>All</b>, <b>Sent</b> and <b>Received</b> filters. Tap a payment for its details, and use <b>Load more</b> for older ones. Payments still in progress update on their own.</li>
           </ol>
           <div class="note warn"><b>Note:</b> the <b>Pay</b> button on a place card opens the Payments page with the place name as the note. OpenStreetMap places don’t have wallets, so you need the merchant’s Hedgora QR code or wallet address.</div>
           <h3>How Hedgora keeps you safe</h3>
@@ -155,16 +157,17 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
         <section id="demo-status">
           <div class="kicker">STATUS</div>
           <h2>What’s live?</h2>
-          <p>Hedgora is a demo. This table shows which parts use real data and which are still samples.</p>
+          <p>Hedgora runs on Arc Testnet. Every part below uses real data or real testnet transactions; none of it is sample data.</p>
           <div class="table-wrap"><table>
             <thead><tr><th>Part</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
               <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc Testnet</td></tr>
-              <tr><td>Weather</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
+              <tr><td>Weather &amp; sunset</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap, Overpass, OSRM</td></tr>
               <tr><td>Discover nearby</td><td><span class="status live">LIVE</span></td><td>Places from OpenStreetMap (Photon). Wikimedia Commons photos only when they match the place’s name and location, credited with author and license.</td></tr>
-              <tr><td>Hedgora AI</td><td><span class="status live">LIVE</span></td><td>DeepSeek (<code>deepseek-flash</code>), grounded in OpenStreetMap places around you. It never makes up prices or opening hours.</td></tr>
-              <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek picks 3–4 stops only from OpenStreetMap places near you; distances are computed from coordinates; landmarks get a credited Wikimedia Commons photo. No prices or opening hours.</td></tr>
+              <tr><td>Hedgora AI</td><td><span class="status live">LIVE</span></td><td>DeepSeek (<code>deepseek-flash</code>), grounded in OpenStreetMap places around you. It has no price, rating or opening-hours data and is instructed not to state them.</td></tr>
+              <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek is asked for 3–4 stops and may only pick OpenStreetMap places near you; the server drops anything else. Distances are computed from coordinates, and landmarks show a credited Wikimedia Commons photo when one matches. No prices or opening hours.</td></tr>
+              <tr><td>Saved places</td><td><span class="status live">LIVE</span></td><td>Stored in this browser only (no account sync)</td></tr>
               <tr><td>USDC balance</td><td><span class="status live">LIVE</span></td><td>Read from your Circle wallet once connected</td></tr>
               <tr><td>Payments page</td><td><span class="status live">LIVE</span></td><td>Sends USDC on Arc Testnet; history from Circle</td></tr>
               <tr><td>Pay button on place cards</td><td><span class="status live">LIVE</span></td><td>Opens the Payments page; needs the merchant’s QR code or address</td></tr>
@@ -178,10 +181,10 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <details><summary>Does Hedgora use real money?</summary><p>No. Hedgora runs on Arc Testnet. The USDC there is a test token with no real value, even though payments are real testnet transactions.</p></details>
           <details><summary>Where do I get test USDC?</summary><p>Go to <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>, pick Arc Testnet and paste your Hedgora wallet address. The link is also at the bottom of the Circle sign-in window.</p></details>
           <details><summary>Why sign in with Google?</summary><p>Circle uses your Google account to verify you and link the wallet to you. You don’t need another password, and the same Google account always opens the same wallet.</p></details>
-          <details><summary>I signed in but don’t see my wallet address</summary><p>A new wallet can take a few seconds to appear. Wait a moment, then click <b>Get Start</b> to sign in again. If it still fails, the message in the Circle window explains why.</p></details>
-          <details><summary>Google sign-in says it was cancelled or failed</summary><p>This usually means the Google window was closed early, so try again. While Hedgora’s Google app is in testing mode, only approved Google accounts can sign in.</p></details>
+          <details><summary>I signed in but don’t see my wallet address</summary><p>A new wallet can take a few seconds to appear. Wait a moment, then click <b>Get Start</b> to sign in again. If it still fails, the message under <b>Continue with Google</b> explains why.</p></details>
+          <details><summary>Google sign-in says it was cancelled or failed</summary><p>This usually means the Google window was closed early, so try again.</p></details>
           <details><summary>What if I lose access to my Google account?</summary><p>Your wallet is tied to the Google account you sign in with, and recovery depends entirely on signing in with it again. Neither Hedgora nor Circle can access your keys or recover the wallet for you, so keep that Google account secure.</p></details>
-          <details><summary>Do I have to share my location?</summary><p>No. Your location is only used to find places around you. If you decline, Hedgora uses central Vũng Tàu.</p></details>
+          <details><summary>Do I have to share my location?</summary><p>No. Hedgora uses central Vũng Tàu until you tap <b>Update</b> or <b>Use my location</b>. When you share it, your location is used for nearby places, weather, sunset time and photos, and it is sent to the services that provide them (Photon, Open-Meteo, Wikimedia Commons, and on the map OpenStreetMap, Overpass and the OSRM routing servers). When you ask Hedgora AI or get a plan, your location name and nearby places go through Hedgora’s server to DeepSeek; Ask Hedgora also sends your coordinates. Hedgora’s server does not save them.</p></details>
         </section>
 
         <section id="developers">
@@ -242,7 +245,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>POST /api/transfers/estimate</code></td><td><code>{ userToken, walletId, destinationAddress, amount }</code></td><td>Fee estimate (<code>low / medium / high</code>)</td></tr>
               <tr><td><code>POST /api/transfers/create</code></td><td><code>{ userToken, walletId, destinationAddress, amount, note }</code></td><td><code>{ challengeId }</code>. Funds only move after the user confirms in Circle.</td></tr>
               <tr><td><code>POST /api/ai/itinerary</code></td><td><code>{ location, localTime, weather, places }</code></td><td><code>{ summary, stops: [{ place, start, minutes, activity, tip }] }</code>; <code>place</code> is an index into <code>places</code>, validated on the server.</td></tr>
-              <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>NDJSON stream: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Limited to 10 questions per minute per IP.</td></tr>
+              <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>NDJSON stream: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Both AI endpoints share a limit of 10 requests per minute per IP, kept in memory on each server instance.</td></tr>
             </tbody>
           </table></div>
 
@@ -250,11 +253,11 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <ol class="steps">
             <li>Import the GitHub repo into Vercel. <code>vercel.json</code> already selects the <b>Hono</b> framework, runs <code>npm run build</code> and enables clean URLs (<code>/payments</code>, <code>/docs</code>).</li>
             <li>In <b>Settings → Environment Variables</b>, add <code>CIRCLE_API_KEY</code> and <code>DEEPSEEK_API_KEY</code>, then redeploy.</li>
-            <li>In Google Cloud Console, add your Vercel domain (e.g. <code>https://hedgora-xyz.vercel.app</code>) to both <i>Authorized JavaScript origins</i> and <i>Authorized redirect URIs</i>.</li>
+            <li>In Google Cloud Console, add your domain (for this site, <code>https://www.hedgora.xyz</code>) to both <i>Authorized JavaScript origins</i> and <i>Authorized redirect URIs</i>.</li>
           </ol>
           <ul>
-            <li>Vercel serves <code>public/</code> from its CDN, and <code>server.js</code> runs as a Vercel Function for every <code>/api/*</code> path.</li>
-            <li>The API has no CORS: only pages on the same domain can call it, so other sites can’t use your AI endpoint.</li>
+            <li>Vercel serves <code>public/</code> from its CDN, and <code>server.js</code> runs as a Vercel Function for every <code>/api/*</code> path and for the homepage (<code>/</code>).</li>
+            <li>The API sends no CORS headers, so web pages on other domains can’t call it from a browser. Scripts outside a browser still can, which is why the AI endpoints are rate-limited.</li>
             <li>Never put an API key in <code>circle-config.js</code> or any other file in <code>public/</code>.</li>
           </ul>
         </section>
