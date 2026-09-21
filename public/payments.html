@@ -59,8 +59,8 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 <body>
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-mark">H</span><span>Hedgora</span><small>AI local companion</small></a>
-    <nav><a href="index.html#explore">Explore</a><a href="index.html#itinerary">Trips</a><a href="payments.html" class="active">Payments</a><a href="docs.html">Docs</a></nav>
+    <a class="brand" href="/"><span class="brand-mark">H</span><span>Hedgora</span><small>AI local companion</small></a>
+    <nav><a href="/#explore">Explore</a><a href="/#itinerary">Trips</a><a href="/payments" class="active">Payments</a><a href="/docs">Docs</a></nav>
     <button class="wallet-btn" id="walletBtn"><span class="status-dot"></span><span id="walletText">Kết nối ví</span></button>
   </header>
 
@@ -202,7 +202,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
   </main>
 
   <footer class="pay-footer">
-    <div><a href="index.html">Mở ứng dụng</a><a href="docs.html#payments">Hướng dẫn thanh toán</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan ↗</a></div>
+    <div><a href="/">Mở ứng dụng</a><a href="/docs#payments">Hướng dẫn thanh toán</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan ↗</a></div>
   </footer>
 
   <div class="circle-modal" id="circleModal" aria-hidden="true">
@@ -447,7 +447,7 @@ function refreshSoon() {
 }
 
 function requestLink() {
-  const url = new URL('payments.html', window.location.href)
+  const url = new URL('/payments', window.location.href)
   url.searchParams.set('to', state.wallet.address)
   const amount = normalizeAmount($('#reqAmount').value)
   if (isAmount(amount)) url.searchParams.set('amount', amount)
@@ -725,7 +725,7 @@ window.addEventListener('focus', refreshSoon)
 document.addEventListener('visibilitychange', refreshSoon)
 setInterval(checkSession, 20000)
 
-// payments.html?to=0x…&amount=5&note=… comes from a Hedgora QR / payment link; ?note=… alone comes
+// /payments?to=0x…&amount=5&note=… comes from a Hedgora QR / payment link; ?note=… alone comes
 // from a place card on the homepage. Links win over a saved draft.
 const params = new URLSearchParams(window.location.search)
 restoreDraft()

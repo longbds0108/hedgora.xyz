@@ -15,7 +15,14 @@ function unavailable(c) {
   return c.json({ message: 'CIRCLE_API_KEY is not configured on the Circle backend.' }, 503)
 }
 
-app.get('/', (c) => c.redirect('/index.html'))
+// Serve the homepage at "/" itself (no redirect, so the address bar stays clean). Vercel's CDN normally
+// answers "/" from public/index.html; if the request reaches this function instead, return that page as-is.
+app.get('/', async (c) => {
+  // The marker header stops a loop if that fetch were ever routed back here (cleanUrls maps /index.html to /).
+  if (c.req.header('x-hedgora-home')) return c.notFound()
+  const page = await fetch(new URL('/index.html', c.req.url), { headers: { 'x-hedgora-home': '1' } })
+  return new Response(page.body, { status: page.status, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+})
 
 app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek) }))
 
