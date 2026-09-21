@@ -131,9 +131,9 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
               <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc Testnet</td></tr>
               <tr><td>Weather</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap, Overpass, OSRM</td></tr>
-              <tr><td>Discover nearby</td><td><span class="status live">LIVE</span></td><td>Places from OpenStreetMap (Photon). Wikimedia Commons photos only when they match the place’s name and location.</td></tr>
+              <tr><td>Discover nearby</td><td><span class="status live">LIVE</span></td><td>Places from OpenStreetMap (Photon). Wikimedia Commons photos only when they match the place’s name and location, credited with author and license.</td></tr>
               <tr><td>Hedgora AI</td><td><span class="status live">LIVE</span></td><td>DeepSeek (<code>deepseek-flash</code>), grounded in OpenStreetMap places around you. It never makes up prices or opening hours.</td></tr>
-              <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek picks 3–4 stops only from OpenStreetMap places near you; distances are computed from coordinates. No prices.</td></tr>
+              <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek picks 3–4 stops only from OpenStreetMap places near you; distances are computed from coordinates; landmarks get a credited Wikimedia Commons photo. No prices or opening hours.</td></tr>
               <tr><td>USDC balance</td><td><span class="status live">LIVE</span></td><td>Read from your Circle wallet once connected</td></tr>
               <tr><td>Payments page</td><td><span class="status live">LIVE</span></td><td>Sends USDC on Arc Testnet; history from Circle</td></tr>
               <tr><td>Pay button on place cards</td><td><span class="status live">LIVE</span></td><td>Opens the Payments page; needs the merchant’s QR code or address</td></tr>
@@ -194,6 +194,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <ul>
             <li><b>Google Cloud Console:</b> create an OAuth Client ID of type <i>Web application</i> and add the site’s origin to both <i>Authorized JavaScript origins</i> and <i>Authorized redirect URIs</i>.</li>
             <li><b>Circle Console:</b> Configurator → Authentication Methods → Social Logins → Google, then paste that Client ID.</li>
+            <li><b>Wikimedia Commons</b> (no key): place photos are searched by name within 1 km of the place, one request at a time with an <code>Api-User-Agent</code> header, and cached in the browser for 7 days. Each photo shows its author and license (most are CC BY or CC BY-SA) and links to its Commons page.</li>
           </ul>
 
           <h3>Backend API</h3>
