@@ -174,8 +174,8 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
               <input id="reqNote" maxlength="60" placeholder="Nội dung (tùy chọn)" aria-label="Nội dung thanh toán" />
             </div>
             <div class="qr-box" id="qrBox" role="img" aria-label="Mã QR yêu cầu thanh toán"></div>
-            <input class="req-link" id="reqLink" readonly aria-label="Link yêu cầu thanh toán" />
-            <div class="req-actions"><button class="btn ghost small" id="copyReqBtn" type="button">Sao chép link</button><button class="btn ghost small" id="shareReqBtn" type="button" hidden>Chia sẻ</button></div>
+            <input class="req-link" id="reqAddress" readonly aria-label="Địa chỉ ví nhận tiền của bạn" />
+            <div class="req-actions"><button class="btn ghost small" id="copyReqBtn" type="button">Sao chép ví</button></div>
           </div>
         </div>
         <div class="panel">
@@ -458,8 +458,9 @@ function requestLink() {
 
 function renderRequest() {
   if (!state.wallet) return
+  // The QR carries the full payment link; the box below shows the plain wallet address to copy.
   const link = requestLink()
-  $('#reqLink').value = link
+  $('#reqAddress').value = state.wallet.address
   if (typeof window.qrcode !== 'function') {
     $('#qrBox').textContent = 'Không tải được thư viện QR. Hãy gửi link bên dưới.'
     return
@@ -718,10 +719,8 @@ document.addEventListener('click', (event) => {
 $('#reqAmount').addEventListener('input', renderRequest)
 $('#reqNote').addEventListener('input', renderRequest)
 $('#copyReqBtn').onclick = async () => {
-  try { await navigator.clipboard.writeText($('#reqLink').value); toast('Đã sao chép link yêu cầu thanh toán') } catch { toast('Không sao chép được link') }
+  try { await navigator.clipboard.writeText(state.wallet.address); toast('Đã sao chép địa chỉ ví') } catch { toast('Không sao chép được, hãy chọn và copy thủ công') }
 }
-$('#shareReqBtn').hidden = !navigator.share
-$('#shareReqBtn').onclick = () => navigator.share({ title: 'Yêu cầu thanh toán LocalMate', url: $('#reqLink').value }).catch(() => {})
 window.addEventListener('focus', refreshSoon)
 document.addEventListener('visibilitychange', refreshSoon)
 setInterval(checkSession, 20000)
