@@ -96,7 +96,7 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
             <div class="feature"><span>▣</span><h3>Discover nearby</h3><p>Six real places around you from OpenStreetMap: sights, food, a café and a place to stay, with real distances. Use <b>Update</b> to refresh, <b>Directions</b> for a route and <b>Pay</b> to open the Payments page.</p></div>
             <div class="feature"><span>⌖</span><h3>Map &amp; directions</h3><p>Click <b>View map</b> to find restaurants, hotels and attractions within 5 km. Pick one to see the distance and travel time by car, on foot, by bike or by motorbike.</p></div>
             <div class="feature"><span>☀</span><h3>Weather</h3><p>Current temperature and conditions for your location. It refreshes when you update your location.</p></div>
-            <div class="feature"><span>◷</span><h3>Smart itinerary</h3><p>A sample afternoon with food, an experience and a sunset spot, with a total compared to a 30 USDC budget.</p></div>
+            <div class="feature"><span>◷</span><h3>Smart itinerary</h3><p>Hedgora AI plans your next few hours from real places around you, fitted to the local time and weather. Every stop shows the real distance and a <b>Directions</b> button; <b>New plan</b> asks for another.</p></div>
             <div class="feature"><span>◎</span><h3>Your location</h3><p>Click <b>Update</b> next to “Your location”, or <b>Use my location</b> on the map. If you decline, Hedgora starts from central Vũng Tàu.</p></div>
           </div>
         </section>
@@ -133,7 +133,7 @@ details{background:#fff;border:1px solid var(--card);border-radius:12px;padding:
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap, Overpass, OSRM</td></tr>
               <tr><td>Discover nearby</td><td><span class="status live">LIVE</span></td><td>Places from OpenStreetMap (Photon). Wikimedia Commons photos only when they match the place’s name and location.</td></tr>
               <tr><td>Hedgora AI</td><td><span class="status live">LIVE</span></td><td>DeepSeek (<code>deepseek-flash</code>), grounded in OpenStreetMap places around you. It never makes up prices or opening hours.</td></tr>
-              <tr><td>Afternoon itinerary</td><td><span class="status demo">SAMPLE</span></td><td>Fixed example plan</td></tr>
+              <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek picks 3–4 stops only from OpenStreetMap places near you; distances are computed from coordinates. No prices.</td></tr>
               <tr><td>USDC balance</td><td><span class="status live">LIVE</span></td><td>Read from your Circle wallet once connected</td></tr>
               <tr><td>Payments page</td><td><span class="status live">LIVE</span></td><td>Sends USDC on Arc Testnet; history from Circle</td></tr>
               <tr><td>Pay button on place cards</td><td><span class="status live">LIVE</span></td><td>Opens the Payments page; needs the merchant’s QR code or address</td></tr>
@@ -208,6 +208,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>POST /api/transactions/list</code></td><td><code>{ userToken, walletId, pageAfter?, destinationAddress?, pageSize? }</code></td><td><code>{ transactions }</code>, newest first; <code>pageAfter</code> loads more</td></tr>
               <tr><td><code>POST /api/transfers/estimate</code></td><td><code>{ userToken, walletId, destinationAddress, amount }</code></td><td>Fee estimate (<code>low / medium / high</code>)</td></tr>
               <tr><td><code>POST /api/transfers/create</code></td><td><code>{ userToken, walletId, destinationAddress, amount, note }</code></td><td><code>{ challengeId }</code>. Funds only move after the user confirms in Circle.</td></tr>
+              <tr><td><code>POST /api/ai/itinerary</code></td><td><code>{ location, localTime, weather, places }</code></td><td><code>{ summary, stops: [{ place, start, minutes, activity, tip }] }</code>; <code>place</code> is an index into <code>places</code>, validated on the server.</td></tr>
               <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>NDJSON stream: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Limited to 10 questions per minute per IP.</td></tr>
             </tbody>
           </table></div>

@@ -241,4 +241,71 @@ app.post('/api/ai/ask', async (c) => {
   })
 })
 
+const ITINERARY_PROMPT = `You plan short, realistic itineraries for Hedgora, a travel companion app.
+
+You get the traveler's local time (24h), weather, and a numbered list of real places near them from OpenStreetMap (type, straight-line distance from the traveler, address). Plan the next few hours as 3 or 4 stops:
+- Use only places from the list, referenced by their number, each at most once.
+- Start at the next round quarter hour after the local time. Leave realistic gaps for travel between stops.
+- Fit the time of day: meals around meal times, cafés for breaks, sights in daylight, viewpoints or beaches near sunset. Prefer indoor places when it rains. At night, keep it short and close by.
+- Keep travel short: order stops so the route does not zigzag.
+- You have no prices, ratings or opening hours. Never mention or guess them.
+
+Write in English. Respond with JSON only, in this shape:
+{"summary": "one sentence about the plan", "stops": [{"place": 0, "start": "HH:MM", "minutes": 60, "activity": "Lunch", "tip": "One short sentence on what to do there."}]}`
+
+// Plans 3–4 stops from the real places the page sends; the model may only pick places by index.
+app.post('/api/ai/itinerary', async (c) => {
+  if (!deepseek) return c.json({ message: 'DEEPSEEK_API_KEY is not configured on the backend.' }, 503)
+  if (aiRateLimited(c)) return c.json({ message: 'Too many requests. Please wait a minute and try again.' }, 429)
+  let body
+  try { body = await c.req.json() } catch { return c.json({ message: 'Invalid JSON body.' }, 400) }
+  const places = (Array.isArray(body?.places) ? body.places : []).slice(0, 40)
+  if (places.length < 2) return c.json({ message: 'Not enough nearby places to plan an itinerary.' }, 400)
+  const { location, localTime, weather } = body
+  const context = [
+    `Location: ${clip(location?.name, 160) || 'unknown'}`,
+    `Local time: ${clip(localTime, 40)}`,
+    `Weather: ${clip(weather, 120)}`,
+    '<places source="OpenStreetMap">',
+    ...places.map((p, i) => `[${i}] ${clip(p?.name, 120)} | ${clip(p?.kind, 40)} | ${clip(p?.distance, 20)} | ${clip(p?.address, 160)}`),
+    '</places>',
+  ].join('\n')
+  try {
+    const completion = await deepseek.chat.completions.create({
+      model: 'deepseek-flash',
+      thinking: { type: 'disabled' },
+      response_format: { type: 'json_object' },
+      max_tokens: 1500,
+      messages: [
+        { role: 'system', content: ITINERARY_PROMPT },
+        { role: 'user', content: context },
+      ],
+    })
+    let plan
+    try { plan = JSON.parse(completion.choices[0]?.message?.content || '') } catch { plan = null }
+    // Keep only stops that point at a real place from the list, once each, with a sane time and duration.
+    const seen = new Set()
+    const stops = (Array.isArray(plan?.stops) ? plan.stops : [])
+      .filter((stop) => Number.isInteger(stop?.place) && stop.place >= 0 && stop.place < places.length && !seen.has(stop.place) && seen.add(stop.place))
+      .filter((stop) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(stop.start)))
+      .slice(0, 5)
+      .map((stop) => ({
+        place: stop.place,
+        start: stop.start,
+        minutes: Math.min(Math.max(Math.round(Number(stop.minutes) || 45), 15), 240),
+        activity: clip(stop.activity, 40) || 'Visit',
+        tip: clip(stop.tip, 200),
+      }))
+    if (stops.length < 2) return c.json({ message: 'Hedgora AI could not build a plan from the nearby places. Try again.' }, 502)
+    return c.json({ summary: clip(plan.summary, 240), stops })
+  } catch (error) {
+    let message = 'Hedgora AI is unavailable right now.'
+    if (error instanceof OpenAI.AuthenticationError) message = 'The DeepSeek API key on the backend is invalid.'
+    else if (error instanceof OpenAI.RateLimitError) message = 'Hedgora AI is busy. Please try again shortly.'
+    else if (error instanceof OpenAI.APIError && error.status === 402) message = 'The DeepSeek account is out of balance.'
+    console.error('Itinerary request failed:', error)
+    return c.json({ message }, 502)
+  }
+})
+
 export default app
