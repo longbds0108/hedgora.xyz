@@ -59,6 +59,8 @@ main section[id]{scroll-margin-top:90px}/* Site footer (same on every page) */.s
 .wallet-btn,.book,.plan-btn,.ask-input button,.cards-status button{transition:transform .15s,filter .2s}
 .wallet-btn:hover,.book:hover,.plan-btn:not(:disabled):hover,.ask-input button:not(:disabled):hover{filter:brightness(1.08)}
 .wallet-btn:active,.book:active,.plan-btn:active,.ask-input button:active,.cards-status button:active{transform:translateY(1px) scale(.98)}
+/* Get Start: fills with mint on hover so the main call to action stands out (mouse only, so taps do not leave it stuck) */
+@media(hover:hover){.wallet-btn{transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .2s}.wallet-btn:hover{background:var(--mint);border-color:var(--mint);color:#08231c;transform:translateY(-2px);box-shadow:0 10px 26px -8px #70efc0aa;filter:none}.wallet-btn:hover .status-dot{background:#08231c!important}.wallet-btn:active{transform:translateY(0) scale(.98);box-shadow:none}}
 .modal.open .modal-card,.saved-modal.open .saved-card{animation:cardIn .35s cubic-bezier(.2,.8,.2,1)}
 /* Place cards: rise in one after another; the photo fades in once loaded and zooms a little on hover */
 .cards.is-in .place-card:not(.skeleton){animation:rise .7s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*90ms)}
