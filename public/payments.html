@@ -59,7 +59,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 /* Phones: skip the marketing copy so the wallet and the send form come first */
 @media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.wallet-btn{padding:9px 12px;font-size:13px}.pay-hero{padding:24px 16px 28px;gap:18px}.pay-hero h1{font-size:34px;margin:10px 0 0}.hero-desc,.trust{display:none}.wallet-card{padding:20px;border-radius:22px;min-height:0}.wallet-empty h3{margin-top:14px}.pay-workspace{padding:20px 16px 56px;border-radius:24px 24px 0 0}.panel{padding:20px;border-radius:18px}.stepper li{padding:8px 6px;font-size:11px;gap:5px;justify-content:center}.actions{grid-template-columns:1fr}.tx summary{grid-template-columns:36px minmax(0,1fr) auto;gap:10px}.tx-icon{width:36px;height:36px}.tx-detail{margin-left:0}.req-fields{grid-template-columns:1fr}.toast{left:16px;right:16px;bottom:16px}}
   /* Site footer (same on every page) */.site-footer{background:#040f0d;border-top:1px solid rgba(255,255,255,.08);color:#a7bbb5;font-family:'DM Sans',sans-serif}.sf-inner{max-width:1440px;margin:auto;padding:56px 7vw 28px}.sf-top{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px}.sf-brand img{display:block;height:34px;width:auto}.sf-brand p{margin:16px 0 18px;font-size:14px;line-height:1.7;max-width:330px;color:#91aaa2}.sf-social{display:flex;gap:10px}.sf-social a{width:40px;height:40px;display:grid;place-items:center;border:1px solid #1f3a35;border-radius:12px;background:#0b1d1a;color:#c5d8d1;transition:.2s}.sf-social a:hover{color:#06221c;background:#70efc0;border-color:#70efc0}.sf-social svg{width:18px;height:18px;fill:currentColor}.sf-col h4{margin:4px 0 14px;font:800 11px 'DM Sans',sans-serif;letter-spacing:1.8px;color:#70efc0;text-transform:uppercase}.sf-col a{display:block;width:max-content;color:#c5d8d1;text-decoration:none;font-size:14px;padding:6px 0}.sf-col a:hover{color:#fff}.sf-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8aa39b}.sf-bottom a{color:#b8cbc4;text-decoration:none}.sf-credits a{white-space:nowrap}.sf-bottom a:hover{color:#fff}.sf-up{white-space:nowrap}@media(max-width:900px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-brand{grid-column:1/-1}}@media(max-width:620px){.sf-inner{padding:40px 16px 24px}.sf-top{grid-template-columns:1fr 1fr;gap:28px}.sf-bottom{flex-direction:column;align-items:flex-start}}
-</style>
+.circle-recovery{margin:10px 0 0!important;padding:10px 12px;border-radius:10px;background:#fff0c9;color:#6b520f!important;font-size:12px!important;line-height:1.5;text-align:left}</style>
 </head>
 <body>
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
@@ -97,7 +97,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
           <div class="address-row"><code id="address"></code><button class="icon-btn" id="copyBtn" aria-label="Copy wallet address">Copy</button></div>
           <div class="wallet-actions">
             <button class="icon-btn" id="faucetBtn">Get test USDC ↗</button>
-            <a class="icon-btn" id="arcscanLink" target="_blank" rel="noreferrer">Arcscan ↗</a>
+            <a class="icon-btn" id="explorerLink" target="_blank" rel="noreferrer">Arc Explorer ↗</a>
             <button class="icon-btn" id="refreshBtn" aria-label="Refresh balance and activity">↻</button>
             <button class="icon-btn quiet" id="disconnectBtn">Disconnect</button>
           </div>
@@ -150,6 +150,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
             <div class="total"><dt>Total (max)</dt><dd id="reviewTotal">…</dd></div>
             <div id="reviewNoteRow"><dt>Note</dt><dd id="reviewNote"></dd></div>
           </dl>
+          <div class="notice warn" id="amountCheck" hidden></div>
           <div class="notice" id="recipientCheck" hidden></div>
           <div class="notice" id="reviewNotice" role="status"></div>
           <div class="actions"><button class="btn ghost" id="editBtn" type="button">← Edit</button><button class="btn dark" id="approveBtn" type="button" disabled>Confirm in Circle</button></div>
@@ -163,7 +164,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
           <div class="receipt-actions" id="receiptActions" hidden>
             <button class="btn ghost small" id="copyReceiptBtn" type="button">Copy receipt</button>
             <button class="btn ghost small" id="shareReceiptBtn" type="button" hidden>Share</button>
-            <a class="btn ghost small" id="receiptArcscan" target="_blank" rel="noreferrer">Arcscan ↗</a>
+            <a class="btn ghost small" id="receiptExplorer" target="_blank" rel="noreferrer">View on Arc Explorer ↗</a>
           </div>
           <button class="btn dark" id="newPaymentBtn" type="button">New payment</button>
         </div>
@@ -216,7 +217,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
         </div>
         <nav class="sf-col" aria-label="Product"><h4>Product</h4><a href="/#explore">Discover nearby</a><a href="/#itinerary">Smart itinerary</a><a href="/payments">Payments</a><a href="/payments#receive">Get paid with QR</a></nav>
         <nav class="sf-col" aria-label="Resources"><h4>Resources</h4><a href="/docs">Docs</a><a href="/docs#quick-start">Quick start</a><a href="/docs#payments">Payments guide</a><a href="/docs#faq">FAQ</a><a href="/docs#developers">For developers</a></nav>
-        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://testnet.arcscan.app" target="_blank" rel="noreferrer">Arcscan explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
+        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://explorer.testnet.arc.io" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
       </div>
       <div class="sf-bottom">
         <span>© 2026 Hedgora. All rights reserved.</span>
@@ -232,6 +233,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
       <div class="pay-icon">◈</div><div class="step">CIRCLE WALLET</div>
       <h2 id="circleTitle">Your Circle wallet</h2>
       <p id="circleIntro">Sign in with Google to create or open your non-custodial wallet. Every approval happens in Circle’s secure window.</p>
+      <p class="circle-recovery">Your wallet is tied to your Google account. If you lose access to that account, neither Hedgora nor Circle can recover the wallet.</p>
       <div class="circle-setup" id="circleSetup" hidden>Circle Wallet is not configured yet. Add your App ID from the Circle Console to <code>public/circle-config.js</code> and run the backend with an API key.</div>
       <div class="circle-actions"><button id="circleGoogle">Continue with Google</button></div>
       <div class="circle-connected" id="circleConnected" hidden><small>Connected wallet</small><code id="circleConnectedAddress"></code><button id="circleDisconnect" type="button">Disconnect</button></div>
@@ -244,14 +246,15 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
   <script>
 const $ = (selector) => document.querySelector(selector)
 const $$ = (selector) => [...document.querySelectorAll(selector)]
-const ARCSCAN = 'https://testnet.arcscan.app'
-const FINAL_OK = ['COMPLETE', 'CONFIRMED']
+const EXPLORER = 'https://explorer.testnet.arc.io'
+const FINAL_OK = ['COMPLETE']
 const FINAL_BAD = ['FAILED', 'DENIED', 'CANCELLED']
 // Sending here destroys the funds, so they are refused outright.
 const BURN_ADDRESSES = ['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dead']
 const DRAFT_KEY = 'hedgora.payDraft'
 const RATE_KEY = 'hedgora.usdVnd'
 const PAGE_SIZE = 20
+const LARGE_PAYMENT = 100
 const state = { wallet: null, balance: null, vnd: null, symbols: {}, pending: null, txs: [], hasMore: false, filter: 'all', tracking: false, lastRefresh: 0, pendingTimer: null }
 
 const short = (address) => (address ? address.slice(0, 6) + '…' + address.slice(-4) : '')
@@ -362,7 +365,7 @@ function renderWallet() {
   $('#receiveBody').hidden = !wallet
   if (!wallet) return
   $('#address').textContent = wallet.address
-  $('#arcscanLink').href = `${ARCSCAN}/address/${wallet.address}`
+  $('#explorerLink').href = `${EXPLORER}/address/${wallet.address}`
   $('#balance').textContent = state.balance == null ? '—' : formatUsdc(state.balance)
   $('#balanceVnd').textContent = state.balance == null ? '' : toVnd(state.balance)
   renderRequest()
@@ -403,10 +406,10 @@ function txRow(tx) {
   const counterparty = outbound ? tx.destinationAddress : tx.sourceAddress
   const symbol = state.symbols[tx.tokenId] || 'USDC'
   const tone = FINAL_OK.includes(tx.state) ? 'ok' : FINAL_BAD.includes(tx.state) ? 'bad' : 'wait'
-  const label = { COMPLETE: 'COMPLETE', CONFIRMED: 'CONFIRMED', FAILED: 'FAILED', DENIED: 'DENIED', CANCELLED: 'CANCELLED' }[tx.state] || 'PENDING'
+  const label = { COMPLETE: 'COMPLETE', CONFIRMED: 'CONFIRMING', STUCK: 'STUCK', FAILED: 'FAILED', DENIED: 'DENIED', CANCELLED: 'CANCELLED' }[tx.state] || 'PENDING'
   const date = tx.createDate ? new Date(tx.createDate) : null
   const when = date ? date.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
-  const hash = tx.txHash ? `<a href="${ARCSCAN}/tx/${escapeHtml(tx.txHash)}" target="_blank" rel="noreferrer">${escapeHtml(short(tx.txHash))} ↗</a>` : 'Not yet'
+  const hash = tx.txHash ? `<a href="${EXPLORER}/tx/${escapeHtml(tx.txHash)}" target="_blank" rel="noreferrer">${escapeHtml(short(tx.txHash))} ↗</a>` : 'Not yet'
   return `<li><details class="tx"><summary>
     <div class="tx-icon ${outbound ? 'out' : 'in'}" aria-hidden="true">${outbound ? '↗' : '↙'}</div>
     <div class="tx-main"><b>${outbound ? 'Sent to' : 'Received from'} ${escapeHtml(short(counterparty) || 'unknown')}</b><span>${escapeHtml(tx.refId ? tx.refId + ' · ' : '')}${escapeHtml(when)}</span></div>
@@ -543,6 +546,7 @@ async function review(event) {
   $('#reviewFee').textContent = 'Estimating…'
   $('#reviewTotal').textContent = '…'
   setNotice($('#recipientCheck'), '', '')
+  setNotice($('#amountCheck'), 'warn', Number(amount) > LARGE_PAYMENT ? `<b>Large payment:</b> ${escapeHtml(formatUsdc(amount))} USDC is above ${LARGE_PAYMENT} USDC. Double-check the recipient and the amount before you confirm.` : '')
   setNotice($('#reviewNotice'), '', 'Checking this payment with Circle…')
   $('#approveBtn').disabled = true
   setStep(2)
@@ -608,9 +612,9 @@ function showReceipt(pending, tx) {
   $('#receipt').innerHTML = rows.map(([k, v]) => `<div><dt>${escapeHtml(k)}</dt><dd${/^0x/.test(v) ? ' class="mono"' : ''}>${escapeHtml(v)}</dd></div>`).join('')
   $('#receipt').hidden = false
   $('#receiptActions').hidden = false
-  const url = tx?.txHash ? `${ARCSCAN}/tx/${tx.txHash}` : ''
-  $('#receiptArcscan').hidden = !url
-  if (url) $('#receiptArcscan').href = url
+  const url = tx?.txHash ? `${EXPLORER}/tx/${tx.txHash}` : ''
+  $('#receiptExplorer').hidden = !url
+  if (url) $('#receiptExplorer').href = url
   const text = ['Hedgora receipt', ...rows.map(([k, v]) => `${k}: ${v}`), url].filter(Boolean).join('\n')
   $('#copyReceiptBtn').onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast('Receipt copied') } catch { toast('Couldn’t copy the receipt') }

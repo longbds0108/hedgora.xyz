@@ -10,6 +10,8 @@ const sessionTtl = 55 * 60 * 1000
 const returnKey = 'hedgora.returnTo'
 let sdk
 let sdkModule
+// Circle: execute() can fail silently unless getDeviceId() has run on this SDK instance first.
+let deviceReady = false
 
 function apiUrl(path) {
   return `${apiBase}${path}`
@@ -108,6 +110,12 @@ async function getSdk() {
   return sdk
 }
 
+async function ensureDevice(walletSdk) {
+  if (deviceReady) return
+  await walletSdk.getDeviceId()
+  deviceReady = true
+}
+
 // Circle's SDK never calls back when the traveler closes its window, which left pages waiting forever.
 // Treat the removal of its iframe as a cancel. On success the SDK removes the iframe and then calls back
 // synchronously, so by the time this check runs the promise is already settled.
@@ -149,6 +157,7 @@ async function finishLogin(walletSdk, userToken, encryptionKey) {
   const { challengeId } = await postJson('/api/user/initialize', { userToken })
   if (challengeId) {
     setStatus('Confirm wallet creation in Circle’s window…')
+    await ensureDevice(walletSdk)
     await executeChallenge(walletSdk, challengeId)
   }
   await showWallet(userToken, encryptionKey)
@@ -162,6 +171,7 @@ async function connectWithGoogle() {
     setStatus('Preparing Google sign-in…')
     const walletSdk = await getSdk()
     const deviceId = await walletSdk.getDeviceId()
+    deviceReady = true
     const { deviceToken, deviceEncryptionKey } = await postJson('/api/social/token', { deviceId })
     const device = { deviceToken, deviceEncryptionKey }
     sessionStorage.setItem(googleDeviceKey, JSON.stringify(device))
@@ -203,6 +213,7 @@ async function resumeGoogleLogin() {
   setStatus('Verifying your Google account…')
   // Constructing the SDK with the saved device credentials makes it verify the returned Google token.
   const { W3SSdk } = await loadSdkModule()
+  deviceReady = false
   sdk = new W3SSdk({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
 }
 
@@ -261,6 +272,7 @@ window.HedgoraCircle = {
     const session = loadSession()
     if (!session) throw Object.assign(new Error('Wallet session expired. Connect again.'), { code: 'SESSION_EXPIRED' })
     const walletSdk = await getSdk()
+    await ensureDevice(walletSdk)
     walletSdk.setAuthentication({ userToken: session.userToken, encryptionKey: session.encryptionKey })
     return executeChallenge(walletSdk, challengeId)
   },
