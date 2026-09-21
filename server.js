@@ -1,4 +1,4 @@
-// LocalMate API. Vercel runs this file as a function (framework preset "hono");
+// Hedgora API. Vercel runs this file as a function (framework preset "hono");
 // locally, circle-server.mjs serves it together with public/.
 import { Hono } from 'hono'
 import { stream } from 'hono/streaming'
@@ -149,7 +149,7 @@ app.post('/api/transfers/create', async (c) => {
   }
 })
 
-const AI_SYSTEM_PROMPT = `You are LocalMate, a friendly local travel companion inside a web app. Travelers ask you about food, places, culture, and how to plan their time.
+const AI_SYSTEM_PROMPT = `You are Hedgora, a friendly local travel companion inside a web app. Travelers ask you about food, places, culture, and how to plan their time.
 
 Each request includes the traveler's current location, local time, current weather, and a list of real places near them from OpenStreetMap (name, type, straight-line distance, address). Ground your suggestions in that list: prefer places from it and use their names exactly as given. You may also mention well-known landmarks of the area that you are confident exist.
 
@@ -220,16 +220,16 @@ app.post('/api/ai/ask', async (c) => {
         if (choice?.finish_reason) finishReason = choice.finish_reason
       }
       if (finishReason === 'length') await send({ type: 'error', message: 'The answer was cut off. Try a narrower question.' })
-      else if (finishReason === 'content_filter') await send({ type: 'error', message: 'LocalMate cannot help with that request.' })
-      else if (finishReason === 'insufficient_system_resource') await send({ type: 'error', message: 'LocalMate AI is busy. Please try again shortly.' })
+      else if (finishReason === 'content_filter') await send({ type: 'error', message: 'Hedgora cannot help with that request.' })
+      else if (finishReason === 'insufficient_system_resource') await send({ type: 'error', message: 'Hedgora AI is busy. Please try again shortly.' })
       await send({ type: 'done' })
     } catch (error) {
       if (controller.signal.aborted) return
-      let message = 'LocalMate AI is unavailable right now.'
+      let message = 'Hedgora AI is unavailable right now.'
       if (error instanceof OpenAI.AuthenticationError) message = 'The DeepSeek API key on the backend is invalid.'
-      else if (error instanceof OpenAI.RateLimitError) message = 'LocalMate AI is busy. Please try again shortly.'
+      else if (error instanceof OpenAI.RateLimitError) message = 'Hedgora AI is busy. Please try again shortly.'
       else if (error instanceof OpenAI.APIError && error.status === 402) message = 'The DeepSeek account is out of balance.'
-      else if (error instanceof OpenAI.APIError) message = `LocalMate AI error (${error.status ?? 'network'}).`
+      else if (error instanceof OpenAI.APIError) message = `Hedgora AI error (${error.status ?? 'network'}).`
       console.error('AI request failed:', error)
       await send({ type: 'error', message })
     }

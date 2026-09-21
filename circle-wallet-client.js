@@ -2,12 +2,12 @@ const config = window.CIRCLE_CONFIG || {}
 const apiBase = String(config.apiBase || '').replace(/\/$/, '')
 const byId = (id) => document.getElementById(id)
 // Google redirects away and back, so the device credentials must survive the reload.
-const googleDeviceKey = 'localmate.circleGoogleDevice'
+const googleDeviceKey = 'hedgora.circleGoogleDevice'
 // The connected wallet is shared across pages in this tab. Circle user tokens last 60 minutes.
-const sessionKey = 'localmate.circleSession'
+const sessionKey = 'hedgora.circleSession'
 const sessionTtl = 55 * 60 * 1000
 // Google always returns to the site origin, so remember which page started the login.
-const returnKey = 'localmate.returnTo'
+const returnKey = 'hedgora.returnTo'
 let sdk
 let sdkModule
 
@@ -69,9 +69,9 @@ function loadSession() {
 }
 
 function announceWallet(session) {
-  window.localMateWallet?.setConnected(Boolean(session), session?.address)
+  window.hedgoraWallet?.setConnected(Boolean(session), session?.address)
   const detail = session ? { address: session.address, walletId: session.walletId, blockchain: session.blockchain, expiresAt: session.expiresAt } : null
-  window.dispatchEvent(new CustomEvent('localmate:wallet', { detail }))
+  window.dispatchEvent(new CustomEvent('hedgora:wallet', { detail }))
 }
 
 // When a wallet is connected the modal shows it with a Disconnect button instead of the login.
@@ -240,7 +240,7 @@ byId('circleDisconnect')?.addEventListener('click', signOut)
 if (config.appId) void resumeGoogleLogin()
 
 // Used by payments.html (and the homepage wallet card) to act on the connected wallet.
-window.LocalMateCircle = {
+window.HedgoraCircle = {
   session() {
     const session = loadSession()
     return session && { address: session.address, walletId: session.walletId, blockchain: session.blockchain, expiresAt: session.expiresAt }

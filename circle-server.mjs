@@ -10,4 +10,4 @@ local.use('/*', serveStatic({ root: './public' }))
 
 const port = Number(process.env.PORT) || 5173
 serve({ fetch: local.fetch, port })
-console.log(`LocalMate running on http://localhost:${port} (Circle ${process.env.CIRCLE_API_KEY ? 'configured' : 'waiting for CIRCLE_API_KEY'}; AI ${process.env.DEEPSEEK_API_KEY ? 'configured' : 'waiting for DEEPSEEK_API_KEY'})`)
+console.log(`Hedgora running on http://localhost:${port} (Circle ${process.env.CIRCLE_API_KEY ? 'configured' : 'waiting for CIRCLE_API_KEY'}; AI ${process.env.DEEPSEEK_API_KEY ? 'configured' : 'waiting for DEEPSEEK_API_KEY'})`)

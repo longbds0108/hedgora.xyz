@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#071a18" />
-  <meta name="description" content="Gửi và nhận USDC thử nghiệm trên Arc Testnet bằng ví Circle của bạn. LocalMate chuẩn bị giao dịch, bạn là người phê duyệt." />
-  <title>LocalMate Payments</title>
+  <meta name="description" content="Gửi và nhận USDC thử nghiệm trên Arc Testnet bằng ví Circle của bạn. Hedgora chuẩn bị giao dịch, bạn là người phê duyệt." />
+  <title>Hedgora Payments</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -59,7 +59,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 <body>
   <div class="glow glow-one"></div><div class="glow glow-two"></div>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-mark">L</span><span>LocalMate</span><small>AI local companion</small></a>
+    <a class="brand" href="index.html"><span class="brand-mark">H</span><span>Hedgora</span><small>AI local companion</small></a>
     <nav><a href="index.html#explore">Explore</a><a href="index.html#itinerary">Trips</a><a href="payments.html" class="active">Payments</a><a href="docs.html">Docs</a></nav>
     <button class="wallet-btn" id="walletBtn"><span class="status-dot"></span><span id="walletText">Kết nối ví</span></button>
   </header>
@@ -69,7 +69,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
       <div>
         <div class="eyebrow">✦ THANH TOÁN</div>
         <h1>Thanh toán<br>bằng <em>USDC</em>.</h1>
-        <p class="hero-desc">Gửi USDC tới ví của người bán hoặc bạn đồng hành, hoặc tạo mã QR để nhận tiền. LocalMate chuẩn bị giao dịch, còn bạn là người xác nhận trong cửa sổ bảo mật của Circle.</p>
+        <p class="hero-desc">Gửi USDC tới ví của người bán hoặc bạn đồng hành, hoặc tạo mã QR để nhận tiền. Hedgora chuẩn bị giao dịch, còn bạn là người xác nhận trong cửa sổ bảo mật của Circle.</p>
         <ul class="trust">
           <li><b>◇</b>Chỉ bạn phê duyệt</li>
           <li><b>◈</b>Ví không lưu ký của Circle</li>
@@ -117,7 +117,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
           <div class="field">
             <label for="toAddress">Địa chỉ ví người nhận</label>
             <div class="input-row"><input id="toAddress" class="mono" autocomplete="off" spellcheck="false" placeholder="0x…" aria-describedby="toHint" /><button class="btn ghost small" type="button" id="pasteBtn">Dán</button></div>
-            <span class="hint" id="toHint">Địa chỉ 0x… trên Arc Testnet. Nếu người bán có mã QR LocalMate, quét bằng camera điện thoại để tự điền.</span>
+            <span class="hint" id="toHint">Địa chỉ 0x… trên Arc Testnet. Nếu người bán có mã QR Hedgora, quét bằng camera điện thoại để tự điền.</span>
           </div>
           <div class="field">
             <label for="amount">Số tiền</label>
@@ -181,7 +181,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
         <div class="panel">
           <h3>Cách hoạt động</h3>
           <ol class="how">
-            <li>LocalMate kiểm tra địa chỉ, số tiền, phí mạng và cho biết bạn đã từng gửi tới địa chỉ này chưa.</li>
+            <li>Hedgora kiểm tra địa chỉ, số tiền, phí mạng và cho biết bạn đã từng gửi tới địa chỉ này chưa.</li>
             <li>Bạn xem lại tổng tiền (gồm phí) trước khi gửi.</li>
             <li>Cửa sổ bảo mật của Circle mở ra. Chỉ khi bạn xác nhận, USDC mới rời ví.</li>
           </ol>
@@ -228,8 +228,8 @@ const FINAL_OK = ['COMPLETE', 'CONFIRMED']
 const FINAL_BAD = ['FAILED', 'DENIED', 'CANCELLED']
 // Sending here destroys the funds, so they are refused outright.
 const BURN_ADDRESSES = ['0x0000000000000000000000000000000000000000', '0x000000000000000000000000000000000000dead']
-const DRAFT_KEY = 'localmate.payDraft'
-const RATE_KEY = 'localmate.usdVnd'
+const DRAFT_KEY = 'hedgora.payDraft'
+const RATE_KEY = 'hedgora.usdVnd'
 const PAGE_SIZE = 20
 const state = { wallet: null, balance: null, vnd: null, symbols: {}, pending: null, txs: [], hasMore: false, filter: 'all', tracking: false, lastRefresh: 0, pendingTimer: null }
 
@@ -270,12 +270,12 @@ function friendlyError(error) {
   if (code === 155208) return 'Circle mô phỏng thấy giao dịch này sẽ thất bại. Thường là do số dư không đủ cho số tiền cộng phí mạng.'
   if (code === 155706) return 'Không mở được cửa sổ Circle do lỗi mạng. Hãy thử lại.'
   if (error?.status === 401 || error?.status === 403) return 'Phiên ví không còn hợp lệ. Hãy ngắt kết nối rồi kết nối lại.'
-  if (/failed to fetch|networkerror|load failed/i.test(error?.message || '')) return 'Không kết nối được máy chủ LocalMate. Kiểm tra mạng rồi thử lại.'
+  if (/failed to fetch|networkerror|load failed/i.test(error?.message || '')) return 'Không kết nối được máy chủ Hedgora. Kiểm tra mạng rồi thử lại.'
   return `Circle báo lỗi${code ? ` (mã ${code})` : ''}: ${error?.message || 'không rõ nguyên nhân'}.`
 }
 
 // Called by circle-wallet-client.js whenever the wallet connects or disconnects.
-window.localMateWallet = {
+window.hedgoraWallet = {
   setConnected(connected, address) {
     $('#walletText').textContent = connected ? short(address) : 'Kết nối ví'
     $('.status-dot').style.background = connected ? '#70efc0' : '#667d76'
@@ -284,9 +284,9 @@ window.localMateWallet = {
 
 async function walletPost(path, body) {
   try {
-    return await window.LocalMateCircle.post(path, body)
+    return await window.HedgoraCircle.post(path, body)
   } catch (error) {
-    if (error.code === 'SESSION_EXPIRED') window.LocalMateCircle.signOut()
+    if (error.code === 'SESSION_EXPIRED') window.HedgoraCircle.signOut()
     throw error
   }
 }
@@ -365,9 +365,9 @@ async function loadBalance() {
 // Warn 5 minutes before Circle's 60-minute session ends, and sign out cleanly when it does.
 function checkSession() {
   if (!state.wallet) return
-  const session = window.LocalMateCircle?.session()
+  const session = window.HedgoraCircle?.session()
   if (!session) {
-    window.LocalMateCircle?.signOut()
+    window.HedgoraCircle?.signOut()
     toast('Phiên ví đã hết hạn. Kết nối lại để tiếp tục.')
     return
   }
@@ -506,7 +506,7 @@ function validateDetails() {
 async function review(event) {
   event?.preventDefault()
   saveDraft()
-  if (!state.wallet) return window.LocalMateCircle?.connect()
+  if (!state.wallet) return window.HedgoraCircle?.connect()
   const details = validateDetails()
   $('#formError').textContent = details.error || ''
   if (details.error) return
@@ -554,7 +554,7 @@ async function review(event) {
       + (max > 0 ? `<br><button class="btn ghost small" type="button" id="adjustBtn" data-amount="${max}">Gửi tối đa ${formatUsdc(max)} USDC</button>` : ''))
     return
   }
-  setNotice($('#reviewNotice'), '', '◇ Bấm xác nhận để mở cửa sổ bảo mật của Circle. LocalMate không thể tự gửi tiền; bạn có thể hủy trong cửa sổ đó.')
+  setNotice($('#reviewNotice'), '', '◇ Bấm xác nhận để mở cửa sổ bảo mật của Circle. Hedgora không thể tự gửi tiền; bạn có thể hủy trong cửa sổ đó.')
   $('#approveBtn').disabled = false
 }
 
@@ -590,12 +590,12 @@ function showReceipt(pending, tx) {
   const url = tx?.txHash ? `${ARCSCAN}/tx/${tx.txHash}` : ''
   $('#receiptArcscan').hidden = !url
   if (url) $('#receiptArcscan').href = url
-  const text = ['Biên nhận LocalMate', ...rows.map(([k, v]) => `${k}: ${v}`), url].filter(Boolean).join('\n')
+  const text = ['Biên nhận Hedgora', ...rows.map(([k, v]) => `${k}: ${v}`), url].filter(Boolean).join('\n')
   $('#copyReceiptBtn').onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast('Đã sao chép biên nhận') } catch { toast('Không sao chép được biên nhận') }
   }
   $('#shareReceiptBtn').hidden = !navigator.share
-  $('#shareReceiptBtn').onclick = () => navigator.share({ title: 'Biên nhận LocalMate', text }).catch(() => {})
+  $('#shareReceiptBtn').onclick = () => navigator.share({ title: 'Biên nhận Hedgora', text }).catch(() => {})
 }
 
 async function approve() {
@@ -608,7 +608,7 @@ async function approve() {
   try {
     const { challengeId } = await walletPost('/api/transfers/create', { destinationAddress: pending.to, amount: pending.amount, note: pending.note })
     $('#approveBtn').textContent = 'Chờ bạn xác nhận trong cửa sổ Circle…'
-    await window.LocalMateCircle.approve(challengeId)
+    await window.HedgoraCircle.approve(challengeId)
   } catch (error) {
     setNotice($('#reviewNotice'), error.code === 'CANCELLED' ? 'warn' : 'bad', escapeHtml(friendlyError(error)))
     $('#approveBtn').disabled = false
@@ -656,7 +656,7 @@ function resetForm() {
   setStep(1)
 }
 
-window.addEventListener('localmate:wallet', (event) => {
+window.addEventListener('hedgora:wallet', (event) => {
   state.wallet = event.detail
   state.balance = null
   state.txs = []
@@ -667,8 +667,8 @@ window.addEventListener('localmate:wallet', (event) => {
   loadActivity()
 })
 
-$('#connectBtn').onclick = () => window.LocalMateCircle?.connect()
-$('#disconnectBtn').onclick = () => { window.LocalMateCircle?.signOut(); toast('Đã ngắt kết nối ví') }
+$('#connectBtn').onclick = () => window.HedgoraCircle?.connect()
+$('#disconnectBtn').onclick = () => { window.HedgoraCircle?.signOut(); toast('Đã ngắt kết nối ví') }
 $('#detailsForm').addEventListener('submit', review)
 $('#detailsForm').addEventListener('input', () => { saveDraft(); renderAmountVnd(); $('#formError').textContent = '' })
 $('#editBtn').onclick = () => setStep(1)
@@ -714,7 +714,7 @@ document.addEventListener('click', (event) => {
   if (target.id === 'retryBtn') review()
   if (target.id === 'adjustBtn') { $('#amount').value = target.dataset.amount; saveDraft(); renderAmountVnd(); review() }
   if (target.id === 'moreBtn') loadActivity({ more: true })
-  if (target.id === 'renewBtn') { window.LocalMateCircle?.signOut(); window.LocalMateCircle?.connect() }
+  if (target.id === 'renewBtn') { window.HedgoraCircle?.signOut(); window.HedgoraCircle?.connect() }
 })
 $('#reqAmount').addEventListener('input', renderRequest)
 $('#reqNote').addEventListener('input', renderRequest)
@@ -725,7 +725,7 @@ window.addEventListener('focus', refreshSoon)
 document.addEventListener('visibilitychange', refreshSoon)
 setInterval(checkSession, 20000)
 
-// payments.html?to=0x…&amount=5&note=… comes from a LocalMate QR / payment link; ?note=… alone comes
+// payments.html?to=0x…&amount=5&note=… comes from a Hedgora QR / payment link; ?note=… alone comes
 // from a place card on the homepage. Links win over a saved draft.
 const params = new URLSearchParams(window.location.search)
 restoreDraft()
@@ -737,7 +737,7 @@ if (params.get('to')) {
   setNotice($('#requestBanner'), 'warn', `Bạn đang mở một yêu cầu thanh toán: ${parts.join(' · ')}. Kiểm tra kỹ người nhận trước khi xác nhận.`)
 } else if (params.get('note')) {
   $('#note').value = params.get('note').slice(0, 60)
-  setNotice($('#requestBanner'), 'warn', `Thanh toán cho <b>${escapeHtml(params.get('note'))}</b>: hỏi người bán mã QR LocalMate hoặc địa chỉ ví của họ, rồi quét bằng camera điện thoại hoặc dán vào ô bên dưới.`)
+  setNotice($('#requestBanner'), 'warn', `Thanh toán cho <b>${escapeHtml(params.get('note'))}</b>: hỏi người bán mã QR Hedgora hoặc địa chỉ ví của họ, rồi quét bằng camera điện thoại hoặc dán vào ô bên dưới.`)
 }
 renderAmountVnd()
 loadRate()
