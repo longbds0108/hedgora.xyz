@@ -17,5 +17,8 @@
     "esbuild": "0.28.2",
     "vite": "^7.1.9",
     "vite-plugin-node-polyfills": "^0.24.0"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
