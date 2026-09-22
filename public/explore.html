@@ -139,7 +139,16 @@ select{font:inherit}
 .g-photos img{display:block;width:100%;height:100%;object-fit:cover;animation:fade .5s ease}
 .g-photos button{flex:none;width:112px;height:84px;border:1px dashed #cfdad2;border-radius:10px;background:#fbfcfa;color:var(--green);font-weight:700;font-size:12px}
 .g-photos button:disabled{cursor:wait;opacity:.7}
-.g-source{color:var(--soft);font-size:11px;line-height:1.5}.g-source a{color:var(--green);font-weight:700;text-decoration:none}
+.g-quotes{margin:0;padding:0;list-style:none;display:grid;gap:5px;color:var(--soft);font-style:italic;line-height:1.5}
+.g-quotes a,.g-quotes span{font-style:normal;color:var(--green);font-weight:700;text-decoration:none;white-space:nowrap}.g-quotes span{color:var(--soft)}
+.g-source{color:var(--soft);font-size:11px;line-height:1.5}
+.g-tours{display:grid;gap:6px;padding-top:9px;border-top:1px dashed #e3e9e3}
+.g-tours-title{font-weight:800;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.g-tour{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;padding:6px;border:1px solid #edf1ec;border-radius:12px;background:#fbfcfa;color:var(--text);text-decoration:none;transition:border-color .2s}
+.g-tour:hover{border-color:#b9e6d4}
+.g-tour img,.g-tour-img{width:64px;height:48px;border-radius:8px;object-fit:cover;background:#e8ede7;display:grid;place-items:center}
+.g-tour b{font-size:12px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.g-tour small{display:block;margin-top:2px;color:var(--green);font-weight:700}.g-source a{color:var(--green);font-weight:700;text-decoration:none}
 .g-empty{color:var(--soft);line-height:1.5}
 @media(max-width:1000px){.ex-layout{grid-template-columns:1fr}.map-panel{order:-1}}
 @media(max-width:620px){.filters{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}.filters button{flex:none}.search{width:100%}.place-row{grid-template-columns:68px minmax(0,1fr);gap:12px}.thumb{width:68px;height:68px;font-size:24px}}
@@ -268,22 +277,43 @@ function rowHtml(p, i, n) {
 // Google Maps details for a row. Open or closed is worked out from the weekly hours each time it's drawn,
 // so a cached answer never shows a stale "Open now".
 function detailsHtml(p, d) {
-  const esc = H.escapeHtml
-  if (!d.found) return '<div class="gdetail"><div class="g-empty">Google Maps has no listing that matches this place, so there are no opening hours, photos or price for it.</div></div>'
+  const esc = H.escapeHtml, tours = toursHtml(p)
+  if (!d.found) return `<div class="gdetail"><div class="g-empty">Google Maps has no listing that matches this place, so there are no opening hours, photos or price for it.</div>${tours}</div>`
   const open = H.openNow(d.hours), today = H.todayHours(d.hours), weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
   const loaded = H.cachedPlacePhotos(d.photosId), gallery = loaded?.photos.length ? loaded.photos : d.photo ? [d.photo] : []
   const more = d.photosId && !loaded ? '<button type="button" data-action="photos">More photos</button>' : ''
+  // Sights have no listed price; their ticket prices are what visitors wrote in Google reviews, quoted as written.
+  const tickets = Array.isArray(d.tickets) ? d.tickets : null
+  const price = tickets
+    ? `<span class="g-chip${tickets.length ? '' : ' muted'}">🎟 ${tickets.length ? 'Visitors mention ' + tickets.map((t) => (t.price === 'Free' ? 'free entry' : esc(t.price))).join(' · ') : 'No ticket price in reviews'}</span>`
+    : `<span class="g-chip${d.price ? '' : ' muted'}">💵 ${d.price ? esc(d.price) + (p.group.key === 'stay' ? ' a night' : ' per person') : 'No price listed'}</span>`
   const facts = [
     open === null ? '' : `<span class="g-chip ${open ? 'open' : 'closed'}">${open ? 'Open now' : 'Closed now'}</span>`,
     `<span class="g-chip${today ? '' : ' muted'}">🕒 ${today ? 'Today ' + esc(today) : 'No opening hours listed'}</span>`,
-    `<span class="g-chip${d.price ? '' : ' muted'}">💵 ${d.price ? esc(d.price) + (p.group.key === 'stay' ? ' a night' : ' per person') : 'No price listed'}</span>`,
+    price,
     gallery.length || more ? '' : '<span class="g-chip muted">📷 No photos listed</span>',
   ].join('')
+  const reviewDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+  const quotes = tickets?.length ? `<ul class="g-quotes">${tickets.map((t) => {
+    const source = 'Google review' + (t.date ? ', ' + reviewDate(t.date) : '')
+    return `<li>“${esc(t.quote)}” ${t.link ? `<a href="${esc(t.link)}" target="_blank" rel="noreferrer">${source} ↗</a>` : `<span>${source}</span>`}</li>`
+  }).join('')}</ul>` : ''
   const week = d.hours.length ? `<details class="g-week"><summary>Opening hours this week</summary><ul>${d.hours.map((h) => `<li${h.day === weekday ? ' class="today"' : ''}><span>${h.day[0].toUpperCase() + h.day.slice(1)}</span><span>${esc(h.hours)}</span></li>`).join('')}</ul></details>` : ''
   // Google answers photo requests that carry another site's Referer with 429, so the images are loaded without one.
   const photos = gallery.length || more ? `<div class="g-photos">${gallery.map((ph) => `<a href="${esc(ph.image)}" target="_blank" rel="noreferrer"><img src="${esc(ph.thumbnail)}" alt="Photo of ${esc(d.name)} on Google Maps" loading="lazy" referrerpolicy="no-referrer"></a>`).join('')}${more}</div>` : ''
   const listedAs = d.name.toLowerCase() === p.name.toLowerCase() ? '' : `Listed on Google Maps as “${esc(d.name)}” · `
-  return `<div class="gdetail"><div class="g-facts">${facts}</div>${week}${photos}<div class="g-source">${listedAs}Hours, price and photos from Google Maps via SerpApi · <a href="${esc(d.mapsUrl)}" target="_blank" rel="noreferrer">Open in Google Maps ↗</a></div></div>`
+  const ticketNote = tickets?.length ? 'Ticket prices are quoted from visitors’ reviews and may be out of date. ' : ''
+  return `<div class="gdetail"><div class="g-facts">${facts}</div>${quotes}${week}${photos}<div class="g-source">${listedAs}${ticketNote}Hours, price and photos from Google Maps via SerpApi · <a href="${esc(d.mapsUrl)}" target="_blank" rel="noreferrer">Open in Google Maps ↗</a></div>${tours}</div>`
+}
+
+// Bookable tours and tickets from Viator for a sight: ones that name it, otherwise the destination's best rated.
+function toursHtml(p) {
+  const esc = H.escapeHtml, t = p.group.key === 'sight' && H.cachedPlaceTours(p)
+  const list = t && (t.matched?.length ? t.matched : t.popular)
+  if (!list?.length) return ''
+  const title = t.matched?.length ? 'Tickets &amp; tours for this place' : `Popular tours in ${esc(t.destination.name)}`
+  const price = (vnd) => vnd.toLocaleString('vi-VN') + ' ₫'
+  return `<div class="g-tours"><div class="g-tours-title">${title}</div>${list.map((tour) => `<a class="g-tour" href="${esc(tour.url)}" target="_blank" rel="sponsored noreferrer">${tour.image ? `<img src="${esc(tour.image)}" alt="" loading="lazy">` : '<span class="g-tour-img" aria-hidden="true">🎟</span>'}<span><b>${esc(tour.title)}</b><small>from ${price(tour.fromPrice)}${tour.rating ? ` · ★ ${tour.rating} (${tour.reviews})` : ''}${tour.minutes ? ` · ${H.formatDuration(tour.minutes * 60)}` : ''}</small></span></a>`).join('')}<div class="g-source">Prices and booking on Viator. Hedgora may earn a commission if you book through these links.</div></div>`
 }
 
 // Each lookup spends a search from Hedgora's small SerpApi plan, so it only runs on a tap and answers are cached.
@@ -299,7 +329,8 @@ async function toggleDetails(row, i, button) {
   button.disabled = true
   button.textContent = 'Loading…'
   try {
-    const details = await H.placeDetails(p, state.location.name)
+    // Sights also look for Viator tours; if Viator is down or not set up, the details show without them.
+    const [details] = await Promise.all([H.placeDetails(p, state.location.name), p.group.key === 'sight' ? H.placeTours(p).catch(() => null) : null])
     state.open.add(key)
     if (!row.isConnected) return
     row.querySelector('.row-body').insertAdjacentHTML('beforeend', detailsHtml(p, details))

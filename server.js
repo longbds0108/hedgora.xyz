@@ -14,6 +14,8 @@ const deepseek = process.env.DEEPSEEK_API_KEY ? new OpenAI({ baseURL: 'https://a
 const vietmapKey = process.env.VIETMAP_API_KEY
 // SerpApi reads Google Maps listings: opening hours, photos and prices that OpenStreetMap doesn't have.
 const serpKey = process.env.SERPAPI_API_KEY
+// Viator (Tripadvisor) sells tours and tickets; its affiliate API gives "from" prices and booking links.
+const viatorKey = process.env.VIATOR_API_KEY
 const app = new Hono()
 
 function unavailable(c) {
@@ -26,7 +28,7 @@ function unavailable(c) {
 const homepage = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8')
 app.get('/', (c) => c.html(homepage))
 
-app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey), places: Boolean(serpKey) }))
+app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey), places: Boolean(serpKey), tours: Boolean(viatorKey) }))
 
 async function circleRequest(path, { userToken, body }) {
   const response = await fetch(`https://api.circle.com${path}`, {
@@ -449,6 +451,46 @@ function googlePhoto(thumbnail, image = thumbnail) {
   return photo.thumbnail && photo.image ? photo : null
 }
 
+// Google Maps has no ticket prices, but visitors often write them in reviews ("Giá vé là 100.000 VND cho người
+// lớn", "vé vào cửa 100k"). A mention counts when a ticket word comes shortly before the amount and the text
+// isn't about parking or food. They are the reviewers' words, so pages quote them with the review's date.
+const TICKET_WORD = /(?<!\p{L})(vé|phí vào cửa|phí tham quan|tickets?|entrance|entry fee|admission)(?!\p{L})/iu
+const NOT_ADMISSION = /gửi xe|giữ xe|đỗ xe|đậu xe|parking|nước|đồ ăn|ăn uống|food|drink/iu
+const VND_AMOUNT = /(?<![\d.,])(\d{1,3}(?:[.,]\d{3})+|\d{1,4})\s*(k|nghìn|ngàn|đồng|đ|₫|vnđ|vnd)(?!\p{L})/giu
+const FREE_ENTRY = /(miễn phí|không mất phí|không thu phí|free)[^.!?]{0,20}(vé|vào cửa|entry|admission)|(vé|vào cửa|entry|admission)[^.!?]{0,20}(miễn phí|free)/iu
+function ticketMentions(reviews) {
+  const quoteAround = (text, from, to) => {
+    const start = Math.max(0, from - 70), end = Math.min(text.length, to + 50)
+    let snippet = text.slice(start, end)
+    if (start) snippet = '…' + snippet.replace(/^\S*\s/, '')
+    if (end < text.length) snippet = snippet.replace(/\s\S*$/, '') + '…'
+    return clip(snippet, 200)
+  }
+  const found = []
+  for (const review of Array.isArray(reviews) ? reviews : []) {
+    const text = String(review?.description || '').replace(/\s+/g, ' ')
+    const mention = (vnd, from, to) => found.push({ vnd, quote: quoteAround(text, from, to), date: /^\d{4}-\d{2}/.test(review.date_iso8601 || '') ? review.date_iso8601 : null, link: httpsUrl(review.link) })
+    const amount = [...text.matchAll(VND_AMOUNT)].find((m) => {
+      const before = text.slice(Math.max(0, m.index - 50), m.index), around = before.slice(-25) + m[0] + text.slice(m.index + m[0].length, m.index + m[0].length + 15)
+      return TICKET_WORD.test(before) && !NOT_ADMISSION.test(around)
+    })
+    if (amount) {
+      const n = Number(amount[1].replace(/[.,]/g, '')), vnd = ['k', 'nghìn', 'ngàn'].includes(amount[2].toLowerCase()) ? n * 1000 : n
+      if (vnd >= 5000 && vnd <= 5_000_000) mention(vnd, amount.index, amount.index + amount[0].length)
+      continue
+    }
+    const free = text.match(FREE_ENTRY)
+    if (free && !NOT_ADMISSION.test(free[0])) mention(0, free.index, free.index + free[0].length)
+  }
+  // Newest first, one quote per amount.
+  const seen = new Set()
+  return found
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+    .filter((t) => !seen.has(t.vnd) && seen.add(t.vnd))
+    .slice(0, 3)
+    .map(({ vnd, ...t }) => ({ ...t, price: vnd ? vnd.toLocaleString('vi-VN') + ' ₫' : 'Free' }))
+}
+
 // Finds the Google Maps listing for an OpenStreetMap place: same name, and close to where OSM puts it.
 app.get('/api/places/details', async (c) => {
   const blocked = placesGuard(c)
@@ -458,7 +500,8 @@ app.get('/api/places/details', async (c) => {
   const name = clip(c.req.query('name'), 120).trim(), lat = coord(c.req.query('lat')), lon = coord(c.req.query('lon'))
   if (!name || !isLat(lat) || !isLon(lon)) return c.json({ message: 'Send a place name, lat and lon.' }, 400)
   // Beaches and sights are large, so OSM and Google can put them far apart; shops sit within a street or two.
-  const radius = ['Beach', 'Attraction', 'Viewpoint', 'Historic site'].includes(c.req.query('kind')) ? 2000 : 400
+  const kind = c.req.query('kind'), sight = ['Beach', 'Attraction', 'Viewpoint', 'Historic site', 'Museum'].includes(kind)
+  const radius = sight && kind !== 'Museum' ? 2000 : 400
   const key = `d:${fold(name)}@${lat.toFixed(3)},${lon.toFixed(3)}`
   const hit = cacheGet(key, 24 * 3600_000)
   if (hit) return c.json(hit)
@@ -472,6 +515,13 @@ app.get('/api/places/details', async (c) => {
       .filter(({ x, d }) => d <= radius && sameName(name, x.title))
       .sort((a, b) => a.d - b.d)[0]?.x
     if (!place) return c.json(cacheSet(key, { found: false, fetchedAt: Date.now() }))
+    // Sights get the ticket prices visitors mention. A search list has no reviews, so that costs one more search.
+    let tickets
+    if (sight) {
+      let reviews = place.user_reviews?.most_relevant
+      if (!reviews && place.place_id) reviews = (await serpSearch({ engine: 'google_maps', place_id: place.place_id })).place_results?.user_reviews?.most_relevant
+      tickets = ticketMentions(reviews)
+    }
     return c.json(cacheSet(key, {
       found: true,
       name: clip(place.title, 120),
@@ -481,10 +531,79 @@ app.get('/api/places/details', async (c) => {
       hours: weekHours(place.operating_hours || place.hours),
       photo: googlePhoto(place.thumbnail),
       photosId: /^0x[0-9a-f]+:0x[0-9a-f]+$/i.test(place.data_id || '') ? place.data_id : null,
+      tickets,
       fetchedAt: Date.now(),
     }))
   } catch (error) {
     return serpFailure(c, error)
+  }
+})
+
+// Tours and tickets near a spot, from Viator's Basic-access affiliate API (/destinations and /products/search).
+// The nearest Viator destination within 60 km is used; its 50 best-rated products are cached for a day, and the
+// destination list for a day. With a sight's name, products whose title names it come first.
+// Links are Viator's affiliate productUrl, so a booking made through them earns Hedgora a commission.
+async function viator(path, body) {
+  const r = await fetch('https://api.viator.com/partner' + path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'exp-api-key': viatorKey, Accept: 'application/json;version=2.0', 'Accept-Language': 'en-US', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw Object.assign(new Error(data.message || `Viator request failed (${r.status})`), { status: r.status })
+  return data
+}
+async function nearestDestination(lat, lon) {
+  let hit = cacheGet('v:destinations', 24 * 3600_000)
+  if (!hit) {
+    const { destinations = [] } = await viator('/destinations')
+    // Countries, states and regions are too wide to say "tours near you".
+    const list = destinations.filter((d) => Number.isFinite(d.center?.latitude) && Number.isFinite(d.center?.longitude) && !['COUNTRY', 'STATE', 'REGION', 'UNION TERRITORY'].includes(d.type))
+      .map((d) => ({ id: d.destinationId, name: d.name, lat: d.center.latitude, lon: d.center.longitude }))
+    hit = cacheSet('v:destinations', { list, fetchedAt: Date.now() })
+  }
+  const best = hit.list.map((d) => ({ d, m: metres({ lat, lon }, d) })).sort((a, b) => a.m - b.m)[0]
+  return best && best.m <= 60_000 ? best.d : null
+}
+async function destinationProducts(id) {
+  const key = `v:products:${id}`, hit = cacheGet(key, 24 * 3600_000)
+  if (hit) return hit.products
+  const { products = [] } = await viator('/products/search', { filtering: { destination: String(id) }, sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' }, pagination: { start: 1, count: 50 }, currency: 'VND' })
+  const list = products.filter((p) => httpsUrl(p.productUrl) && Number.isFinite(p.pricing?.summary?.fromPrice)).map((p) => {
+    const cover = (p.images || []).find((i) => i.isCover) || p.images?.[0]
+    const image = (cover?.variants || []).filter((v) => v.width >= 300).sort((a, b) => a.width - b.width)[0]
+    return {
+      title: clip(p.title, 160),
+      fromPrice: Math.round(p.pricing.summary.fromPrice),
+      url: p.productUrl,
+      rating: Number.isFinite(p.reviews?.combinedAverageRating) ? Math.round(p.reviews.combinedAverageRating * 10) / 10 : null,
+      reviews: p.reviews?.totalReviews || 0,
+      image: httpsUrl(image?.url),
+      minutes: p.duration?.fixedDurationInMinutes || p.duration?.variableDurationFromMinutes || null,
+    }
+  })
+  return cacheSet(key, { products: list, fetchedAt: Date.now() }).products
+}
+app.get('/api/tours', async (c) => {
+  if (!viatorKey) return c.json({ message: 'VIATOR_API_KEY is not configured on the backend.' }, 503)
+  if (placesRateLimited(c)) return c.json({ message: 'Too many requests. Please wait a minute and try again.' }, 429)
+  const lat = Number(c.req.query('lat')), lon = Number(c.req.query('lon'))
+  if (!String(c.req.query('lat') ?? '').trim() || !isLat(lat) || !isLon(lon)) return c.json({ message: 'Send lat and lon.' }, 400)
+  try {
+    const destination = await nearestDestination(lat, lon)
+    if (!destination) return c.json({ destination: null, matched: [], popular: [] })
+    const products = await destinationProducts(destination.id)
+    // "Bảo tàng Vũ khí cổ Robert Taylor" matches "… Robert Taylor Museum …": at least two of the name's own words
+    // (or its only one), ignoring the destination's name and words that say what kind of place it is.
+    const skip = new Set([...nameWords(destination.name), 'bao', 'tang', 'tuong', 'chua', 'den', 'dinh', 'nha', 'tho', 'bai', 'nui', 'ho', 'cong', 'vien', 'khu', 'di', 'tich'])
+    const own = nameWords(clip(c.req.query('name'), 120)).filter((w) => !skip.has(w) && w.length > 1)
+    const matched = own.length ? products.filter((p) => { const t = new Set(nameWords(p.title)); return own.filter((w) => t.has(w)).length >= Math.min(2, own.length) }).slice(0, 3) : []
+    const popular = products.filter((p) => !matched.includes(p)).slice(0, 3)
+    return c.json({ destination: { name: destination.name }, matched, popular })
+  } catch (error) {
+    console.error('Viator request failed:', error)
+    const status = error?.status
+    return c.json({ message: status === 401 || status === 403 ? 'The Viator API key on the backend is invalid or lacks access.' : 'Viator is unavailable right now.' }, 502)
   }
 })
 

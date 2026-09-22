@@ -290,6 +290,9 @@
   const placePhotos = (id) => cachedLookup('p:' + id, '/api/places/photos?' + new URLSearchParams({ id }), 7 * 864e5)
   const cachedPlaceDetails = (p) => cachedValue('d:' + placeKey(p), GPLACES_TTL)
   const cachedPlacePhotos = (id) => (id ? cachedValue('p:' + id, 7 * 864e5) : null)
+  // Viator tours and tickets near a sight, cached for a day (Viator costs Hedgora nothing per call).
+  const placeTours = (p) => cachedLookup('t:' + placeKey(p), '/api/tours?' + new URLSearchParams({ lat: p.lat, lon: p.lon, name: p.name }), 864e5)
+  const cachedPlaceTours = (p) => cachedValue('t:' + placeKey(p), 864e5)
   // true/false from today's hours ("07:00–21:00", "07:00–14:00, 17:00–22:00"), null when they can't be read.
   // A range that ends after midnight keeps the place open into the next morning.
   const WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -402,7 +405,7 @@
     GROUPS, SIGHT_KINDS, ROUTE_MODES, reduceMotion,
     escapeHtml, formatDistance, formatDuration, haversine, toast,
     loadLocation, locate, fetchNearby, findPlacePhoto, photoCredit, photoAlt,
-    placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, openNow, todayHours,
+    placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, placeTours, cachedPlaceTours, openNow, todayHours,
     placeKey, savedPlaces, isSaved, toggleSaved, popHeart,
     createMap, route, drawRoute, planTitle, planTrip,
   }
