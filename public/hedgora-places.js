@@ -7,6 +7,8 @@
   const SAVED_KEY = 'hedgora.saved'
   const PHOTO_CACHE_KEY = 'hedgora.photos'
   const PHOTO_TTL = 7 * 864e5
+  const GPLACES_KEY = 'hedgora.gplaces'
+  const GPLACES_TTL = 3 * 864e5
   const SIGHT_KINDS = ['Beach', 'Attraction', 'Viewpoint', 'Museum', 'Historic site']
   const PLACE_KINDS = { beach: 'Beach', attraction: 'Attraction', viewpoint: 'Viewpoint', museum: 'Museum', restaurant: 'Restaurant', cafe: 'Café', hotel: 'Hotel', guest_house: 'Guest house', hostel: 'Hostel' }
   // The same four searches as the homepage's "Discover nearby" (radius in km, up to 25 results each).
@@ -117,20 +119,21 @@
   // Only use a Commons photo whose title matches the place name AND was taken within 1 km of it.
   // Wikimedia asks clients to identify themselves and not to burst, so lookups run one at a time and are cached for a week.
   let photoQueue = Promise.resolve()
-  function photoCache() { try { return JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY) || '{}') } catch { return {} } }
-  function cachePhoto(key, value) {
+  // Small browser caches shaped { key: { v: value, t: savedAt } }; past `max` entries the oldest are dropped.
+  function readStore(name) { try { return JSON.parse(localStorage.getItem(name) || '{}') } catch { return {} } }
+  function writeStore(name, key, value, max) {
     try {
-      const c = photoCache()
+      const c = readStore(name)
       c[key] = { v: value, t: Date.now() }
       const keys = Object.keys(c)
-      if (keys.length > 200) keys.sort((a, b) => c[a].t - c[b].t).slice(0, keys.length - 200).forEach((k) => delete c[k])
-      localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(c))
+      if (keys.length > max) keys.sort((a, b) => c[a].t - c[b].t).slice(0, keys.length - max).forEach((k) => delete c[k])
+      localStorage.setItem(name, JSON.stringify(c))
     } catch {}
   }
   // Commons returns the author as HTML; parse it in an inert document so nothing in it can load or run.
   const htmlText = (h) => new DOMParser().parseFromString(String(h || ''), 'text/html').body.textContent.replace(/\s+/g, ' ').trim()
   function findPlacePhoto(place) {
-    const key = place.name + '@' + Number(place.lat).toFixed(3) + ',' + Number(place.lon).toFixed(3), hit = photoCache()[key]
+    const key = place.name + '@' + Number(place.lat).toFixed(3) + ',' + Number(place.lon).toFixed(3), hit = readStore(PHOTO_CACHE_KEY)[key]
     if (hit && Date.now() - hit.t < PHOTO_TTL) return Promise.resolve(hit.v)
     const job = photoQueue.then(async () => {
       const p = new URLSearchParams({ action: 'query', format: 'json', origin: '*', generator: 'search', gsrnamespace: '6', gsrlimit: '3', gsrsearch: `${place.name} nearcoord:1km,${place.lat},${place.lon}`, prop: 'imageinfo', iiprop: 'url|extmetadata', iiextmetadatafilter: 'Artist|LicenseShortName', iiurlwidth: '700' })
@@ -144,7 +147,7 @@
             const meta = info.extmetadata || {}
             photo = { url: info.thumburl, page: info.descriptionurl, author: (htmlText(meta.Artist?.value) || 'Unknown author').slice(0, 60), license: htmlText(meta.LicenseShortName?.value) || 'see source' }
           }
-          cachePhoto(key, photo)
+          writeStore(PHOTO_CACHE_KEY, key, photo, 200)
         }
       } catch {}
       await new Promise((r) => setTimeout(r, 350))
@@ -155,6 +158,41 @@
   }
   // CC BY / BY-SA photos must credit the author and license; the link goes to the file page on Commons.
   const photoCredit = (photo, className = 'photo-credit') => `<a class="${className}" href="${escapeHtml(photo.page)}" target="_blank" rel="noreferrer" title="Photo by ${escapeHtml(photo.author)} · ${escapeHtml(photo.license)} · Wikimedia Commons">📷 ${escapeHtml(photo.author)} · ${escapeHtml(photo.license)}</a>`
+
+  // Opening hours, photos and price from Google Maps, through Hedgora's server and SerpApi. Every lookup spends
+  // a search from a small monthly plan, so they only run when the traveler taps Details and are kept for 3 days
+  // (photos for 7), including "not on Google Maps".
+  // Answers are also kept in memory for this page, in case the browser blocks localStorage.
+  const lookups = new Map()
+  const cachedValue = (key, ttl) => { const hit = lookups.get(key) || readStore(GPLACES_KEY)[key]; return hit && Date.now() - hit.t < ttl ? hit.v : null }
+  async function cachedLookup(key, path, ttl) {
+    const hit = cachedValue(key, ttl)
+    if (hit) return hit
+    const r = await fetch(apiBase + path)
+    const data = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(data.message || 'Google Maps details are unavailable right now.')
+    lookups.set(key, { v: data, t: Date.now() })
+    writeStore(GPLACES_KEY, key, data, 150)
+    return data
+  }
+  // `near` is the traveler's area, e.g. "Phường Thắng Tam, Thành Phố Vũng Tàu".
+  const placeDetails = (p, near) => cachedLookup('d:' + placeKey(p), '/api/places/details?' + new URLSearchParams({ name: p.name, lat: p.lat, lon: p.lon, kind: p.kind || '', near: near || '' }), GPLACES_TTL)
+  const placePhotos = (id) => cachedLookup('p:' + id, '/api/places/photos?' + new URLSearchParams({ id }), 7 * 864e5)
+  const cachedPlaceDetails = (p) => cachedValue('d:' + placeKey(p), GPLACES_TTL)
+  const cachedPlacePhotos = (id) => (id ? cachedValue('p:' + id, 7 * 864e5) : null)
+  // true/false from today's hours ("07:00–21:00", "07:00–14:00, 17:00–22:00"), null when they can't be read.
+  // A range that ends after midnight keeps the place open into the next morning.
+  const WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  function openNow(hours, now = new Date()) {
+    const day = (offset) => (hours || []).find((h) => h.day === WEEK[(now.getDay() + 7 + offset) % 7])?.hours || ''
+    const ranges = (text) => [...text.matchAll(/(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/g)].map((m) => [m[1] * 60 + +m[2], m[3] * 60 + +m[4]])
+    const mins = now.getHours() * 60 + now.getMinutes(), today = day(0), todayRanges = ranges(today)
+    if (today === 'Open 24 hours') return true
+    if (todayRanges.some(([a, b]) => (b > a ? mins >= a && mins < b : mins >= a))) return true
+    if (ranges(day(-1)).some(([a, b]) => b <= a && mins < b)) return true
+    return todayRanges.length || today === 'Closed' ? false : null
+  }
+  const todayHours = (hours, now = new Date()) => (hours || []).find((h) => h.day === WEEK[now.getDay()])?.hours || ''
 
   // Saved places live in this browser (localStorage), in the same format as the homepage.
   const placeKey = (p) => p.name + '@' + Number(p.lat).toFixed(5) + ',' + Number(p.lon).toFixed(5)
@@ -254,6 +292,7 @@
     GROUPS, SIGHT_KINDS, ROUTE_MODES, reduceMotion,
     escapeHtml, formatDistance, formatDuration, haversine, toast,
     loadLocation, locate, fetchNearby, findPlacePhoto, photoCredit,
+    placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, openNow, todayHours,
     placeKey, savedPlaces, isSaved, toggleSaved, popHeart,
     createMap, route, drawRoute, planTitle, planTrip,
   }

@@ -125,6 +125,22 @@ select{font:inherit}
 .place-row.skeleton{grid-template-columns:84px minmax(0,1fr)}
 .more{justify-self:center;margin-top:6px;border:1px solid #cfdad2;background:#fff;border-radius:12px;padding:10px 18px;font-weight:700;color:var(--green);transition:border-color .2s}
 .more:hover{border-color:#25b78a}
+/* Details: opening hours, price and photos from Google Maps, loaded when asked for */
+.act[aria-expanded="true"]{background:#cdeee2}
+.gdetail{margin-top:10px;padding-top:10px;border-top:1px solid #edf1ec;display:grid;gap:9px;font-size:12px;color:var(--body);cursor:default;animation:fadeUp .35s cubic-bezier(.2,.7,.2,1)}
+.g-facts{display:flex;flex-wrap:wrap;gap:6px}
+.g-chip{padding:5px 9px;border-radius:8px;background:#f1f5f0;white-space:nowrap}
+.g-chip.open{background:#dff7ee;color:var(--green);font-weight:700}.g-chip.closed{background:var(--red-bg);color:var(--red);font-weight:700}.g-chip.muted{color:var(--soft)}
+.g-week summary{cursor:pointer;color:var(--green);font-weight:700;width:max-content}
+.g-week ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;max-width:260px}
+.g-week li{display:flex;justify-content:space-between;gap:12px}.g-week li.today{font-weight:700;color:var(--text)}
+.g-photos{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.g-photos a{flex:none;width:112px;height:84px;border-radius:10px;overflow:hidden;background:#e8ede7}
+.g-photos img{display:block;width:100%;height:100%;object-fit:cover;animation:fade .5s ease}
+.g-photos button{flex:none;width:112px;height:84px;border:1px dashed #cfdad2;border-radius:10px;background:#fbfcfa;color:var(--green);font-weight:700;font-size:12px}
+.g-photos button:disabled{cursor:wait;opacity:.7}
+.g-source{color:var(--soft);font-size:11px;line-height:1.5}.g-source a{color:var(--green);font-weight:700;text-decoration:none}
+.g-empty{color:var(--soft);line-height:1.5}
 @media(max-width:1000px){.ex-layout{grid-template-columns:1fr}.map-panel{order:-1}}
 @media(max-width:620px){.filters{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}.filters button{flex:none}.search{width:100%}.place-row{grid-template-columns:68px minmax(0,1fr);gap:12px}.thumb{width:68px;height:68px;font-size:24px}}
   </style>
@@ -211,7 +227,8 @@ const $ = (s) => document.querySelector(s)
 const MARKER_COLORS = { sight: '#1fae84', food: '#d9912f', cafe: '#a8652c', stay: '#7d6fd8' }
 // The list shows 20 places at a time; the map shows the same places as the list.
 const PAGE = 20
-const state = { location: H.loadLocation(), places: [], filter: 'all', query: '', limit: PAGE, selected: -1, token: 0, view: null, markers: [], routeLine: null, routeTarget: -1 }
+// `open` holds the places whose Details are shown, so they stay open when the list is filtered or redrawn.
+const state = { location: H.loadLocation(), places: [], filter: 'all', query: '', limit: PAGE, selected: -1, token: 0, view: null, markers: [], routeLine: null, routeTarget: -1, open: new Set() }
 // /explore?type=food opens straight on one kind of place.
 const wanted = new URLSearchParams(location.search).get('type')
 if (H.GROUPS.some((g) => g.key === wanted)) state.filter = wanted
@@ -235,16 +252,80 @@ function renderFilters() {
 }
 
 function rowHtml(p, i, n) {
-  const saved = H.isSaved(p)
+  const saved = H.isSaved(p), details = state.open.has(H.placeKey(p)) && H.cachedPlaceDetails(p)
   return `<article class="place-row${i === state.selected ? ' selected' : ''}" data-index="${i}" style="--i:${Math.min(n, 12)}">
       <div class="thumb cat-${p.group.key}"><span aria-hidden="true">${p.group.icon}</span></div>
       <div class="row-body">
         <div class="row-top"><small>${p.group.tag}</small><b>${H.formatDistance(p.distance)}</b></div>
         <h3>${H.escapeHtml(p.name)}</h3>
         <p>${H.escapeHtml(p.kind)}${p.address ? ' · ' + H.escapeHtml(p.address) : ''}</p>
-        <div class="row-actions"><button class="act" type="button" data-action="route">Directions</button><button class="act save" type="button" data-action="save" aria-pressed="${saved}">${saved ? '♥ Saved' : '♡ Save'}</button><button class="act pay" type="button" data-action="pay">Pay</button></div>
+        <div class="row-actions"><button class="act" type="button" data-action="details" aria-expanded="${Boolean(details)}">Details</button><button class="act" type="button" data-action="route">Directions</button><button class="act save" type="button" data-action="save" aria-pressed="${saved}">${saved ? '♥ Saved' : '♡ Save'}</button><button class="act pay" type="button" data-action="pay">Pay</button></div>
+        ${details ? detailsHtml(p, details) : ''}
       </div>
     </article>`
+}
+
+// Google Maps details for a row. Open or closed is worked out from the weekly hours each time it's drawn,
+// so a cached answer never shows a stale "Open now".
+function detailsHtml(p, d) {
+  const esc = H.escapeHtml
+  if (!d.found) return '<div class="gdetail"><div class="g-empty">Google Maps has no listing that matches this place, so there are no opening hours, photos or price for it.</div></div>'
+  const open = H.openNow(d.hours), today = H.todayHours(d.hours), weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+  const loaded = H.cachedPlacePhotos(d.photosId), gallery = loaded?.photos.length ? loaded.photos : d.photo ? [d.photo] : []
+  const more = d.photosId && !loaded ? '<button type="button" data-action="photos">More photos</button>' : ''
+  const facts = [
+    open === null ? '' : `<span class="g-chip ${open ? 'open' : 'closed'}">${open ? 'Open now' : 'Closed now'}</span>`,
+    `<span class="g-chip${today ? '' : ' muted'}">🕒 ${today ? 'Today ' + esc(today) : 'No opening hours listed'}</span>`,
+    `<span class="g-chip${d.price ? '' : ' muted'}">💵 ${d.price ? esc(d.price) + (p.group.key === 'stay' ? ' a night' : ' per person') : 'No price listed'}</span>`,
+    gallery.length || more ? '' : '<span class="g-chip muted">📷 No photos listed</span>',
+  ].join('')
+  const week = d.hours.length ? `<details class="g-week"><summary>Opening hours this week</summary><ul>${d.hours.map((h) => `<li${h.day === weekday ? ' class="today"' : ''}><span>${h.day[0].toUpperCase() + h.day.slice(1)}</span><span>${esc(h.hours)}</span></li>`).join('')}</ul></details>` : ''
+  // Google answers photo requests that carry another site's Referer with 429, so the images are loaded without one.
+  const photos = gallery.length || more ? `<div class="g-photos">${gallery.map((ph) => `<a href="${esc(ph.image)}" target="_blank" rel="noreferrer"><img src="${esc(ph.thumbnail)}" alt="Photo of ${esc(d.name)} on Google Maps" loading="lazy" referrerpolicy="no-referrer"></a>`).join('')}${more}</div>` : ''
+  const listedAs = d.name.toLowerCase() === p.name.toLowerCase() ? '' : `Listed on Google Maps as “${esc(d.name)}” · `
+  return `<div class="gdetail"><div class="g-facts">${facts}</div>${week}${photos}<div class="g-source">${listedAs}Hours, price and photos from Google Maps via SerpApi · <a href="${esc(d.mapsUrl)}" target="_blank" rel="noreferrer">Open in Google Maps ↗</a></div></div>`
+}
+
+// Each lookup spends a search from Hedgora's small SerpApi plan, so it only runs on a tap and answers are cached.
+async function toggleDetails(row, i, button) {
+  const p = state.places[i], key = H.placeKey(p), box = row.querySelector('.gdetail')
+  if (box) {
+    const show = box.hidden
+    box.hidden = !show
+    show ? state.open.add(key) : state.open.delete(key)
+    button.setAttribute('aria-expanded', String(show))
+    return
+  }
+  button.disabled = true
+  button.textContent = 'Loading…'
+  try {
+    const details = await H.placeDetails(p, state.location.name)
+    state.open.add(key)
+    if (!row.isConnected) return
+    row.querySelector('.row-body').insertAdjacentHTML('beforeend', detailsHtml(p, details))
+    button.setAttribute('aria-expanded', 'true')
+  } catch (error) {
+    H.toast(error.message)
+  } finally {
+    button.disabled = false
+    button.textContent = 'Details'
+  }
+}
+
+async function morePhotos(row, i, button) {
+  const p = state.places[i], details = H.cachedPlaceDetails(p)
+  if (!details?.photosId) return
+  button.disabled = true
+  button.textContent = 'Loading…'
+  try {
+    await H.placePhotos(details.photosId)
+    const box = row.querySelector('.gdetail')
+    if (box) box.outerHTML = detailsHtml(p, details)
+  } catch (error) {
+    H.toast(error.message)
+    button.disabled = false
+    button.textContent = 'More photos'
+  }
 }
 
 function renderList(animate) {
@@ -401,7 +482,10 @@ $('#placeList').addEventListener('click', (e) => {
   const row = e.target.closest('.place-row[data-index]'), i = Number(row?.dataset.index), p = state.places[i]
   if (!p) return
   const action = e.target.closest('[data-action]')
-  if (!action) return select(i)
+  // Reading the details (or opening the week's hours) shouldn't move the map.
+  if (!action) return e.target.closest('.gdetail') ? undefined : select(i)
+  if (action.dataset.action === 'details') return toggleDetails(row, i, action)
+  if (action.dataset.action === 'photos') return morePhotos(row, i, action)
   if (action.dataset.action === 'route') return showRoute(i)
   if (action.dataset.action === 'pay') return (location.href = '/payments?note=' + encodeURIComponent(p.name))
   const saved = H.toggleSaved(p)

@@ -125,7 +125,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <div class="feature-grid">
             <div class="feature"><span>✦</span><h3>Ask Hedgora AI</h3><p>Type a question in <b>Where should we go next?</b> or tap a quick prompt such as <b>Local food</b> or <b>Plan my afternoon</b>. DeepSeek answers using your location, local time, weather and the real places around you.</p></div>
             <div class="feature"><span>▣</span><h3>Discover nearby</h3><p>Up to six real places around you from OpenStreetMap: sights, food, a café and a place to stay, with real distances. Landmarks show a Wikimedia Commons photo when one matches the place. Use <b>Update</b> to refresh, <b>Directions</b> for a route and <b>Pay</b> to open the Payments page. <b>See all on Explore</b> opens the full list.</p></div>
-            <div class="feature"><span>⌕</span><h3>Explore page</h3><p>Every named place Hedgora finds near you on OpenStreetMap, up to 25 of each kind: sights within 10 km, restaurants and cafés within 2 km, places to stay within 3 km. Filter by kind or name, see them on the map, and get directions on foot, by car, by bike or by motorbike.</p></div>
+            <div class="feature"><span>⌕</span><h3>Explore page</h3><p>Every named place Hedgora finds near you on OpenStreetMap, up to 25 of each kind: sights within 10 km, restaurants and cafés within 2 km, places to stay within 3 km. Filter by kind or name, see them on the map, and get directions on foot, by car, by bike or by motorbike. Tap <b>Details</b> for today’s opening hours, whether it’s open now, the price and photos from Google Maps, when Google lists them.</p></div>
             <div class="feature"><span>⌖</span><h3>Map &amp; directions</h3><p>Click <b>View map</b> to find restaurants, hotels and attractions within 5 km. Pick one to see the distance and travel time by car, on foot, by bike or by motorbike. In Vietnam, car and motorbike routes come from VIETMAP; walking, cycling and routes elsewhere come from OSRM.</p></div>
             <div class="feature"><span>☀</span><h3>Weather &amp; sunset</h3><p>Current temperature and conditions for your location, plus the time of the next sunset (or sunrise after dark) and how long until it. Both refresh when you update your location.</p></div>
             <div class="feature"><span>◷</span><h3>Smart itinerary</h3><p>Hedgora AI plans your next few hours from real places around you, fitted to the local time and weather. Every stop shows the real distance and a <b>Directions</b> button; <b>New plan</b> asks for another. <b>Open in Trips</b> shows the same plan on a map.</p></div>
@@ -171,6 +171,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
               <tr><td>Hedgora AI</td><td><span class="status live">LIVE</span></td><td>DeepSeek (<code>deepseek-flash</code>), grounded in OpenStreetMap places around you. It has no price, rating or opening-hours data and is instructed not to state them.</td></tr>
               <tr><td>Smart itinerary</td><td><span class="status live">LIVE</span></td><td>DeepSeek is asked for 3–4 stops and may only pick OpenStreetMap places near you; the server drops anything else. Distances are computed from coordinates, and landmarks show a credited Wikimedia Commons photo when one matches. No prices or opening hours.</td></tr>
               <tr><td>Explore page</td><td><span class="status live">LIVE</span></td><td>Places from OpenStreetMap (Photon); routes from VIETMAP or OSRM</td></tr>
+              <tr><td>Place details</td><td><span class="status live">LIVE</span></td><td>Opening hours, price and photos from Google Maps via SerpApi, only when you tap <b>Details</b> on Explore. Shown only when the Google listing has the same name near the same spot. Prices are what Google lists: usually per person for restaurants and per night for hotels, and often missing.</td></tr>
               <tr><td>Trips page</td><td><span class="status live">LIVE</span></td><td>Plan from DeepSeek using real places near you or your saved places; route and leg times from VIETMAP or OSRM</td></tr>
               <tr><td>Saved places</td><td><span class="status live">LIVE</span></td><td>Stored in this browser only (no account sync)</td></tr>
               <tr><td>USDC balance</td><td><span class="status live">LIVE</span></td><td>Read from your Circle wallet once connected</td></tr>
@@ -189,7 +190,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <details><summary>I signed in but don’t see my wallet address</summary><p>A new wallet can take a few seconds to appear. Wait a moment, then click <b>Get Start</b> to sign in again. If it still fails, the message under <b>Continue with Google</b> explains why.</p></details>
           <details><summary>Google sign-in says it was cancelled or failed</summary><p>This usually means the Google window was closed early, so try again.</p></details>
           <details><summary>What if I lose access to my Google account?</summary><p>Your wallet is tied to the Google account you sign in with, and recovery depends entirely on signing in with it again. Neither Hedgora nor Circle can access your keys or recover the wallet for you, so keep that Google account secure.</p></details>
-          <details><summary>Do I have to share my location?</summary><p>No. Hedgora uses central Vũng Tàu until you tap <b>Update</b> or <b>Use my location</b>. When you share it, your location is used for nearby places, weather, sunset time and photos, and it is sent to the services that provide them (Photon, Open-Meteo, Wikimedia Commons, and on the map OpenStreetMap, Overpass and the OSRM routing servers). In Vietnam, your coordinates and the places you route to also go through Hedgora’s server to VIETMAP for the location name and car or motorbike routes. When you ask Hedgora AI or get a plan, your location name and nearby places go through Hedgora’s server to DeepSeek; Ask Hedgora also sends your coordinates. Hedgora’s server does not save them. Your browser remembers a location you share for that tab only, so Explore and Trips use it too.</p></details>
+          <details><summary>Do I have to share my location?</summary><p>No. Hedgora uses central Vũng Tàu until you tap <b>Update</b> or <b>Use my location</b>. When you share it, your location is used for nearby places, weather, sunset time and photos, and it is sent to the services that provide them (Photon, Open-Meteo, Wikimedia Commons, and on the map OpenStreetMap, Overpass and the OSRM routing servers). In Vietnam, your coordinates and the places you route to also go through Hedgora’s server to VIETMAP for the location name and car or motorbike routes. When you ask Hedgora AI or get a plan, your location name and nearby places go through Hedgora’s server to DeepSeek; Ask Hedgora also sends your coordinates. When you tap <b>Details</b> on a place, its name and coordinates and your location name go through Hedgora’s server to SerpApi, which looks the place up on Google Maps. Hedgora’s server does not save them. Your browser remembers a location you share for that tab only, so Explore and Trips use it too.</p></details>
         </section>
 
         <section id="developers">
@@ -198,7 +199,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <p>Hedgora is a static frontend plus a small backend that holds the API keys.</p>
           <ul>
             <li><b>Frontend</b> (<code>public/</code>): <code>index.html</code>, <code>explore.html</code>, <code>trips.html</code>, <code>payments.html</code>, <code>docs.html</code>, <code>circle-config.js</code>, <code>hedgora-places.js</code> (places, photos, saved places, map and routing shared by Explore and Trips), and <code>circle-wallet-client.js</code>, the Circle Web SDK bundle built with Vite (the SDK itself loads lazily from <code>circle-index.js</code>).</li>
-            <li><b>Backend</b> (<code>server.js</code>): Hono on Node. It holds <code>CIRCLE_API_KEY</code>, <code>DEEPSEEK_API_KEY</code> and <code>VIETMAP_API_KEY</code> and calls the Circle User-Controlled Wallets API, the DeepSeek API and the VIETMAP reverse geocoding and routing APIs.</li>
+            <li><b>Backend</b> (<code>server.js</code>): Hono on Node. It holds <code>CIRCLE_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>, <code>VIETMAP_API_KEY</code> and <code>SERPAPI_API_KEY</code> and calls the Circle User-Controlled Wallets API, the DeepSeek API, the VIETMAP reverse geocoding and routing APIs, and SerpApi’s Google Maps APIs.</li>
           </ul>
 
           <h3>Sign-in flow</h3>
@@ -212,7 +213,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
 
           <h3>Run locally</h3>
 <pre><code>npm install
-cp .env.example .env   <span class="c"># fill in CIRCLE_API_KEY, DEEPSEEK_API_KEY, VIETMAP_API_KEY</span>
+cp .env.example .env   <span class="c"># fill in CIRCLE_API_KEY, DEEPSEEK_API_KEY, VIETMAP_API_KEY, SERPAPI_API_KEY</span>
 npm run build          <span class="c"># builds public/circle-wallet-client.js</span>
 npm start              <span class="c"># site + API: http://localhost:5173</span></code></pre>
 
@@ -223,6 +224,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Circle API key. Secret, backend only.</td></tr>
               <tr><td><code>DEEPSEEK_API_KEY</code></td><td><code>.env</code></td><td>DeepSeek API key for Hedgora AI. Secret, backend only.</td></tr>
               <tr><td><code>VIETMAP_API_KEY</code></td><td><code>.env</code></td><td>VIETMAP API key for location names and car or motorbike routes in Vietnam. Secret, backend only. Without it, Hedgora uses Photon and OSRM everywhere.</td></tr>
+              <tr><td><code>SERPAPI_API_KEY</code></td><td><code>.env</code></td><td>SerpApi key for opening hours, prices and photos from Google Maps on Explore. Secret, backend only. Without it, <b>Details</b> says the feature isn’t configured.</td></tr>
               <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Local port, <code>5173</code> by default.</td></tr>
               <tr><td><code>appId</code></td><td><code>public/circle-config.js</code></td><td>Public App ID from Circle Console → Wallets → User Controlled → Configurator.</td></tr>
               <tr><td><code>googleClientId</code></td><td><code>public/circle-config.js</code></td><td>OAuth Client ID (Web application) from Google Cloud Console.</td></tr>
@@ -236,15 +238,18 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
             <li><b>Google Cloud Console:</b> create an OAuth Client ID of type <i>Web application</i> and add the site’s origin to both <i>Authorized JavaScript origins</i> and <i>Authorized redirect URIs</i>.</li>
             <li><b>Circle Console:</b> Configurator → Authentication Methods → Social Logins → Google, then paste that Client ID.</li>
             <li><b>Wikimedia Commons</b> (no key): place photos are searched by name within 1 km of the place, one request at a time with an <code>Api-User-Agent</code> header, and cached in the browser for 7 days. Each photo shows its author and license (most are CC BY or CC BY-SA) and links to its Commons page.</li>
+            <li><b>SerpApi</b> (<code>SERPAPI_API_KEY</code>): each <b>Details</b> tap is one Google Maps search, in Vietnamese so names match OpenStreetMap, and <b>More photos</b> is one more. The free plan has 250 searches a month, so answers (including “not on Google Maps”) are cached in the browser for 3 days (photos for 7) and on each server instance for a day.</li>
           </ul>
 
           <h3>Backend API</h3>
           <div class="table-wrap"><table>
             <thead><tr><th>Endpoint</th><th>Body</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map }</code></td></tr>
+              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map, places }</code></td></tr>
               <tr><td><code>GET /api/map/reverse</code></td><td><code>?lat=&amp;lon=</code></td><td><code>{ name }</code> such as “Phường Bến Nghé, Quận 1”; 404 outside Vietnam</td></tr>
               <tr><td><code>GET /api/map/route</code></td><td><code>?vehicle=car|motorcycle&amp;points=lat,lon;lat,lon</code> (2–8 points)</td><td>OSRM-shaped route: <code>{ source, distance, duration, geometry, legs }</code>; 404 when VIETMAP has no route. Map endpoints allow 60 requests per minute per IP.</td></tr>
+              <tr><td><code>GET /api/places/details</code></td><td><code>?name=&amp;lat=&amp;lon=&amp;kind=&amp;near=</code></td><td><code>{ found, name, address, mapsUrl, price, hours: [{ day, hours }], photo, photosId }</code> from the Google Maps listing with the same name within 400 m (2 km for beaches and sights), or <code>{ found: false }</code></td></tr>
+              <tr><td><code>GET /api/places/photos</code></td><td><code>?id=</code> (<code>photosId</code>)</td><td><code>{ photos: [{ thumbnail, image }] }</code>, up to 12. Both place endpoints allow 10 requests per minute per IP.</td></tr>
               <tr><td><code>POST /api/social/token</code></td><td><code>{ deviceId }</code></td><td><code>{ deviceToken, deviceEncryptionKey }</code></td></tr>
               <tr><td><code>POST /api/user/initialize</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code>, or <code>null</code> if the wallet exists</td></tr>
               <tr><td><code>POST /api/wallets/list</code></td><td><code>{ userToken }</code></td><td><code>{ wallets }</code></td></tr>
@@ -260,7 +265,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <h3>Deploy to Vercel</h3>
           <ol class="steps">
             <li>Import the GitHub repo into Vercel. <code>vercel.json</code> already selects the <b>Hono</b> framework, runs <code>npm run build</code> and enables clean URLs (<code>/explore</code>, <code>/trips</code>, <code>/payments</code>, <code>/docs</code>).</li>
-            <li>In <b>Settings → Environment Variables</b>, add <code>CIRCLE_API_KEY</code>, <code>DEEPSEEK_API_KEY</code> and <code>VIETMAP_API_KEY</code>, then redeploy.</li>
+            <li>In <b>Settings → Environment Variables</b>, add <code>CIRCLE_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>, <code>VIETMAP_API_KEY</code> and <code>SERPAPI_API_KEY</code>, then redeploy.</li>
             <li>In Google Cloud Console, add your domain (for this site, <code>https://www.hedgora.xyz</code>) to both <i>Authorized JavaScript origins</i> and <i>Authorized redirect URIs</i>.</li>
           </ol>
           <ul>

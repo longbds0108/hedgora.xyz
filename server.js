@@ -12,6 +12,8 @@ const client = apiKey ? initiateUserControlledWalletsClient({ apiKey }) : null
 const deepseek = process.env.DEEPSEEK_API_KEY ? new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY }) : null
 // VietMap covers Vietnam only (Vietnamese addresses, car and motorbike routes); outside it the pages use Photon and OSRM.
 const vietmapKey = process.env.VIETMAP_API_KEY
+// SerpApi reads Google Maps listings: opening hours, photos and prices that OpenStreetMap doesn't have.
+const serpKey = process.env.SERPAPI_API_KEY
 const app = new Hono()
 
 function unavailable(c) {
@@ -24,7 +26,7 @@ function unavailable(c) {
 const homepage = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8')
 app.get('/', (c) => c.html(homepage))
 
-app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey) }))
+app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey), places: Boolean(serpKey) }))
 
 async function circleRequest(path, { userToken, body }) {
   const response = await fetch(`https://api.circle.com${path}`, {
@@ -168,7 +170,7 @@ Reply in the traveler's language (Vietnamese if they write in Vietnamese). Keep 
 
 The traveler can only type text here: there is no photo upload, and each question is answered on its own without memory of earlier ones. So don't end with a follow-up question, and if a request needs something you don't have, such as the dishes on a menu to translate, ask them to type it in their next question.`
 
-// Small in-memory per-IP limits so the public endpoints can't run up the DeepSeek or VietMap bills.
+// Small in-memory per-IP limits so the public endpoints can't run up the DeepSeek, VietMap or SerpApi bills.
 function rateLimiter(perMinute) {
   const hits = new Map()
   return (c) => {
@@ -370,6 +372,137 @@ app.get('/api/map/route', async (c) => {
     return c.json({ source: 'VIETMAP', distance: path.distance, duration: path.time / 1000, geometry: path.points, legs })
   } catch {
     return c.json({ message: 'VietMap is unavailable right now.' }, 502)
+  }
+})
+
+// Place details from Google Maps through SerpApi: opening hours, photos and a price when Google lists one.
+// Each call spends a search from a small monthly plan, so pages only ask when the traveler taps Details,
+// and answers are cached here (per server instance) and in the browser.
+const placesRateLimited = rateLimiter(10)
+const placeCache = new Map()
+function cacheGet(key, ttl) {
+  const hit = placeCache.get(key)
+  if (hit && Date.now() - hit.fetchedAt < ttl) return hit
+  placeCache.delete(key)
+  return null
+}
+function cacheSet(key, value) {
+  placeCache.set(key, value)
+  if (placeCache.size > 500) placeCache.delete(placeCache.keys().next().value)
+  return value
+}
+function placesGuard(c) {
+  if (!serpKey) return c.json({ message: 'SERPAPI_API_KEY is not configured on the backend.' }, 503)
+  if (placesRateLimited(c)) return c.json({ message: 'Too many requests. Please wait a minute and try again.' }, 429)
+  return null
+}
+async function serpSearch(params) {
+  const r = await fetch('https://serpapi.com/search.json?' + new URLSearchParams({ ...params, hl: 'vi', gl: 'vn', api_key: serpKey }))
+  const data = await r.json().catch(() => ({}))
+  // "No results" is an answer; a bad key or a used-up plan is not.
+  if (data.error && !/hasn't returned any results/i.test(data.error)) throw Object.assign(new Error(data.error), { status: r.status })
+  return data
+}
+function serpFailure(c, error) {
+  console.error('SerpApi request failed:', error)
+  const quota = /run out of searches|exhausted|throughput/i.test(error?.message || '')
+  return c.json({ message: quota ? 'Google Maps details are used up for this month.' : 'Google Maps details are unavailable right now.' }, quota ? 503 : 502)
+}
+
+// Searching in Vietnamese keeps Vietnamese names as they are on OpenStreetMap; in English Google translates
+// them ("Cơm tấm 67" becomes "Broken Rice 67"). Accents and words that only say what a place is are ignored.
+const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase()
+const GENERIC_WORDS = new Set(['quan', 'nha', 'hang', 'restaurant', 'cafe', 'ca', 'phe', 'coffee', 'hotel', 'khach', 'san', 'nghi', 'hostel', 'homestay', 'resort', 'the', 'and', 'va'])
+const nameWords = (s) => fold(s).split(/[^a-z0-9]+/).filter((w) => w && !GENERIC_WORDS.has(w))
+function sameName(a, b) {
+  const wa = nameWords(a), wb = nameWords(b)
+  if (!wa.length || !wb.length) return false
+  const ja = ` ${wa.join(' ')} `, jb = ` ${wb.join(' ')} `
+  if (ja.includes(jb) || jb.includes(ja)) return true
+  const shared = wa.filter((w) => wb.includes(w)).length
+  return shared >= 2 && shared / wa.length >= 0.6
+}
+function metres(a, b) {
+  const R = 6371000, rad = Math.PI / 180, dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
+
+const DAYS = { 'thu hai': 'monday', 'thu ba': 'tuesday', 'thu tu': 'wednesday', 'thu nam': 'thursday', 'thu sau': 'friday', 'thu bay': 'saturday', 'chu nhat': 'sunday' }
+const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+// Google gives either { "thứ hai": "07:00–21:00", … } or [{ "thứ hai": "07:00–21:00" }, …]; times stay as given.
+function weekHours(raw) {
+  const entries = Array.isArray(raw) ? raw.flatMap((o) => Object.entries(o || {})) : raw && typeof raw === 'object' ? Object.entries(raw) : []
+  const byDay = new Map()
+  for (const [key, value] of entries) {
+    const day = DAYS[fold(key).trim()] || (DAY_ORDER.includes(key) ? key : null)
+    const text = fold(value)
+    if (day) byDay.set(day, /ca ngay|24 gio/.test(text) ? 'Open 24 hours' : /^dong cua$/.test(text.trim()) ? 'Closed' : clip(value, 60))
+  }
+  return DAY_ORDER.filter((d) => byDay.has(d)).map((day) => ({ day, hours: byDay.get(day) }))
+}
+const httpsUrl = (u) => (/^https:\/\//.test(String(u || '')) ? String(u) : null)
+// Google photo URLs end in a size such as "=w1000-h1000-c-n"; ask for a cropped 4:3 thumbnail and a large view.
+function googlePhoto(thumbnail, image = thumbnail) {
+  const resize = (url, size) => httpsUrl(url)?.replace(/=w\d+-h\d+[^/=]*$/, size)
+  const photo = { thumbnail: resize(thumbnail, '=w400-h300-c'), image: resize(image, '=w1600-h1600-k-no') }
+  return photo.thumbnail && photo.image ? photo : null
+}
+
+// Finds the Google Maps listing for an OpenStreetMap place: same name, and close to where OSM puts it.
+app.get('/api/places/details', async (c) => {
+  const blocked = placesGuard(c)
+  if (blocked) return blocked
+  // Number('') is 0, so a missing coordinate would otherwise search off the coast of Africa.
+  const coord = (v) => (String(v ?? '').trim() ? Number(v) : NaN)
+  const name = clip(c.req.query('name'), 120).trim(), lat = coord(c.req.query('lat')), lon = coord(c.req.query('lon'))
+  if (!name || !isLat(lat) || !isLon(lon)) return c.json({ message: 'Send a place name, lat and lon.' }, 400)
+  // Beaches and sights are large, so OSM and Google can put them far apart; shops sit within a street or two.
+  const radius = ['Beach', 'Attraction', 'Viewpoint', 'Historic site'].includes(c.req.query('kind')) ? 2000 : 400
+  const key = `d:${fold(name)}@${lat.toFixed(3)},${lon.toFixed(3)}`
+  const hit = cacheGet(key, 24 * 3600_000)
+  if (hit) return c.json(hit)
+  try {
+    // The area name keeps Google from answering with a same-named place in another city or country.
+    const near = clip(c.req.query('near'), 120).trim()
+    const data = await serpSearch({ engine: 'google_maps', type: 'search', q: near ? `${name}, ${near}` : name, ll: `@${lat},${lon},16z` })
+    const listings = data.place_results ? [data.place_results] : Array.isArray(data.local_results) ? data.local_results : []
+    const place = listings
+      .map((x) => ({ x, d: metres({ lat, lon }, { lat: x.gps_coordinates?.latitude, lon: x.gps_coordinates?.longitude }) }))
+      .filter(({ x, d }) => d <= radius && sameName(name, x.title))
+      .sort((a, b) => a.d - b.d)[0]?.x
+    if (!place) return c.json(cacheSet(key, { found: false, fetchedAt: Date.now() }))
+    return c.json(cacheSet(key, {
+      found: true,
+      name: clip(place.title, 120),
+      address: clip(place.address, 200),
+      mapsUrl: 'https://www.google.com/maps/search/?' + new URLSearchParams({ api: '1', query: place.title, ...(place.place_id ? { query_place_id: place.place_id } : {}) }),
+      price: clip(place.price, 40) || null,
+      hours: weekHours(place.operating_hours || place.hours),
+      photo: googlePhoto(place.thumbnail),
+      photosId: /^0x[0-9a-f]+:0x[0-9a-f]+$/i.test(place.data_id || '') ? place.data_id : null,
+      fetchedAt: Date.now(),
+    }))
+  } catch (error) {
+    return serpFailure(c, error)
+  }
+})
+
+// More photos of a listing found above (its data_id), at a size that suits the page.
+app.get('/api/places/photos', async (c) => {
+  const blocked = placesGuard(c)
+  if (blocked) return blocked
+  const id = String(c.req.query('id') || '')
+  if (!/^0x[0-9a-f]+:0x[0-9a-f]+$/i.test(id)) return c.json({ message: 'Invalid place id.' }, 400)
+  const key = `p:${id}`
+  const hit = cacheGet(key, 7 * 24 * 3600_000)
+  if (hit) return c.json(hit)
+  try {
+    const data = await serpSearch({ engine: 'google_maps_photos', data_id: id })
+    const photos = (Array.isArray(data.photos) ? data.photos : []).map((p) => googlePhoto(p.thumbnail, p.image)).filter(Boolean).slice(0, 12)
+    return c.json(cacheSet(key, { photos, fetchedAt: Date.now() }))
+  } catch (error) {
+    return serpFailure(c, error)
   }
 })
 
