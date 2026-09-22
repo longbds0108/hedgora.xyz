@@ -327,6 +327,80 @@ function mapGuard(c) {
   return null
 }
 
+// Named places near a spot from OpenStreetMap: the four searches every page shows (sights within 10 km, restaurants
+// and cafés within 2 km, places to stay within 3 km, up to 25 each). Browsers used to ask Photon directly, so a slow
+// or throttled Photon left pages waiting with no end. Here each Photon search gives up after 5 seconds, Overpass
+// answers if Photon can't, and answers are cached per spot on this instance and on Vercel's CDN, so travellers near
+// each other share one lookup. Pages round the spot to about 500 m and measure distances from where you really are.
+const NEARBY_GROUPS = [
+  { key: 'sight', radius: 10, tags: ['natural:beach', 'tourism:attraction', 'tourism:viewpoint', 'tourism:museum', 'historic'] },
+  { key: 'food', radius: 2, tags: ['amenity:restaurant'] },
+  { key: 'cafe', radius: 2, tags: ['amenity:cafe'] },
+  { key: 'stay', radius: 3, tags: ['tourism:hotel', 'tourism:guest_house', 'tourism:hostel'] },
+]
+const PLACE_KINDS = { beach: 'Beach', attraction: 'Attraction', viewpoint: 'Viewpoint', museum: 'Museum', restaurant: 'Restaurant', cafe: 'Café', hotel: 'Hotel', guest_house: 'Guest house', hostel: 'Hostel' }
+const OSM_HEADERS = { 'User-Agent': 'Hedgora/1.0 (https://www.hedgora.xyz)', Accept: 'application/json' }
+const nearbyRateLimited = rateLimiter(30)
+async function photonGroup(group, lat, lon) {
+  const p = new URLSearchParams({ lat, lon, radius: group.radius, limit: '25', lang: 'default' })
+  group.tags.forEach((t) => p.append('osm_tag', t))
+  const r = await fetch('https://photon.komoot.io/reverse?' + p, { headers: OSM_HEADERS, signal: AbortSignal.timeout(5000) })
+  if (!r.ok) throw new Error('Photon request failed (' + r.status + ')')
+  return ((await r.json()).features || []).map((f) => {
+    const pr = f.properties || {}, [plon, plat] = f.geometry?.coordinates || []
+    return {
+      name: pr.name, lat: plat, lon: plon, group: group.key,
+      kind: pr.osm_key === 'historic' ? 'Historic site' : PLACE_KINDS[pr.osm_value] || 'Place',
+      address: [[pr.housenumber, pr.street].filter(Boolean).join(' '), pr.district || pr.city].filter(Boolean).join(', '),
+    }
+  })
+}
+async function overpassNearby(lat, lon) {
+  const around = (km) => `(around:${km * 1000},${lat},${lon})["name"]`
+  const query = `[out:json][timeout:8];(nwr${around(10)}["tourism"~"^(attraction|viewpoint|museum)$"];nwr${around(10)}["natural"="beach"];nwr${around(10)}["historic"];nwr${around(2)}["amenity"~"^(restaurant|cafe)$"];nwr${around(3)}["tourism"~"^(hotel|guest_house|hostel)$"];);out center tags 600;`
+  // Both public Overpass servers are asked at once; the first good answer wins and the other is cancelled.
+  const controller = new AbortController()
+  const ask = async (endpoint) => {
+    const r = await fetch(endpoint, { method: 'POST', headers: { ...OSM_HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ data: query }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]) })
+    if (!r.ok) throw new Error('Overpass request failed (' + r.status + ')')
+    return (await r.json()).elements || []
+  }
+  const elements = await Promise.any(['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'].map(ask)).finally(() => controller.abort())
+  const places = elements.map((e) => {
+    const t = e.tags || {}
+    const group = t.amenity === 'restaurant' ? 'food' : t.amenity === 'cafe' ? 'cafe' : /^(hotel|guest_house|hostel)$/.test(t.tourism) ? 'stay' : 'sight'
+    const kind = t.natural === 'beach' ? 'Beach' : PLACE_KINDS[t.amenity] || PLACE_KINDS[t.tourism] || (t.historic ? 'Historic site' : 'Place')
+    return { name: t.name, lat: e.lat ?? e.center?.lat, lon: e.lon ?? e.center?.lon, group, kind, address: [[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), t['addr:district'] || t['addr:city']].filter(Boolean).join(', ') }
+  })
+  // Like Photon: the 25 closest of each kind.
+  return NEARBY_GROUPS.flatMap((g) => places.filter((p) => p.group === g.key && Number.isFinite(p.lat)).sort((a, b) => metres({ lat, lon }, a) - metres({ lat, lon }, b)).slice(0, 25))
+}
+app.get('/api/places/nearby', async (c) => {
+  if (nearbyRateLimited(c)) return c.json({ message: 'Too many requests. Please wait a minute and try again.' }, 429)
+  const lat = Number(c.req.query('lat')), lon = Number(c.req.query('lon'))
+  if (!String(c.req.query('lat') ?? '').trim() || !String(c.req.query('lon') ?? '').trim() || !isLat(lat) || !isLon(lon)) return c.json({ message: 'Send lat and lon.' }, 400)
+  const key = `n:${lat.toFixed(3)},${lon.toFixed(3)}`
+  let answer = cacheGet(key, 12 * 3600_000)
+  if (!answer) {
+    const results = await Promise.allSettled(NEARBY_GROUPS.map((g) => photonGroup(g, lat, lon)))
+    let places = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])), source = 'photon'
+    if (results.every((r) => r.status === 'rejected')) {
+      try { places = await overpassNearby(lat, lon); source = 'overpass' } catch (error) {
+        console.error('Nearby places failed:', results[0].reason, error)
+        return c.json({ message: 'Could not load nearby places right now.' }, 502)
+      }
+    }
+    places = places.filter((p) => p.name && Number.isFinite(p.lat) && Number.isFinite(p.lon)).map((p) => ({ ...p, name: clip(p.name, 120), address: clip(p.address, 160) }))
+    // Only a complete answer is kept; one with a missing search is tried again next time.
+    answer = { source, places, fetchedAt: Date.now() }
+    if (source === 'overpass' || results.every((r) => r.status === 'fulfilled')) cacheSet(key, answer)
+    else return c.json(answer)
+  }
+  // Browsers keep it for 10 minutes; Vercel's CDN for 12 hours, then serves it stale while it refreshes.
+  c.header('Cache-Control', 'public, max-age=600, s-maxage=43200, stale-while-revalidate=604800')
+  return c.json(answer)
+})
+
 // Names a spot as "ward, district or city", e.g. "Phường Thắng Tam, Thành Phố Vũng Tàu". 404 outside Vietnam.
 app.get('/api/map/reverse', async (c) => {
   const blocked = mapGuard(c)

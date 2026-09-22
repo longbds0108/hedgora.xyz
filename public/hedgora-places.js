@@ -11,6 +11,10 @@
   const PHOTO_TTL = 7 * 864e5
   const GPLACES_KEY = 'hedgora.gplaces'
   const GPLACES_TTL = 3 * 864e5
+  const NEARBY_KEY = 'hedgora.nearby'
+  const NEARBY_TTL = 6 * 3600e3
+  // Gives up on a request after `ms` (older browsers without AbortSignal.timeout just wait).
+  const timeout = (ms) => (AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined)
   const SIGHT_KINDS = ['Beach', 'Attraction', 'Viewpoint', 'Museum', 'Historic site']
   const PLACE_KINDS = { beach: 'Beach', attraction: 'Attraction', viewpoint: 'Viewpoint', museum: 'Museum', restaurant: 'Restaurant', cafe: 'Café', hotel: 'Hotel', guest_house: 'Guest house', hostel: 'Hostel' }
   // The same four searches as the homepage's "Discover nearby" (radius in km, up to 25 results each).
@@ -62,20 +66,21 @@
     try { sessionStorage.setItem(LOCATION_KEY, JSON.stringify({ lat: loc.lat, lon: loc.lon, name: loc.name })) } catch {}
   }
   // Inside Vietnam, VietMap names the ward and city; elsewhere it has nothing and Photon (then Nominatim) is used.
+  // Each service gets a few seconds, so a slow one can't hold up the page.
   async function reverseGeocode(lat, lon) {
     try {
-      const r = await fetch(apiBase + '/api/map/reverse?' + new URLSearchParams({ lat, lon }))
+      const r = await fetch(apiBase + '/api/map/reverse?' + new URLSearchParams({ lat, lon }), { signal: timeout(6000) })
       if (r.ok) { const { name } = await r.json(); if (name) return name }
     } catch {}
     try {
-      const r = await fetch('https://photon.komoot.io/reverse?' + new URLSearchParams({ lat, lon, limit: '1', lang: 'en' }))
+      const r = await fetch('https://photon.komoot.io/reverse?' + new URLSearchParams({ lat, lon, limit: '1', lang: 'en' }), { signal: timeout(6000) })
       if (!r.ok) throw new Error('Photon request failed')
       const p = (await r.json()).features?.[0]?.properties || {}
       const parts = [...new Set([p.district || p.locality || p.name, p.city || p.county || p.state].filter(Boolean).map(String))]
       if (parts.length < 2 && p.country) parts.push(p.country)
       if (parts.length) return parts.join(', ')
     } catch {}
-    const r = await fetch('https://nominatim.openstreetmap.org/reverse?' + new URLSearchParams({ format: 'jsonv2', lat, lon, zoom: '14', 'accept-language': 'en' }))
+    const r = await fetch('https://nominatim.openstreetmap.org/reverse?' + new URLSearchParams({ format: 'jsonv2', lat, lon, zoom: '14', 'accept-language': 'en' }), { signal: timeout(6000) })
     if (!r.ok) throw new Error('Reverse geocoding failed')
     const a = (await r.json()).address || {}
     return [...new Set([a.suburb || a.quarter || a.city_district, a.city || a.town || a.village || a.county || a.state].filter(Boolean).map(String))].join(', ') || a.country || ''
@@ -94,28 +99,53 @@
     })
   }
 
-  // Real named places from OpenStreetMap, closest first.
+  // Real named places from OpenStreetMap, straight from Photon. Only used when Hedgora's server can't be reached.
   async function photonNearby(group, origin) {
     const p = new URLSearchParams({ lat: origin.lat, lon: origin.lon, radius: group.radius, limit: '25', lang: 'default' })
     group.tags.forEach((t) => p.append('osm_tag', t))
-    const r = await fetch('https://photon.komoot.io/reverse?' + p)
+    const r = await fetch('https://photon.komoot.io/reverse?' + p, { signal: timeout(8000) })
     if (!r.ok) throw new Error('Photon request failed')
     return ((await r.json()).features || []).map((f) => {
       const pr = f.properties || {}, [lon, lat] = f.geometry?.coordinates || []
       return {
-        name: pr.name, lat, lon, group,
+        name: pr.name, lat, lon, group: group.key,
         kind: pr.osm_key === 'historic' ? 'Historic site' : (PLACE_KINDS[pr.osm_value] || 'Place'),
         address: [[pr.housenumber, pr.street].filter(Boolean).join(' '), pr.district || pr.city].filter(Boolean).join(', '),
-        distance: haversine(origin, { lat, lon }),
       }
     }).filter((x) => x.name && Number.isFinite(x.lat) && Number.isFinite(x.lon))
   }
-  // All groups are searched at once; one that fails just adds nothing. Duplicate names are dropped, as on the homepage.
+  // Nearby places come from Hedgora's server, which asks Photon (or Overpass when Photon can't answer) and caches
+  // the answer per spot. The spot is rounded to about 500 m so nearby travellers share it; distances are measured
+  // from where the traveler really is. Answers stay in this browser, shared by the homepage, Explore and Trips: for
+  // 6 hours they're simply used, and for up to a week they're shown at once while a fresh copy loads for next time.
+  // Photon is asked directly only when the server can't be reached at all. Closest first, duplicate names dropped.
+  async function nearbyFromServer(spot, key) {
+    let r
+    try {
+      r = await fetch(apiBase + '/api/places/nearby?' + new URLSearchParams(spot), { signal: timeout(20000) })
+    } catch {
+      const results = await Promise.allSettled(GROUPS.map((g) => photonNearby(g, { lat: Number(spot.lat), lon: Number(spot.lon) })))
+      if (results.every((x) => x.status === 'rejected')) throw new Error('Could not load nearby places right now.')
+      return results.flatMap((x) => (x.status === 'fulfilled' ? x.value : []))
+    }
+    const data = await r.json().catch(() => ({}))
+    if (!r.ok || !Array.isArray(data.places)) throw new Error(data.message || 'Could not load nearby places right now.')
+    writeStore(NEARBY_KEY, key, data.places, 8)
+    return data.places
+  }
   async function fetchNearby(origin) {
-    const results = await Promise.allSettled(GROUPS.map((g) => photonNearby(g, origin)))
-    if (results.every((r) => r.status === 'rejected')) throw new Error('Could not load nearby places right now.')
-    const seen = new Set()
-    return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).sort((a, b) => a.distance - b.distance).filter((p) => !seen.has(p.name) && seen.add(p.name))
+    const round = (v) => (Math.round(v / 0.005) * 0.005).toFixed(3)
+    const spot = { lat: round(origin.lat), lon: round(origin.lon) }, key = spot.lat + ',' + spot.lon
+    const hit = readStore(NEARBY_KEY)[key], age = hit ? Date.now() - hit.t : Infinity
+    let places
+    if (age < NEARBY_TTL) places = hit.v
+    else if (age < 7 * 864e5) { places = hit.v; nearbyFromServer(spot, key).catch(() => {}) }
+    else places = await nearbyFromServer(spot, key)
+    const groups = Object.fromEntries(GROUPS.map((g) => [g.key, g])), seen = new Set()
+    return places
+      .map((p) => ({ ...p, group: groups[p.group] || GROUPS[0], distance: haversine(origin, p) }))
+      .sort((a, b) => a.distance - b.distance)
+      .filter((p) => !seen.has(p.name) && seen.add(p.name))
   }
 
   // Small browser caches shaped { key: { v: value, t: savedAt } }; past `max` entries the oldest are dropped.
@@ -404,7 +434,7 @@
   window.Hedgora = {
     GROUPS, SIGHT_KINDS, ROUTE_MODES, reduceMotion,
     escapeHtml, formatDistance, formatDuration, haversine, toast,
-    loadLocation, locate, fetchNearby, findPlacePhoto, photoCredit, photoAlt,
+    loadLocation, locate, reverseGeocode, fetchNearby, findPlacePhoto, photoCredit, photoAlt,
     placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, placeTours, cachedPlaceTours, openNow, todayHours,
     placeKey, savedPlaces, isSaved, toggleSaved, popHeart,
     createMap, route, drawRoute, planTitle, planTrip,
