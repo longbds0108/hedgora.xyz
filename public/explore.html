@@ -197,7 +197,7 @@ select{font:inherit}
       </div>
       <div class="sf-bottom">
         <span>© 2026 Hedgora. All rights reserved.</span>
-        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a></span>
+        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a> and <a href="https://openverse.org/" target="_blank" rel="noreferrer">Openverse</a></span>
         <a class="sf-up" href="#">Back to top ↑</a>
       </div>
     </div>
@@ -331,7 +331,7 @@ async function morePhotos(row, i, button) {
 function renderList(animate) {
   const all = visiblePlaces(), rows = all.slice(0, state.limit), box = $('#placeList'), group = H.GROUPS.find((g) => g.key === state.filter), q = state.query.trim()
   $('#resultNote').innerHTML = rows.length
-    ? `Showing ${rows.length} of ${all.length === state.places.length ? state.places.length : all.length + ' matching'} places near ${H.escapeHtml(state.location.name)}, closest first. Places © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a>.`
+    ? `Showing ${rows.length} of ${all.length === state.places.length ? state.places.length : all.length + ' matching'} places near ${H.escapeHtml(state.location.name)}, closest first. Places © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a> and <a href="https://openverse.org/" target="_blank" rel="noreferrer">Openverse</a>; “Area photo” means it was taken nearby, not of the place.`
     : ''
   box.classList.toggle('animate', Boolean(animate))
   if (!rows.length) {
@@ -344,8 +344,8 @@ function renderList(animate) {
   renderMarkers(rows)
 }
 
-// Landmarks usually have a matching Commons photo; restaurants and cafés almost never do, so only sights are
-// looked up, and only once their row scrolls into view.
+// Sights get their own photo when Commons or Openverse has one; other places (and sights without one) get a
+// nearby area photo. Photos are only looked up once their row scrolls into view.
 const photoObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => entries.forEach((entry) => {
   if (!entry.isIntersecting) return
   photoObserver.unobserve(entry.target)
@@ -354,18 +354,17 @@ const photoObserver = 'IntersectionObserver' in window ? new IntersectionObserve
 function watchPhotos() {
   document.querySelectorAll('.place-row[data-index]:not([data-watched])').forEach((row) => {
     row.dataset.watched = ''
-    const p = state.places[row.dataset.index]
-    if (p && H.SIGHT_KINDS.includes(p.kind)) photoObserver ? photoObserver.observe(row) : loadPhoto(row)
+    if (state.places[row.dataset.index]) photoObserver ? photoObserver.observe(row) : loadPhoto(row)
   })
 }
 function loadPhoto(row) {
   const p = state.places[row.dataset.index]
-  H.findPlacePhoto(p).then((photo) => {
+  H.findPlacePhoto(p, state.location.name).then((photo) => {
     if (!photo || !row.isConnected) return
     const img = new Image()
     img.onload = () => {
       if (!row.isConnected) return
-      img.alt = p.name
+      img.alt = H.photoAlt(photo, p)
       row.querySelector('.thumb').appendChild(img)
       row.querySelector('.row-body p').insertAdjacentHTML('afterend', H.photoCredit(photo, 'row-credit'))
     }

@@ -1,11 +1,13 @@
 // Shared by the Explore and Trips pages: the traveler's location, real nearby places from OpenStreetMap
-// (via Photon), matching Wikimedia Commons photos, saved places, the map, routing and the AI trip planner.
-// Storage keys and formats match the homepage, so location, saved places, photos and plans carry over.
+// (via Photon), photos from Wikimedia Commons and Openverse, saved places, the map, routing and the AI trip planner.
+// The homepage uses the photos from here too; other storage keys and formats match it, so location, saved places
+// and plans carry over.
 ;(() => {
   const DEFAULT_LOCATION = { lat: 10.3467, lon: 107.0844, name: 'Vũng Tàu, Vietnam', shared: false }
   const LOCATION_KEY = 'hedgora.location'
   const SAVED_KEY = 'hedgora.saved'
-  const PHOTO_CACHE_KEY = 'hedgora.photos'
+  const PHOTO_CACHE_KEY = 'hedgora.placePhotos'
+  const AREA_KEY = 'hedgora.areaPhotos'
   const PHOTO_TTL = 7 * 864e5
   const GPLACES_KEY = 'hedgora.gplaces'
   const GPLACES_TTL = 3 * 864e5
@@ -116,9 +118,6 @@
     return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).sort((a, b) => a.distance - b.distance).filter((p) => !seen.has(p.name) && seen.add(p.name))
   }
 
-  // Only use a Commons photo whose title matches the place name AND was taken within 1 km of it.
-  // Wikimedia asks clients to identify themselves and not to burst, so lookups run one at a time and are cached for a week.
-  let photoQueue = Promise.resolve()
   // Small browser caches shaped { key: { v: value, t: savedAt } }; past `max` entries the oldest are dropped.
   function readStore(name) { try { return JSON.parse(localStorage.getItem(name) || '{}') } catch { return {} } }
   function writeStore(name, key, value, max) {
@@ -130,34 +129,145 @@
       localStorage.setItem(name, JSON.stringify(c))
     } catch {}
   }
+  // Place photos, most specific first:
+  // 1. Sights: a Wikimedia Commons photo whose title matches the name and was taken within 1 km, else an Openverse
+  //    photo (openly licensed, from Flickr and other collections) whose title or tags name the sight and the city.
+  // 2. Any place still without one: an area photo, the nearest geotagged Commons photo within 600 m (1 km for sights),
+  //    each scene used once per page. Its credit says "Area photo" and how far away it was taken, so it's never
+  //    passed off as the place itself.
+  // Wikimedia asks clients to identify themselves and not to burst, and Openverse allows 20 anonymous searches a
+  // minute and 200 a day, so each service's requests run one at a time (Openverse at most 18 in any minute), answers
+  // are cached for a week, and a service that answers "too many requests" is left alone for a minute.
+  const sleep = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)))
+  function serialQueue(gap, perMinute = Infinity) {
+    let tail = Promise.resolve(), pausedUntil = 0
+    const starts = []
+    const run = (task) => {
+      const job = tail.then(async () => {
+        if (Date.now() < pausedUntil) throw new Error('Paused after too many requests')
+        while (starts.length && Date.now() - starts[0] >= 60_000) starts.shift()
+        if (starts.length >= perMinute) { await sleep(starts[0] + 60_000 - Date.now()); starts.shift() }
+        starts.push(Date.now())
+        try { return await task() } finally { await sleep(gap) }
+      })
+      tail = job.catch(() => null)
+      return job
+    }
+    run.pause = (ms) => { pausedUntil = Date.now() + ms }
+    return run
+  }
+  const commonsQueue = serialQueue(350), openverseQueue = serialQueue(300, 18)
+  function getJson(queue, url, options) {
+    return queue(async () => {
+      const r = await fetch(url, options)
+      if (r.status === 429) { queue.pause(60_000); throw new Error('Too many requests') }
+      if (!r.ok) throw new Error('Request failed (' + r.status + ')')
+      return r.json()
+    })
+  }
+  // The old cache only knew Commons, so its "no photo" answers would hide Openverse photos for a week.
+  try { localStorage.removeItem('hedgora.photos') } catch {}
+
+  const COMMONS_API = 'https://commons.wikimedia.org/w/api.php?'
+  const COMMONS_HEADERS = { 'Api-User-Agent': 'Hedgora/1.0 (https://www.hedgora.xyz)' }
+  const COMMONS_INFO = { action: 'query', format: 'json', origin: '*', prop: 'imageinfo', iiprop: 'url|extmetadata', iiextmetadatafilter: 'Artist|LicenseShortName', iiurlwidth: '700' }
   // Commons returns the author as HTML; parse it in an inert document so nothing in it can load or run.
   const htmlText = (h) => new DOMParser().parseFromString(String(h || ''), 'text/html').body.textContent.replace(/\s+/g, ' ').trim()
-  function findPlacePhoto(place) {
-    const key = place.name + '@' + Number(place.lat).toFixed(3) + ',' + Number(place.lon).toFixed(3), hit = readStore(PHOTO_CACHE_KEY)[key]
-    if (hit && Date.now() - hit.t < PHOTO_TTL) return Promise.resolve(hit.v)
-    const job = photoQueue.then(async () => {
-      const p = new URLSearchParams({ action: 'query', format: 'json', origin: '*', generator: 'search', gsrnamespace: '6', gsrlimit: '3', gsrsearch: `${place.name} nearcoord:1km,${place.lat},${place.lon}`, prop: 'imageinfo', iiprop: 'url|extmetadata', iiextmetadatafilter: 'Artist|LicenseShortName', iiurlwidth: '700' })
-      let photo = null
-      try {
-        const r = await fetch('https://commons.wikimedia.org/w/api.php?' + p, { headers: { 'Api-User-Agent': 'Hedgora/1.0 (https://www.hedgora.xyz)' } })
-        if (r.ok) {
-          const pages = Object.values((await r.json()).query?.pages || {}).sort((a, b) => a.index - b.index)
-          const info = pages.map((x) => x.imageinfo?.[0]).find((i) => i?.thumburl && !/\.(pdf|svg|tiff?|webm|ogv)$/i.test(i.url || ''))
-          if (info) {
-            const meta = info.extmetadata || {}
-            photo = { url: info.thumburl, page: info.descriptionurl, author: (htmlText(meta.Artist?.value) || 'Unknown author').slice(0, 60), license: htmlText(meta.LicenseShortName?.value) || 'see source' }
-          }
-          writeStore(PHOTO_CACHE_KEY, key, photo, 200)
-        }
-      } catch {}
-      await new Promise((r) => setTimeout(r, 350))
-      return photo
+  function commonsPhoto(page) {
+    const info = page?.imageinfo?.[0]
+    if (!info?.thumburl || /\.(pdf|svg|tiff?|webm|ogv|gif)$/i.test(info.url || '')) return null
+    const meta = info.extmetadata || {}
+    // `scene` ignores numbers and punctuation, so "Temple.jpg" and "Temple (2).jpg" are one scene.
+    return { url: info.thumburl, page: info.descriptionurl, author: (htmlText(meta.Artist?.value) || 'Unknown author').slice(0, 60), license: htmlText(meta.LicenseShortName?.value) || 'see source', source: 'Wikimedia Commons', scene: fold(page.title).replace(/[^a-z]+/g, '') }
+  }
+  async function commonsNamedPhoto(place) {
+    const data = await getJson(commonsQueue, COMMONS_API + new URLSearchParams({ ...COMMONS_INFO, generator: 'search', gsrnamespace: '6', gsrlimit: '3', gsrsearch: `${place.name} nearcoord:1km,${place.lat},${place.lon}` }), { headers: COMMONS_HEADERS })
+    return Object.values(data.query?.pages || {}).sort((a, b) => a.index - b.index).map(commonsPhoto).find(Boolean) || null
+  }
+
+  const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase()
+  const words = (s) => fold(s).split(/[^a-z0-9]+/).filter(Boolean)
+  // "Phường Thắng Tam, Thành Phố Vũng Tàu" → "Vũng Tàu"; "Vũng Tàu, Vietnam" → "Vũng Tàu".
+  function cityOf(locationName) {
+    const parts = String(locationName || '').split(',').map((s) => s.trim()).filter((s) => s && !/^(viet ?nam)$/.test(fold(s)) && !/^-?\d/.test(s))
+    return (parts[parts.length - 1] || '').replace(/^(thành phố|tp\.?|tỉnh|thị xã|quận|huyện|phường|xã)\s+/i, '')
+  }
+  // Words that say what a sight is rather than which one it is ("Chùa", "Bãi", "Tượng"); a photo of another pagoda
+  // in the same city must not count as a match.
+  const TYPE_WORDS = new Set(['chua', 'den', 'dinh', 'mieu', 'nha', 'tho', 'tuong', 'bai', 'nui', 'ho', 'cong', 'vien', 'bao', 'tang', 'thap', 'hai', 'dang', 'khu', 'di', 'tich', 'lang', 'the', 'of', 'and', 'beach', 'temple', 'pagoda', 'church', 'museum', 'park', 'statue', 'lighthouse', 'mountain'])
+  const OPENVERSE_LICENSES = { by: 'CC BY', 'by-sa': 'CC BY-SA', 'by-nd': 'CC BY-ND', cc0: 'CC0', pdm: 'Public domain' }
+  // Only licenses that allow commercial use, since Hedgora takes payments.
+  async function openversePhoto(place, city) {
+    const cityWords = words(city), nameWords = words(place.name).filter((w) => !TYPE_WORDS.has(w) && !cityWords.includes(w))
+    if (!cityWords.length || !nameWords.length) return null
+    const data = await getJson(openverseQueue, 'https://api.openverse.org/v1/images/?' + new URLSearchParams({ q: `${place.name} ${city}`, license_type: 'commercial', page_size: '10' }))
+    const hit = (data.results || []).find((x) => {
+      const text = new Set(words(x.title + ' ' + (x.tags || []).map((t) => t.name).join(' ')))
+      return x.thumbnail && cityWords.every((w) => text.has(w)) && nameWords.filter((w) => text.has(w)).length >= nameWords.length / 2
     })
-    photoQueue = job.catch(() => null)
+    if (!hit) return null
+    const license = (OPENVERSE_LICENSES[hit.license] || 'CC ' + String(hit.license).toUpperCase()) + (hit.license_version && !['cc0', 'pdm'].includes(hit.license) ? ' ' + hit.license_version : '')
+    return { url: hit.thumbnail, page: hit.foreign_landing_url || hit.detail_url, author: String(hit.creator || 'Unknown author').slice(0, 60), license, source: 'Openverse' }
+  }
+  // A failed or paused lookup isn't cached, so it's tried again next time.
+  async function ownPhoto(place, city) {
+    const key = place.name + '@' + Number(place.lat).toFixed(3) + ',' + Number(place.lon).toFixed(3), hit = readStore(PHOTO_CACHE_KEY)[key]
+    if (hit && Date.now() - hit.t < PHOTO_TTL) return hit.v
+    let photo
+    try { photo = (await commonsNamedPhoto(place)) || (await openversePhoto(place, city)) } catch { return null }
+    writeStore(PHOTO_CACHE_KEY, key, photo, 200)
+    return photo
+  }
+
+  // Area photos come in cells of about 550 m: one Commons request returns the 50 geotagged photos nearest the cell,
+  // shared by every place in it. Maps, logos and the like are skipped; "(2)" copies of one scene count once.
+  const areaCells = new Map(), areaPicks = new Map(), usedScenes = new Set()
+  function areaCell(place) {
+    const size = 0.005, lat = (Math.floor(place.lat / size) + 0.5) * size, lon = (Math.floor(place.lon / size) + 0.5) * size
+    const key = lat.toFixed(4) + ',' + lon.toFixed(4), hit = readStore(AREA_KEY)[key]
+    if (areaCells.has(key)) return areaCells.get(key)
+    const job = hit && Date.now() - hit.t < PHOTO_TTL ? Promise.resolve(hit.v) : getJson(commonsQueue, COMMONS_API + new URLSearchParams({ ...COMMONS_INFO, prop: 'imageinfo|coordinates', colimit: 'max', generator: 'geosearch', ggscoord: lat + '|' + lon, ggsradius: '1500', ggslimit: '50', ggsnamespace: '6' }), { headers: COMMONS_HEADERS }).then((data) => {
+      const photos = Object.values(data.query?.pages || {})
+        .filter((pg) => pg.coordinates?.[0] && !/\b(map|ban do|logo|flag|coat of arms|seal|diagram|chart|plan)\b/.test(fold(pg.title)))
+        .map((pg) => { const photo = commonsPhoto(pg); return photo && { ...photo, lat: pg.coordinates[0].lat, lon: pg.coordinates[0].lon } })
+        .filter(Boolean)
+      writeStore(AREA_KEY, key, photos, 12)
+      return photos
+    })
+    areaCells.set(key, job)
+    job.catch(() => areaCells.delete(key))
     return job
   }
-  // CC BY / BY-SA photos must credit the author and license; the link goes to the file page on Commons.
-  const photoCredit = (photo, className = 'photo-credit') => `<a class="${className}" href="${escapeHtml(photo.page)}" target="_blank" rel="noreferrer" title="Photo by ${escapeHtml(photo.author)} · ${escapeHtml(photo.license)} · Wikimedia Commons">📷 ${escapeHtml(photo.author)} · ${escapeHtml(photo.license)}</a>`
+  async function areaPhoto(place) {
+    const key = placeKey(place)
+    if (!areaPicks.has(key)) {
+      const photos = await areaCell(place), limit = SIGHT_KINDS.includes(place.kind) ? 1000 : 600
+      if (areaPicks.has(key)) return areaPicks.get(key)
+      const best = photos.map((ph) => ({ ph, d: haversine(place, ph) })).filter(({ ph, d }) => d <= limit && !usedScenes.has(ph.scene)).sort((a, b) => a.d - b.d)[0]
+      if (best) usedScenes.add(best.ph.scene)
+      areaPicks.set(key, best ? { ...best.ph, area: true, distance: best.d } : null)
+    }
+    return areaPicks.get(key)
+  }
+
+  // `near` is the traveler's location name; its city narrows the Openverse search.
+  async function findPlacePhoto(place, near) {
+    if (SIGHT_KINDS.includes(place.kind)) {
+      const own = await ownPhoto(place, cityOf(near))
+      // A sight's own Commons photo shouldn't show up again as a neighbour's area photo.
+      if (own?.scene) usedScenes.add(own.scene)
+      if (own) return own
+    }
+    try { return await areaPhoto(place) } catch { return null }
+  }
+  // Openly licensed photos must credit the author and license; the link goes to the photo's own page.
+  function photoCredit(photo, className = 'photo-credit') {
+    const where = photo.area ? `Area photo, ${formatDistance(photo.distance)} away · ` : ''
+    const via = photo.source === 'Openverse' ? 'via Openverse' : 'Wikimedia Commons'
+    return `<a class="${className}" href="${escapeHtml(photo.page)}" target="_blank" rel="noreferrer" title="${where}Photo by ${escapeHtml(photo.author)} · ${escapeHtml(photo.license)} · ${via}">📷 ${where}${escapeHtml(photo.author)} · ${escapeHtml(photo.license)}</a>`
+  }
+  // Alt text: an area photo shows the neighbourhood, not the place.
+  const photoAlt = (photo, place) => (photo.area ? 'Area near ' + place.name : place.name)
 
   // Opening hours, photos and price from Google Maps, through Hedgora's server and SerpApi. Every lookup spends
   // a search from a small monthly plan, so they only run when the traveler taps Details and are kept for 3 days
@@ -291,7 +401,7 @@
   window.Hedgora = {
     GROUPS, SIGHT_KINDS, ROUTE_MODES, reduceMotion,
     escapeHtml, formatDistance, formatDuration, haversine, toast,
-    loadLocation, locate, fetchNearby, findPlacePhoto, photoCredit,
+    loadLocation, locate, fetchNearby, findPlacePhoto, photoCredit, photoAlt,
     placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, openNow, todayHours,
     placeKey, savedPlaces, isSaved, toggleSaved, popHeart,
     createMap, route, drawRoute, planTitle, planTrip,

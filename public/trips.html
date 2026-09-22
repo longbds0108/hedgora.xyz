@@ -204,7 +204,7 @@ select{font:inherit}
       </div>
       <div class="sf-bottom">
         <span>© 2026 Hedgora. All rights reserved.</span>
-        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a></span>
+        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a> and <a href="https://openverse.org/" target="_blank" rel="noreferrer">Openverse</a></span>
         <a class="sf-up" href="#">Back to top ↑</a>
       </div>
     </div>
@@ -319,14 +319,13 @@ function render(plan, places) {
   const last = stops[stops.length - 1]
   $('#tripMeta').innerHTML = `<b>${stops.length} stops</b> · ${H.escapeHtml(stops[0].start)}–${fromMinutes(toMinutes(last.start) + last.minutes)}`
   state.stops = stops
-  // Landmarks usually have a matching Commons photo; restaurants and cafés almost never do.
+  // Sights get their own photo when Commons or Openverse has one; other stops get a nearby area photo.
   stops.forEach((s, n) => {
-    if (!H.SIGHT_KINDS.includes(s.p.kind)) return
-    H.findPlacePhoto(s.p).then((photo) => {
+    H.findPlacePhoto(s.p, state.location.name).then((photo) => {
       const row = document.querySelector(`#timeline .stop[data-n="${n}"]`)
       if (!photo || !row || state.stops !== stops) return
       const img = new Image()
-      img.onload = () => { if (row.isConnected) row.querySelector('.stop-body').insertAdjacentHTML('afterbegin', `<figure class="stop-photo"><img src="${H.escapeHtml(photo.url)}" alt="${H.escapeHtml(s.p.name)}">${H.photoCredit(photo)}</figure>`) }
+      img.onload = () => { if (row.isConnected) row.querySelector('.stop-body').insertAdjacentHTML('afterbegin', `<figure class="stop-photo"><img src="${H.escapeHtml(photo.url)}" alt="${H.escapeHtml(H.photoAlt(photo, s.p))}">${H.photoCredit(photo)}</figure>`) }
       img.src = photo.url
     })
   })
