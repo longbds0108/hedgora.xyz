@@ -568,7 +568,10 @@ async function nearestDestination(lat, lon) {
 async function destinationProducts(id) {
   const key = `v:products:${id}`, hit = cacheGet(key, 24 * 3600_000)
   if (hit) return hit.products
-  const { products = [] } = await viator('/products/search', { filtering: { destination: String(id) }, sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' }, pagination: { start: 1, count: 50 }, currency: 'VND' })
+  // Up to 100 products (two pages of 50), so small sights still have a chance to be named.
+  const search = (start) => viator('/products/search', { filtering: { destination: String(id) }, sorting: { sort: 'TRAVELER_RATING', order: 'DESCENDING' }, pagination: { start, count: 50 }, currency: 'VND' })
+  const first = await search(1)
+  const products = [...(first.products || []), ...(first.totalCount > 50 ? (await search(51)).products || [] : [])]
   const list = products.filter((p) => httpsUrl(p.productUrl) && Number.isFinite(p.pricing?.summary?.fromPrice)).map((p) => {
     const cover = (p.images || []).find((i) => i.isCover) || p.images?.[0]
     const image = (cover?.variants || []).filter((v) => v.width >= 300).sort((a, b) => a.width - b.width)[0]
@@ -595,10 +598,15 @@ app.get('/api/tours', async (c) => {
     const products = await destinationProducts(destination.id)
     // "Bảo tàng Vũ khí cổ Robert Taylor" matches "… Robert Taylor Museum …": at least two of the name's own words
     // (or its only one), ignoring the destination's name and words that say what kind of place it is.
-    const skip = new Set([...nameWords(destination.name), 'bao', 'tang', 'tuong', 'chua', 'den', 'dinh', 'nha', 'tho', 'bai', 'nui', 'ho', 'cong', 'vien', 'khu', 'di', 'tich'])
+    const skip = new Set([...nameWords(destination.name), 'bao', 'tang', 'tuong', 'chua', 'den', 'dinh', 'nha', 'tho', 'bai', 'nui', 'ho', 'cong', 'vien', 'khu', 'du', 'lich', 'di', 'tich'])
     const own = nameWords(clip(c.req.query('name'), 120)).filter((w) => !skip.has(w) && w.length > 1)
-    const matched = own.length ? products.filter((p) => { const t = new Set(nameWords(p.title)); return own.filter((w) => t.has(w)).length >= Math.min(2, own.length) }).slice(0, 3) : []
-    const popular = products.filter((p) => !matched.includes(p)).slice(0, 3)
+    // Viator also files cruise shore excursions (Phu My port to Saigon, for Vũng Tàu) and airport transfers under
+    // a destination; someone already here wants things to do here.
+    const local = products.filter((p) => !/transfer|airport|shore excursion|cruise|\bport\b/i.test(p.title))
+    const matched = own.length ? local.filter((p) => { const t = new Set(nameWords(p.title)); return own.filter((w) => t.has(w)).length >= Math.min(2, own.length) }).slice(0, 3) : []
+    // Otherwise the most reviewed products named after the destination ("… in Vung Tau").
+    const destinationWords = nameWords(destination.name)
+    const popular = local.filter((p) => !matched.includes(p) && destinationWords.every((w) => nameWords(p.title).includes(w))).sort((a, b) => b.reviews - a.reviews).slice(0, 3)
     return c.json({ destination: { name: destination.name }, matched, popular })
   } catch (error) {
     console.error('Viator request failed:', error)
