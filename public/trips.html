@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#071a18" />
+  <meta name="description" content="Hedgora AI plans your next few hours from real places near you or from your saved places, and maps the route between the stops." />
+  <title>Hedgora Trips</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+:root{--bg:#061513;--mint:#70efc0;--ink:#ecf7f3;--muted:#91aaa2;--line:rgba(255,255,255,.09);--paper:#f3f4ee;--text:#10211e;--body:#3d4f4a;--soft:#5f6f6a;--rule:#dce3dc;--card:#dfe5df;--green:#08795a;--deep:#0c3028;--amber-bg:#fff0c9;--amber:#6b520f;--red-bg:#ffe3df;--red:#9b2c1f}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:96px}body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid #25b78a;outline-offset:2px}
+.glow{position:fixed;width:520px;height:520px;border-radius:50%;filter:blur(120px);opacity:.1;pointer-events:none;z-index:-1}.glow-one{background:#28d7a4;top:-260px;right:-100px}.glow-two{background:#2ca9ff;bottom:-300px;left:-200px}
+.topbar{height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(6,21,19,.85);backdrop-filter:blur(18px);z-index:20}.brand{color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px;font:800 20px Manrope}.brand-logo{display:block;height:38px;width:auto}.brand small{font:500 10px DM Sans;color:var(--muted);display:block;margin-left:2px}.topbar nav{display:flex;gap:32px}.topbar nav a{color:#a7bbb5;text-decoration:none;font-size:14px}.topbar nav a.active{color:var(--mint);font-weight:700}.wallet-btn{padding:11px 16px;border-radius:12px;background:#12312b;color:#dffff4;border:1px solid #295047;font-weight:700;white-space:nowrap}.status-dot{display:inline-block;width:7px;height:7px;background:#667d76;border-radius:50%;margin-right:8px}
+.eyebrow,.kicker{font-size:11px;font-weight:800;letter-spacing:2px}.eyebrow{color:var(--mint)}.kicker{color:var(--green)}
+.circle-modal{position:fixed;inset:0;background:#02100ddb;backdrop-filter:blur(8px);z-index:70;display:none;place-items:center;padding:20px}.circle-modal.open{display:grid}.circle-card{position:relative;background:#f5f6f1;color:#0b211d;width:min(450px,100%);padding:30px;border-radius:25px;text-align:center}.circle-card h2{font:800 24px Manrope;margin:12px 0 8px}.circle-card>p{font-size:13px;line-height:1.55;color:#5f6f6a}.circle-card .close{position:absolute;right:16px;top:14px;border:0;background:transparent;font-size:24px;color:#0b211d}.pay-icon{margin:auto;width:54px;height:54px;border-radius:16px;background:#d6faec;color:#08815f;display:grid;place-items:center;font-size:25px}.circle-card .step{margin-top:19px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:2px}.circle-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}.circle-actions button{border:0;border-radius:11px;padding:13px;font-weight:700;background:#0c3028;color:white}.circle-actions button:disabled{opacity:.5;cursor:not-allowed}.circle-connected{margin-top:12px;text-align:left}.circle-connected code{display:block;padding:10px 12px;border-radius:10px;background:#e8eee9;font-size:12px;overflow-wrap:anywhere;margin:6px 0 10px}.circle-connected button{width:100%;border:0;border-radius:11px;padding:12px;font-weight:700;background:var(--red-bg);color:var(--red)}.circle-status{min-height:38px;margin:14px 0 4px!important;padding:10px;background:#e5f7f0;border-radius:10px;color:#2d5d52!important;font-size:12px!important}.circle-setup{margin:12px 0;padding:12px;background:#fff0c9;border-radius:10px;color:#6b520f;font-size:12px;line-height:1.5}.circle-console{color:#08795a;font-size:12px;font-weight:700;text-decoration:none}
+.toast{position:fixed;right:24px;bottom:24px;background:#e4fff5;color:#083a2d;padding:14px 18px;border-radius:12px;box-shadow:0 10px 40px #0005;transform:translateY(160px);transition:.3s;z-index:80;max-width:calc(100vw - 48px)}.toast.show{transform:translateY(0)}
+[hidden]{display:none!important}
+  /* Site footer (same on every page) */.site-footer{background:#040f0d;border-top:1px solid rgba(255,255,255,.08);color:#a7bbb5;font-family:'DM Sans',sans-serif}.sf-inner{max-width:1440px;margin:auto;padding:56px 7vw 28px}.sf-top{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:40px}.sf-brand img{display:block;height:34px;width:auto}.sf-brand p{margin:16px 0 18px;font-size:14px;line-height:1.7;max-width:330px;color:#91aaa2}.sf-social{display:flex;gap:10px}.sf-social a{width:40px;height:40px;display:grid;place-items:center;border:1px solid #1f3a35;border-radius:12px;background:#0b1d1a;color:#c5d8d1;transition:.2s}.sf-social a:hover{color:#06221c;background:#70efc0;border-color:#70efc0}.sf-social svg{width:18px;height:18px;fill:currentColor}.sf-col h4{margin:4px 0 14px;font:800 11px 'DM Sans',sans-serif;letter-spacing:1.8px;color:#70efc0;text-transform:uppercase}.sf-col a{display:block;width:max-content;color:#c5d8d1;text-decoration:none;font-size:14px;padding:6px 0}.sf-col a:hover{color:#fff}.sf-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8aa39b}.sf-bottom a{color:#b8cbc4;text-decoration:none}.sf-credits a{white-space:nowrap}.sf-bottom a:hover{color:#fff}.sf-up{white-space:nowrap}@media(max-width:900px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-brand{grid-column:1/-1}}@media(max-width:620px){.sf-inner{padding:40px 16px 24px}.sf-top{grid-template-columns:1fr 1fr;gap:28px}.sf-bottom{flex-direction:column;align-items:flex-start}}
+.circle-recovery{margin:10px 0 0!important;padding:10px 12px;border-radius:10px;background:#fff0c9;color:#6b520f!important;font-size:12px!important;line-height:1.5;text-align:left}/* Mobile menu: the nav collapses behind a hamburger button below 900px */.menu-btn{display:none;width:42px;height:42px;flex:none;border:1px solid #295047;border-radius:12px;background:#12312b;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0}.menu-btn span{display:block;width:18px;height:2px;border-radius:2px;background:#dffff4;transition:transform .2s,opacity .2s}.menu-btn[aria-expanded="true"] span:nth-child(1){transform:translateY(6px) rotate(45deg)}.menu-btn[aria-expanded="true"] span:nth-child(2){opacity:0}.menu-btn[aria-expanded="true"] span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}@media(max-width:900px){.topbar{justify-content:flex-start;gap:10px}.topbar .brand{margin-right:auto}.menu-btn{display:flex}.topbar nav{display:none;position:absolute;top:78px;left:0;right:0;flex-direction:column;gap:0;padding:6px 16px 14px;background:#071a17;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 24px 48px #0009;z-index:30}.topbar nav.open{display:flex}.topbar nav a{display:block;padding:15px 6px;font-size:16px;color:#dffff4;border-bottom:1px solid rgba(255,255,255,.06)}.topbar nav a:last-child{border-bottom:0}.topbar nav a.active{color:#70efc0}}
+/* Motion (same on every page): content rises into view like arriving somewhere new. Off for people who prefer reduced motion. */
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes drift{50%{transform:translate(80px,60px) scale(1.15)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97)}}
+@keyframes pop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.12)}100%{transform:none}}
+.glow{will-change:transform}.glow-one{animation:drift 28s ease-in-out infinite}.glow-two{animation:drift 34s ease-in-out -12s infinite reverse}
+[data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+[data-reveal].is-in{opacity:1;transform:none}
+.topbar nav a{position:relative;transition:color .2s}
+.topbar nav a::after{content:'';position:absolute;left:0;right:0;bottom:-7px;height:2px;border-radius:2px;background:var(--mint);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.topbar nav a:hover{color:#fff}.topbar nav a.active:hover{color:var(--mint)}
+.topbar nav a:hover::after,.topbar nav a.active::after{transform:scaleX(1)}
+:focus-visible{outline:2px solid #1a9d76;outline-offset:3px}
+.toast{opacity:0;transition:transform .35s cubic-bezier(.2,.7,.2,1),opacity .25s}.toast.show{opacity:1}
+.circle-modal.open{animation:fade .25s ease}.circle-modal.open .circle-card{animation:cardIn .35s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:900px){.topbar nav a::after{display:none}.topbar nav.open{animation:fadeUp .25s cubic-bezier(.2,.7,.2,1)}}
+@media print{[data-reveal]{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}[data-reveal]{opacity:1;transform:none}}
+/* Get Start button: same as the homepage */
+.wallet-btn{font-size:13px}
+@media(hover:hover){.wallet-btn{transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .2s}.wallet-btn:hover{background:var(--mint);border-color:var(--mint);color:#08231c;transform:translateY(-2px);box-shadow:0 10px 26px -8px #70efc0aa}.wallet-btn:hover .status-dot{background:#08231c!important}.wallet-btn:active{transform:translateY(0) scale(.98);box-shadow:none}}
+select{font:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Hero: title on the left, your location on the right */
+.page-hero{max-width:1440px;margin:auto;padding:56px 7vw 46px;display:flex;justify-content:space-between;align-items:flex-end;gap:28px;flex-wrap:wrap}
+.page-hero h1{font:800 clamp(38px,5vw,64px)/1.02 Manrope;margin:16px 0 14px}
+.page-hero h1 em{font-style:normal;color:var(--mint)}
+.page-hero p{color:#a7bbb5;font-size:17px;line-height:1.7;max-width:580px;margin:0}
+.hero-copy>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) backwards}.hero-copy>:nth-child(2){animation-delay:.1s}.hero-copy>:nth-child(3){animation-delay:.2s}
+.location-pill{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #25423d;background:#0b211e;border-radius:15px;width:min(380px,100%);animation:rise .9s .3s cubic-bezier(.2,.7,.2,1) backwards}
+.location-pill>span{font-size:23px;color:var(--mint)}
+.location-pill div{display:flex;flex-direction:column;flex:1;min-width:0}
+.location-pill small{color:var(--muted);font-size:10px}
+.location-pill strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.location-pill button{border:0;background:transparent;color:var(--mint);font-weight:700;padding:8px}
+.location-pill button:disabled{opacity:.6;cursor:wait}
+/* Paper sheet with the page's content */
+.sheet{max-width:1440px;margin:auto;background:var(--paper);color:var(--text);border-radius:34px 34px 0 0;padding:32px 5vw 80px;min-height:70vh}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.status-box{margin:0;padding:34px 20px;border:1px dashed #cfdcd3;border-radius:17px;color:#64736f;text-align:center;font-size:14px;line-height:1.6}
+.status-box button,.status-box a{margin-left:8px;border:0;background:#dff7ee;color:#08795a;border-radius:8px;padding:7px 12px;font-weight:700;text-decoration:none;display:inline-block}
+.act{border:0;border-radius:9px;padding:7px 11px;font-weight:700;font-size:12px;background:#e5f8f1;color:#08795a;transition:filter .2s,transform .15s}
+.act:hover{filter:brightness(.97)}.act:active{transform:translateY(1px) scale(.98)}
+.act.pay{background:var(--deep);color:#fff}.act.pay:hover{filter:brightness(1.15)}
+.act.save{background:#fff;border:1px solid #dfe5df;color:#10211e}.act.save[aria-pressed="true"]{color:#e5484d;border-color:#f3c4c5}
+/* Map beside the content; it stays in view while the list scrolls */
+.map-panel{position:sticky;top:96px;background:#fff;border:1px solid var(--card);border-radius:20px;overflow:hidden}
+.map-canvas{height:min(560px,calc(100vh - 230px));min-height:320px;background:#e8ede7}
+.map-empty{margin:0;padding:40px 20px;text-align:center;color:var(--soft);font-size:14px}
+.route-bar{display:flex;gap:10px 14px;align-items:flex-start;padding:12px 14px;border-top:1px solid #edf1ec;flex-wrap:wrap;font-size:13px}
+.route-bar label{display:flex;align-items:center;gap:8px;color:var(--soft);white-space:nowrap}
+.route-bar select{border:1px solid #cfdad2;border-radius:10px;padding:7px 10px;background:#fbfcfa;color:var(--text)}
+.route-summary{flex:1;min-width:200px;color:var(--body);line-height:1.5}
+.route-summary small{display:block;color:var(--soft);margin-top:2px}
+.leaflet-container{font:inherit}
+/* Loading placeholders */
+@keyframes shimmer{to{background-position:-200% 0}}
+.skeleton{pointer-events:none}
+.skeleton .thumb,.skeleton .sk i{background:linear-gradient(90deg,#e8ede7 30%,#f6f8f3 50%,#e8ede7 70%) 0 0/200% 100%;animation:shimmer 1.4s linear infinite}
+.skeleton .sk{display:grid;gap:9px;align-content:center}
+.skeleton .sk i{display:block;height:11px;border-radius:6px}
+.skeleton .sk i:first-child{width:60%;height:15px}.skeleton .sk i:nth-child(2){width:35%}.skeleton .sk i:last-child{width:80%}
+@media(max-width:1000px){.map-panel{position:relative;top:0}.map-canvas{height:300px;min-height:0}}
+@media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.wallet-btn{padding:9px 12px}.page-hero{padding:28px 16px 26px;gap:18px}.page-hero h1{font-size:36px;margin:10px 0 8px}.page-hero p{font-size:15px}.location-pill{width:100%}.sheet{padding:20px 16px 56px;border-radius:24px 24px 0 0}.toast{left:16px;right:16px;bottom:16px}}
+/* Trips: plan source and actions, the timeline beside the map, then saved places */
+.source{display:inline-flex;gap:4px;padding:4px;background:#e6ece7;border-radius:13px}
+.source button{border:0;background:transparent;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;color:#34554d;transition:background .2s,color .2s,box-shadow .2s}
+.source button[aria-pressed="true"]{background:#fff;color:var(--text);box-shadow:0 2px 10px #10211e14}
+.source small{font-size:12px;font-weight:600;opacity:.65;margin-left:3px}
+.trip-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.trip-meta{font-size:13px;color:var(--soft)}.trip-meta b{color:var(--text)}
+.plan-btn{border:1px solid #cfdad2;background:#fff;color:var(--green);border-radius:11px;padding:9px 13px;font-weight:700;white-space:nowrap;transition:border-color .2s,transform .15s}
+.plan-btn:hover{border-color:#25b78a}.plan-btn:active{transform:translateY(1px) scale(.98)}.plan-btn:disabled{opacity:.5;cursor:wait}
+.trip-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:22px;align-items:start}
+.trip-card{background:#fff;border:1px solid var(--card);border-radius:22px;padding:22px 24px}
+.trip-note{margin:12px 4px 0;font-size:12px;line-height:1.6;color:var(--soft)}
+.plan-status{margin:4px 0;color:var(--soft);font-size:14px;line-height:1.6}
+.plan-status.loading{display:flex;align-items:center;gap:14px}
+.plan-status.loading::before{content:'';flex:none;width:64px;height:12px;background:radial-gradient(circle,var(--green) 0 4px,transparent 4.5px) 0 50%/12px 12px no-repeat,linear-gradient(90deg,#b9d7cb 50%,transparent 0) 0 50%/8px 1px repeat-x;animation:travel 1.8s ease-in-out infinite}
+.plan-status a,.plan-status button{margin-left:6px;border:0;background:#dff7ee;color:#08795a;border-radius:8px;padding:6px 11px;font-weight:700;text-decoration:none;display:inline-block}
+/* Timeline: the route draws itself stop by stop, and the first stop pulses like a map pin */
+@keyframes draw{from{transform:scaleY(0)}}
+@keyframes pinDrop{0%{opacity:0;transform:translateY(-16px) scale(.5)}60%{opacity:1;transform:translateY(2px) scale(1.15)}100%{transform:none}}
+@keyframes ping{from{transform:scale(1);opacity:.75}to{transform:scale(2.6);opacity:0}}
+@keyframes travel{50%{background-position:52px 50%,0 50%}}
+.stop{display:grid;grid-template-columns:52px 28px minmax(0,1fr);gap:14px;align-items:start;animation:rise .6s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i,0)*.22s)}
+.stop time{font:800 15px Manrope;padding-top:5px}
+.stop>i{position:relative;width:28px;height:28px;border-radius:50%;background:var(--deep);color:var(--mint);display:grid;place-items:center;font:800 12px Manrope;font-style:normal;box-shadow:0 0 0 5px #70efc02e;animation:pinDrop .55s cubic-bezier(.3,1.4,.5,1) backwards;animation-delay:calc(var(--i,0)*.22s + .15s)}
+.stop:first-child>i::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid #25b78a;opacity:0;animation:ping 2.4s 1.4s ease-out infinite}
+.stop-body{min-width:0}
+.stop small{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--green)}
+.stop h3{font:700 17px Manrope;margin:4px 0}
+.stop p{margin:0;color:var(--soft);font-size:13px;line-height:1.55}
+.leg{display:inline-block;margin-top:8px;font-size:12px;color:#34554d;background:#eef6f1;border-radius:8px;padding:4px 8px}
+.stop-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;clear:both}
+.stop-photo{float:right;width:120px;margin:0 0 6px 14px}
+.stop-photo img{display:block;width:120px;height:80px;object-fit:cover;border-radius:12px;animation:fade .6s ease}
+.stop-photo a{display:block;margin-top:4px;font-size:9px;color:#7d918b;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.line{height:26px;border-left:2px dashed #b9d7cb;margin:6px 0 6px 79px;transform-origin:top;animation:draw .45s ease-out backwards;animation-delay:calc(var(--i,0)*.22s)}
+.trip-pin span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#0c3028;color:#70efc0;font:800 12px Manrope;border:2px solid #fff;box-shadow:0 4px 12px #0005}
+/* Saved places */
+.saved-panel{margin-top:28px;background:#fff;border:1px solid var(--card);border-radius:22px;padding:24px}
+.saved-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.saved-head h2{font:800 26px Manrope;margin:6px 0 0}
+.saved-head a{color:var(--green);font-weight:700;text-decoration:none;font-size:14px}
+.saved-note{margin:6px 0 10px;color:var(--soft);font-size:13px}
+.saved-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:center;padding:14px 0;border-bottom:1px solid #edf1ec}
+.saved-row:last-child{border-bottom:0}
+.saved-row b{display:block;font:700 15px Manrope}
+.saved-row span{display:block;color:var(--soft);font-size:12px;margin-top:3px;line-height:1.5}
+.saved-row .row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.act.remove{background:transparent;color:#9b2c1f}
+@media(max-width:1000px){.trip-layout{grid-template-columns:1fr}.map-panel{order:-1}}
+@media(max-width:620px){.toolbar{align-items:stretch}.source{display:flex}.source button{flex:1;padding:9px 6px;font-size:12px;white-space:nowrap}.trip-actions{justify-content:space-between}.trip-card{padding:18px 16px}.stop{grid-template-columns:44px 26px minmax(0,1fr);gap:10px}.stop>i{width:26px;height:26px}.line{margin-left:67px}.stop-photo{width:92px;margin-left:10px}.stop-photo img{width:92px;height:64px}.saved-panel{padding:18px 16px}.saved-row{grid-template-columns:1fr}.saved-row .row-actions{justify-content:flex-start}}
+  </style>
+</head>
+<body>
+  <div class="glow glow-one"></div><div class="glow glow-two"></div>
+  <header class="topbar">
+    <a class="brand" href="/"><img class="brand-logo" src="/hedgora-logo.png" alt="Hedgora" width="134" height="38"><small>AI local companion</small></a>
+    <nav id="siteNav" aria-label="Main"><a href="/explore">Explore</a><a href="/trips" class="active">Trips</a><a href="/payments">Payments</a><a href="/docs">Docs</a></nav>
+    <button class="wallet-btn" id="walletBtn"><span class="status-dot"></span><span id="walletText">Get Start</span></button><button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="hero-copy">
+        <div class="eyebrow">✦ TRIPS</div>
+        <h1>Your <em id="partOfDay">afternoon</em>, planned</h1>
+        <p id="tripSummary">Hedgora AI plans your next few hours from real places near you, then maps the route between the stops.</p>
+      </div>
+      <div class="location-pill"><span>◎</span><div><small>Your location</small><strong id="locationName">Vũng Tàu, Vietnam</strong></div><button id="locationBtn" type="button">Update</button></div>
+    </section>
+
+    <section class="sheet" aria-labelledby="planHeading">
+      <h2 class="sr-only" id="planHeading">Your plan</h2>
+      <div class="toolbar">
+        <div class="source" role="group" aria-label="Plan with"><button type="button" data-source="nearby" aria-pressed="true">Places near me</button><button type="button" data-source="saved" aria-pressed="false">My saved places<small id="savedCount"></small></button></div>
+        <div class="trip-actions"><span class="trip-meta" id="tripMeta"></span><button class="plan-btn" id="newPlan" type="button">↻ New plan</button></div>
+      </div>
+      <div class="trip-layout">
+        <div>
+          <div class="trip-card" id="timeline" aria-live="polite"><p class="plan-status loading">Planning your next few hours with real places near you…</p></div>
+          <p class="trip-note">Times are suggestions from Hedgora AI. Routes and travel times come from OSRM. Hedgora has no opening hours or prices, so check them before you go.</p>
+        </div>
+        <aside class="map-panel" aria-label="Map of your plan">
+          <div class="map-canvas" id="map"></div>
+          <div class="route-bar">
+            <label>Travel by <select id="travelMode"><option value="WALKING">Walking</option><option value="DRIVING">Driving</option><option value="BICYCLING">Bicycling</option><option value="TWO_WHEELER">Motorbike</option></select></label>
+            <div class="route-summary" id="routeSummary"></div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="saved-panel" id="saved" aria-labelledby="savedTitle">
+        <div class="saved-head"><div><div class="kicker">SAVED PLACES</div><h2 id="savedTitle">Your saved places</h2></div><a href="/explore">Find more places on Explore →</a></div>
+        <p class="saved-note">Saved on this browser only. Tap ♡ on any place in Explore or on the homepage to add it.</p>
+        <div id="savedList"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="sf-inner">
+      <div class="sf-top">
+        <div class="sf-brand">
+          <a href="/" aria-label="Hedgora home"><img src="/hedgora-logo.png" alt="Hedgora" width="120" height="34" loading="lazy"></a>
+          <p>Your AI local companion. Discover real places nearby, plan your next few hours, and pay locals in USDC, only when you approve.</p>
+          <div class="sf-social"><a href="https://t.me/lebry123" target="_blank" rel="noreferrer" aria-label="Hedgora on Telegram" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a><a href="https://x.com/Longlhu2Huu" target="_blank" rel="noreferrer" aria-label="Hedgora on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div>
+        </div>
+        <nav class="sf-col" aria-label="Product"><h4>Product</h4><a href="/explore">Explore nearby</a><a href="/trips">Trips &amp; saved places</a><a href="/payments">Payments</a><a href="/payments#receive">Get paid with QR</a></nav>
+        <nav class="sf-col" aria-label="Resources"><h4>Resources</h4><a href="/docs">Docs</a><a href="/docs#quick-start">Quick start</a><a href="/docs#payments">Payments guide</a><a href="/docs#faq">FAQ</a><a href="/docs#developers">For developers</a></nav>
+        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://explorer.testnet.arc.io" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
+      </div>
+      <div class="sf-bottom">
+        <span>© 2026 Hedgora. All rights reserved.</span>
+        <span class="sf-credits">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · Weather by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a></span>
+        <a class="sf-up" href="#">Back to top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="circle-modal" id="circleModal" aria-hidden="true">
+    <div class="circle-card" role="dialog" aria-modal="true" aria-labelledby="circleTitle">
+      <button class="close" id="closeCircle" aria-label="Close">×</button>
+      <div class="pay-icon">◈</div><div class="step">CIRCLE WALLET</div>
+      <h2 id="circleTitle">Your Circle wallet</h2>
+      <p id="circleIntro">Sign in with Google to create or open your non-custodial wallet. Every approval happens in Circle’s secure window.</p>
+      <p class="circle-recovery">Your wallet is tied to your Google account. If you lose access to that account, neither Hedgora nor Circle can recover the wallet.</p>
+      <div class="circle-setup" id="circleSetup" hidden>Circle Wallet is not configured yet. Add your App ID from the Circle Console to <code>public/circle-config.js</code> and run the backend with an API key.</div>
+      <div class="circle-actions"><button id="circleGoogle">Continue with Google</button></div>
+      <div class="circle-connected" id="circleConnected" hidden><small>Connected wallet</small><code id="circleConnectedAddress"></code><button id="circleDisconnect" type="button">Disconnect</button></div>
+      <p class="circle-status" id="circleStatus">Sign in with Google to create a wallet or reopen yours.</p>
+      <p>Need test USDC? Circle Faucet (Arc Testnet)<br><a class="circle-console" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a></p>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="circle-config.js"></script>
+  <script src="hedgora-places.js"></script>
+  <script>
+const H = window.Hedgora
+const $ = (s) => document.querySelector(s)
+// Saved places further than this from you are left out of a plan for the next few hours.
+const SAVED_RANGE = 20000
+const state = { location: H.loadLocation(), source: 'nearby', token: 0, plan: null, places: [], view: null, layers: [], routeToken: 0 }
+if (new URLSearchParams(location.search).get('from') === 'saved') state.source = 'saved'
+
+function renderLocation() { $('#locationName').textContent = state.location.name }
+const toMinutes = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m }
+const fromMinutes = (min) => String(Math.floor(min / 60) % 24).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0')
+function setStatus(html, loading) {
+  $('#timeline').innerHTML = `<p class="plan-status${loading ? ' loading' : ''}">${html}</p>`
+}
+function clearMap() {
+  state.layers.forEach((layer) => layer.remove())
+  state.layers = []
+  $('#routeSummary').textContent = ''
+}
+
+// Saved places near enough for a plan, closest first, with their distance from you.
+function savedNearby() {
+  return H.savedPlaces().map((p) => ({ ...p, distance: H.haversine(state.location, p) })).filter((p) => p.distance <= SAVED_RANGE).sort((a, b) => a.distance - b.distance)
+}
+
+// The homepage caches the plan for "places near me" under the same key, so both pages show the same plan.
+function cacheKey(places) {
+  const base = state.location.lat.toFixed(3) + ',' + state.location.lon.toFixed(3) + '@' + new Date().toISOString().slice(0, 13)
+  return state.source === 'saved' ? base + '|' + places.map(H.placeKey).join('|') : base
+}
+const cacheStore = () => (state.source === 'saved' ? 'hedgora.planSaved' : 'hedgora.plan')
+
+async function loadPlan(force) {
+  const token = ++state.token, btn = $('#newPlan')
+  $('#partOfDay').textContent = H.planTitle()
+  $('#tripMeta').textContent = ''
+  clearMap()
+  btn.disabled = true
+  try {
+    let places = null
+    if (state.source === 'saved') {
+      places = savedNearby().slice(0, 30)
+      if (places.length < 2) {
+        const total = H.savedPlaces().length, near = places.length
+        const why = !total ? 'You haven’t saved any places yet.'
+          : near === total ? 'You have only one saved place near you.'
+          : near ? `Only one of your ${total} saved places is within 20 km of you.`
+          : `None of your ${total} saved ${total === 1 ? 'place is' : 'places are'} within 20 km of you.`
+        $('#tripSummary').textContent = 'Plan a trip from the places you saved.'
+        return setStatus(why + ' Save at least two nearby places to plan with them.<a href="/explore">Find places on Explore →</a>')
+      }
+    }
+    if (!force) {
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheStore()) || 'null')
+        if (cached && cached.key === cacheKey(places || [])) return render(cached.plan, cached.places)
+      } catch {}
+    }
+    setStatus(state.source === 'saved' ? 'Planning your next few hours with your saved places…' : 'Planning your next few hours with real places near you…', true)
+    if (!places) places = (await H.fetchNearby(state.location)).slice(0, 30)
+    if (token !== state.token) return
+    if (places.length < 2) return setStatus('Not enough named places nearby to plan a route yet.')
+    const plan = await H.planTrip(state.location, places)
+    if (token !== state.token) return
+    const kept = places.map((p) => ({ name: p.name, kind: p.kind, address: p.address || '', lat: p.lat, lon: p.lon }))
+    try { sessionStorage.setItem(cacheStore(), JSON.stringify({ key: cacheKey(places), plan, places: kept })) } catch {}
+    render(plan, kept)
+  } catch (error) {
+    if (token !== state.token) return
+    setStatus(H.escapeHtml(error.message === 'Failed to fetch' ? 'Couldn’t reach the Hedgora server.' : error.message) + '<button type="button" id="retryPlan">Try again</button>')
+  } finally {
+    if (token === state.token) btn.disabled = false
+  }
+}
+
+function render(plan, places) {
+  state.plan = plan
+  state.places = places
+  const stops = plan.stops.map((stop) => ({ ...stop, p: places[stop.place] })).filter((s) => s.p)
+  let prev = state.location
+  $('#timeline').innerHTML = stops.map((s, n) => {
+    const straight = H.haversine(prev, s.p)
+    prev = s.p
+    const saved = H.isSaved(s.p)
+    return `<div class="stop" data-n="${n}"><time>${H.escapeHtml(s.start)}</time><i>${n + 1}</i><div class="stop-body"><small>${H.escapeHtml(String(s.activity).toUpperCase())} · ${s.minutes} MIN</small><h3>${H.escapeHtml(s.p.name)}</h3><p>${H.escapeHtml(s.tip)}</p><span class="leg" data-leg="${n}">${H.formatDistance(straight)} ${n ? 'from the last stop' : 'from you'} in a straight line</span><div class="stop-actions"><button class="act" type="button" data-action="focus">Show on map</button><button class="act save" type="button" data-action="save" aria-pressed="${saved}">${saved ? '♥ Saved' : '♡ Save'}</button><button class="act pay" type="button" data-action="pay">Pay</button></div></div></div>`
+  }).join('<div class="line"></div>')
+  document.querySelectorAll('#timeline .stop, #timeline .line').forEach((el, k) => el.style.setProperty('--i', k))
+  $('#tripSummary').textContent = plan.summary || 'Your next few hours, from real places near you.'
+  const last = stops[stops.length - 1]
+  $('#tripMeta').innerHTML = `<b>${stops.length} stops</b> · ${H.escapeHtml(stops[0].start)}–${fromMinutes(toMinutes(last.start) + last.minutes)}`
+  state.stops = stops
+  // Landmarks usually have a matching Commons photo; restaurants and cafés almost never do.
+  stops.forEach((s, n) => {
+    if (!H.SIGHT_KINDS.includes(s.p.kind)) return
+    H.findPlacePhoto(s.p).then((photo) => {
+      const row = document.querySelector(`#timeline .stop[data-n="${n}"]`)
+      if (!photo || !row || state.stops !== stops) return
+      const img = new Image()
+      img.onload = () => { if (row.isConnected) row.querySelector('.stop-body').insertAdjacentHTML('afterbegin', `<figure class="stop-photo"><img src="${H.escapeHtml(photo.url)}" alt="${H.escapeHtml(s.p.name)}">${H.photoCredit(photo)}</figure>`) }
+      img.src = photo.url
+    })
+  })
+  drawPlan()
+}
+
+// Numbered pins for the stops and the real route through them, starting from your location.
+async function drawPlan() {
+  clearMap()
+  const stops = state.stops || [], view = state.view
+  if (!view || !stops.length) return
+  const token = ++state.routeToken, modeKey = $('#travelMode').value, mode = H.ROUTE_MODES[modeKey]
+  stops.forEach((s, n) => {
+    const pin = L.marker([s.p.lat, s.p.lon], { icon: L.divIcon({ className: 'trip-pin', html: `<span>${n + 1}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }), title: s.p.name }).addTo(view.map).bindPopup(`<b>${n + 1}. ${H.escapeHtml(s.p.name)}</b><br>${H.escapeHtml(s.start)} · ${H.escapeHtml(s.activity)}`)
+    state.layers.push(pin)
+  })
+  const points = [state.location, ...stops.map((s) => s.p)]
+  view.map.fitBounds(points.map((p) => [p.lat, p.lon]), { padding: [36, 36], maxZoom: 16 })
+  $('#routeSummary').textContent = `Finding a ${mode.label.toLowerCase()} route through your stops…`
+  try {
+    const route = await H.route(points, modeKey)
+    if (token !== state.routeToken) return
+    const line = L.geoJSON(route.geometry, { style: { color: '#0d9b73', weight: 5, opacity: 0.9 } }).addTo(view.map)
+    state.layers.push(line)
+    H.drawRoute(line)
+    ;(route.legs || []).forEach((leg, n) => {
+      const el = document.querySelector(`#timeline .leg[data-leg="${n}"]`)
+      if (el) el.textContent = `${H.formatDuration(leg.duration)} ${mode.verb} · ${H.formatDistance(leg.distance)} ${n ? 'from the last stop' : 'from you'}`
+    })
+    $('#routeSummary').innerHTML = `<b>Whole route:</b> ${H.formatDistance(route.distance)} · about ${H.formatDuration(route.duration)} ${mode.verb}, not counting time at each stop.`
+  } catch {
+    if (token !== state.routeToken) return
+    const line = L.polyline(points.map((p) => [p.lat, p.lon]), { color: '#0d9b73', weight: 3, dashArray: '6 8' }).addTo(view.map)
+    state.layers.push(line)
+    $('#routeSummary').textContent = `Couldn’t get a ${mode.label.toLowerCase()} route right now, so the map shows straight lines between the stops.`
+  }
+}
+
+function renderSaved() {
+  const list = H.savedPlaces().map((p) => ({ ...p, distance: H.haversine(state.location, p) })).sort((a, b) => a.distance - b.distance)
+  $('#savedCount').textContent = list.length ? String(list.length) : ''
+  $('#savedList').innerHTML = list.length
+    ? list.map((p) => `<div class="saved-row" data-key="${H.escapeHtml(H.placeKey(p))}"><div><b>${H.escapeHtml(p.name)}</b><span>${H.escapeHtml(p.kind)} · ${H.formatDistance(p.distance)} from you${p.address ? ' · ' + H.escapeHtml(p.address) : ''}</span></div><div class="row-actions"><button class="act" type="button" data-act="focus">Show on map</button><button class="act pay" type="button" data-act="pay">Pay</button><button class="act remove" type="button" data-act="remove">Remove</button></div></div>`).join('')
+    : '<p class="status-box">No saved places yet.<a href="/explore">Find places on Explore →</a></p>'
+}
+
+function focusPlace(p, label) {
+  if (!state.view) return
+  if (innerWidth <= 1000) $('.map-panel').scrollIntoView({ behavior: H.reduceMotion.matches ? 'auto' : 'smooth', block: 'start' })
+  state.view.map.flyTo([p.lat, p.lon], 16, { duration: H.reduceMotion.matches ? 0 : 0.6 })
+  L.popup().setLatLng([p.lat, p.lon]).setContent(label).openOn(state.view.map)
+}
+
+document.querySelector('.source').addEventListener('click', (e) => {
+  const source = e.target.closest('[data-source]')?.dataset.source
+  if (!source || source === state.source) return
+  state.source = source
+  document.querySelectorAll('.source button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.source === source)))
+  const url = new URL(location.href)
+  source === 'saved' ? url.searchParams.set('from', 'saved') : url.searchParams.delete('from')
+  history.replaceState(null, '', url)
+  loadPlan(false)
+})
+$('#newPlan').addEventListener('click', () => loadPlan(true))
+$('#travelMode').addEventListener('change', drawPlan)
+$('#timeline').addEventListener('click', (e) => {
+  if (e.target.id === 'retryPlan') return loadPlan(true)
+  const action = e.target.closest('[data-action]'), row = e.target.closest('.stop'), s = row && state.stops?.[row.dataset.n]
+  if (!action || !s) return
+  if (action.dataset.action === 'focus') return focusPlace(s.p, `<b>${Number(row.dataset.n) + 1}. ${H.escapeHtml(s.p.name)}</b><br>${H.escapeHtml(s.start)} · ${H.escapeHtml(s.activity)}`)
+  if (action.dataset.action === 'pay') return (location.href = '/payments?note=' + encodeURIComponent(s.p.name))
+  const saved = H.toggleSaved(s.p)
+  action.setAttribute('aria-pressed', String(saved))
+  action.textContent = saved ? '♥ Saved' : '♡ Save'
+  if (saved) H.popHeart(action)
+  H.toast(saved ? 'Saved to your places' : 'Removed from saved places')
+})
+$('#savedList').addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]')?.dataset.act, key = e.target.closest('.saved-row')?.dataset.key
+  const p = key && H.savedPlaces().find((s) => H.placeKey(s) === key)
+  if (!act || !p) return
+  if (act === 'focus') return focusPlace(p, `<b>${H.escapeHtml(p.name)}</b><br>${H.escapeHtml(p.kind)}`)
+  if (act === 'pay') return (location.href = '/payments?note=' + encodeURIComponent(p.name))
+  H.toggleSaved(p)
+  H.toast('Removed from saved places')
+})
+// Saving or removing anywhere on this page (or in another tab) refreshes the list and the plan's buttons.
+function syncSaved() {
+  renderSaved()
+  document.querySelectorAll('#timeline .stop').forEach((row) => {
+    const s = state.stops?.[row.dataset.n], btn = row.querySelector('[data-action="save"]')
+    if (!s || !btn) return
+    const saved = H.isSaved(s.p)
+    btn.setAttribute('aria-pressed', String(saved))
+    btn.textContent = saved ? '♥ Saved' : '♡ Save'
+  })
+}
+window.addEventListener('hedgora:saved', syncSaved)
+window.addEventListener('storage', (e) => { if (e.key === 'hedgora.saved') syncSaved() })
+$('#locationBtn').addEventListener('click', async () => {
+  const btn = $('#locationBtn')
+  btn.disabled = true
+  btn.textContent = 'Locating…'
+  try {
+    state.location = await H.locate()
+    renderLocation()
+    renderSaved()
+    state.view?.originMarker.setLatLng([state.location.lat, state.location.lon])
+    loadPlan(false)
+    H.toast('Location updated: ' + state.location.name)
+  } catch (error) {
+    H.toast(error.message)
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Update'
+  }
+})
+
+document.querySelectorAll('.source button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.source === state.source)))
+renderLocation()
+renderSaved()
+state.view = H.createMap($('#map'), state.location)
+loadPlan(false)
+  </script>
+  <script type="module" src="circle-wallet-client.js"></script>
+  <script>
+// Mobile menu: toggles the collapsed nav; closes on link tap, outside tap, Escape, or when the screen gets wide.
+(() => {
+  const btn = document.getElementById('menuBtn'), nav = document.getElementById('siteNav')
+  if (!btn || !nav) return
+  const setOpen = (open) => { nav.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu') }
+  btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!nav.classList.contains('open')) })
+  nav.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false) })
+  document.addEventListener('click', (e) => { if (!nav.contains(e.target)) setOpen(false) })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false) })
+  matchMedia('(min-width: 901px)').addEventListener('change', (e) => { if (e.matches) setOpen(false) })
+})()
+  </script>
+</body>
+</html>
