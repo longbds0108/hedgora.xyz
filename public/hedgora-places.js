@@ -11,6 +11,7 @@
   const PHOTO_TTL = 7 * 864e5
   const GPLACES_KEY = 'hedgora.gplaces'
   const GPLACES_TTL = 3 * 864e5
+  const CITY_KEY = 'hedgora.cityPhoto'
   const NEARBY_KEY = 'hedgora.nearby'
   const NEARBY_TTL = 6 * 3600e3
   // Gives up on a request after `ms` (older browsers without AbortSignal.timeout just wait).
@@ -299,6 +300,50 @@
   // Alt text: an area photo shows the neighbourhood, not the place.
   const photoAlt = (photo, place) => (photo.area ? 'Area near ' + place.name : place.name)
 
+  // The picture of the traveler's city for the homepage: the lead image of its Wikipedia article (a skyline, a coast,
+  // a landmark), from Vietnamese Wikipedia first when the name is Vietnamese. In Vietnam, VietMap says which city
+  // that is (Hiệp Bình or Quận 1 → Thành Phố Hồ Chí Minh; Thắng Tam → Thành Phố Vũng Tàu); elsewhere it's the last
+  // part of the location name ("Mitte, Berlin" → "Berlin"). An article only counts when its coordinates are within
+  // 60 km, so a person or a same-named town elsewhere never shows up. Author and license come from Commons.
+  // Answers, including "none", are cached for a week per city.
+  async function locationCity(loc) {
+    const spot = 'at:' + loc.lat.toFixed(2) + ',' + loc.lon.toFixed(2), known = readStore(CITY_KEY)[spot]
+    if (known && Date.now() - known.t < PHOTO_TTL) return known.v
+    let city
+    try {
+      const r = await fetch(apiBase + '/api/map/reverse?' + new URLSearchParams({ lat: loc.lat, lon: loc.lon }), { signal: timeout(6000) })
+      if (r.ok) city = (await r.json()).city
+    } catch {}
+    if (!city) {
+      const parts = String(loc.name || '').split(',').map((s) => s.trim()).filter((s) => s && !/^viet ?nam$/.test(fold(s)) && !/^-?\d/.test(s))
+      city = parts[parts.length - 1]
+    }
+    if (city) writeStore(CITY_KEY, spot, city, 40)
+    return city
+  }
+  async function cityPhoto(loc) {
+    if (!Number.isFinite(loc.lat) || !Number.isFinite(loc.lon)) return null
+    const city = await locationCity(loc)
+    if (!city) return null
+    const key = fold(city) + '@' + loc.lat.toFixed(1) + ',' + loc.lon.toFixed(1), hit = readStore(CITY_KEY)[key]
+    if (hit && Date.now() - hit.t < PHOTO_TTL) return hit.v
+    for (const wiki of /[^\x00-\x7f]/.test(city) ? ['vi', 'en'] : ['en', 'vi']) {
+      const found = await getJson(commonsQueue, `https://${wiki}.wikipedia.org/w/api.php?` + new URLSearchParams({ action: 'query', format: 'json', origin: '*', generator: 'search', gsrsearch: city, gsrlimit: '5', gsrnamespace: '0', prop: 'coordinates|pageimages', piprop: 'name', redirects: '1' }), { headers: COMMONS_HEADERS })
+      const article = Object.values(found.query?.pages || {}).sort((a, b) => a.index - b.index)
+        .find((p) => p.pageimage && p.coordinates?.[0] && haversine(loc, { lat: p.coordinates[0].lat, lon: p.coordinates[0].lon }) < 60000)
+      if (!article) continue
+      const info = await getJson(commonsQueue, COMMONS_API + new URLSearchParams({ ...COMMONS_INFO, titles: 'File:' + article.pageimage, iiurlwidth: '1280' }), { headers: COMMONS_HEADERS })
+      const photo = commonsPhoto(Object.values(info.query?.pages || {})[0])
+      if (!photo) continue
+      // "Vũng Tàu (thành phố)" → "Vũng Tàu"
+      const value = { ...photo, city: article.title.replace(/\s*\([^)]*\)$/, '') }
+      writeStore(CITY_KEY, key, value, 40)
+      return value
+    }
+    writeStore(CITY_KEY, key, null, 40)
+    return null
+  }
+
   // Opening hours, photos and price from Google Maps, through Hedgora's server and SerpApi. Every lookup spends
   // a search from a small monthly plan, so they only run when the traveler taps Details and are kept for 3 days
   // (photos for 7), including "not on Google Maps".
@@ -434,7 +479,7 @@
   window.Hedgora = {
     GROUPS, SIGHT_KINDS, ROUTE_MODES, reduceMotion,
     escapeHtml, formatDistance, formatDuration, haversine, toast,
-    loadLocation, locate, reverseGeocode, fetchNearby, findPlacePhoto, photoCredit, photoAlt,
+    loadLocation, locate, reverseGeocode, fetchNearby, findPlacePhoto, photoCredit, photoAlt, cityPhoto,
     placeDetails, placePhotos, cachedPlaceDetails, cachedPlacePhotos, placeTours, cachedPlaceTours, openNow, todayHours,
     placeKey, savedPlaces, isSaved, toggleSaved, popHeart,
     createMap, route, drawRoute, planTitle, planTrip,
