@@ -329,8 +329,7 @@ function mapGuard(c) {
 
 // Named places near a spot from OpenStreetMap: the four searches every page shows (sights within 10 km, restaurants
 // and cafés within 2 km, places to stay within 3 km, up to 25 each). Browsers used to ask Photon directly, so a slow
-// or throttled Photon left pages waiting with no end. Here each Photon search gives up after 8 seconds (from
-// Vercel they usually take about 4), Overpass
+// or throttled Photon left pages waiting with no end. Here each Photon search gives up after 5 seconds, Overpass
 // answers if Photon can't, and answers are cached per spot on this instance and on Vercel's CDN, so travellers near
 // each other share one lookup. Pages round the spot to about 500 m and measure distances from where you really are.
 const NEARBY_GROUPS = [
@@ -345,7 +344,7 @@ const nearbyRateLimited = rateLimiter(30)
 async function photonGroup(group, lat, lon) {
   const p = new URLSearchParams({ lat, lon, radius: group.radius, limit: '25', lang: 'default' })
   group.tags.forEach((t) => p.append('osm_tag', t))
-  const r = await fetch('https://photon.komoot.io/reverse?' + p, { headers: OSM_HEADERS, signal: AbortSignal.timeout(8000) })
+  const r = await fetch('https://photon.komoot.io/reverse?' + p, { headers: OSM_HEADERS, signal: AbortSignal.timeout(5000) })
   if (!r.ok) throw new Error('Photon request failed (' + r.status + ')')
   return ((await r.json()).features || []).map((f) => {
     const pr = f.properties || {}, [plon, plat] = f.geometry?.coordinates || []
@@ -416,11 +415,7 @@ app.get('/api/map/reverse', async (c) => {
     const level = (type) => boundaries.find((b) => b.type === type)?.full_name
     const name = [level(2), level(1) || level(0)].filter(Boolean).join(', ')
     if (!name) return c.json({ message: 'VietMap has no address for this spot.' }, 404)
-    // The city a traveler would name: a centrally run city (Thành Phố Hồ Chí Minh, even from Thủ Đức or Quận 1),
-    // else the city or town the ward is in (Thành Phố Vũng Tàu, Thành Phố Đà Lạt), else the province.
-    const province = level(0), district = level(1)
-    const city = /^thành phố/i.test(province || '') ? province : /^(thành phố|thị xã)/i.test(district || '') ? district : province || district
-    return c.json({ name, city })
+    return c.json({ name })
   } catch {
     return c.json({ message: 'VietMap is unavailable right now.' }, 502)
   }
