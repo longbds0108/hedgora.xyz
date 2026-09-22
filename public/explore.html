@@ -335,7 +335,7 @@ async function showRoute(i) {
     H.drawRoute(state.routeLine)
     // OSRM gives street names for each step; list them in order, without repeats.
     const streets = (route.legs || []).flatMap((leg) => leg.steps || []).map((s) => s.name).filter((name, n, list) => name && name !== list[n - 1]).slice(0, 6)
-    summary.innerHTML = `<b>${H.escapeHtml(p.name)}</b> · ${H.formatDistance(route.distance)} · about ${H.formatDuration(route.duration)} ${mode.verb}${streets.length ? `<small>Via ${streets.map(H.escapeHtml).join(' → ')}</small>` : ''}`
+    summary.innerHTML = `<b>${H.escapeHtml(p.name)}</b> · ${H.formatDistance(route.distance)} · about ${H.formatDuration(route.duration)} ${mode.verb}<small>${streets.length ? `Via ${streets.map(H.escapeHtml).join(' → ')} · ` : ''}Route by ${route.source}</small>`
   } catch {
     if (state.routeTarget !== i) return
     summary.textContent = `Couldn’t find a ${mode.label.toLowerCase()} route to ${p.name} right now. Try another way to travel.`

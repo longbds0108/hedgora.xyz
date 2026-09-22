@@ -171,7 +171,7 @@ select{font:inherit}
       <div class="trip-layout">
         <div>
           <div class="trip-card" id="timeline" aria-live="polite"><p class="plan-status loading">Planning your next few hours with real places near you…</p></div>
-          <p class="trip-note">Times are suggestions from Hedgora AI. Routes and travel times come from OSRM. Hedgora has no opening hours or prices, so check them before you go.</p>
+          <p class="trip-note">Times are suggestions from Hedgora AI. Routes and travel times come from VIETMAP for cars and motorbikes in Vietnam, and from OSRM otherwise. Hedgora has no opening hours or prices, so check them before you go.</p>
         </div>
         <aside class="map-panel" aria-label="Map of your plan">
           <div class="map-canvas" id="map"></div>
@@ -356,7 +356,7 @@ async function drawPlan() {
       const el = document.querySelector(`#timeline .leg[data-leg="${n}"]`)
       if (el) el.textContent = `${H.formatDuration(leg.duration)} ${mode.verb} · ${H.formatDistance(leg.distance)} ${n ? 'from the last stop' : 'from you'}`
     })
-    $('#routeSummary').innerHTML = `<b>Whole route:</b> ${H.formatDistance(route.distance)} · about ${H.formatDuration(route.duration)} ${mode.verb}, not counting time at each stop.`
+    $('#routeSummary').innerHTML = `<b>Whole route:</b> ${H.formatDistance(route.distance)} · about ${H.formatDuration(route.duration)} ${mode.verb}, not counting time at each stop.<small>Route by ${route.source}</small>`
   } catch {
     if (token !== state.routeToken) return
     const line = L.polyline(points.map((p) => [p.lat, p.lon]), { color: '#0d9b73', weight: 3, dashArray: '6 8' }).addTo(view.map)

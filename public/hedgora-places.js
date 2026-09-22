@@ -16,11 +16,13 @@
     { key: 'cafe', label: 'Cafés', tag: 'CAFÉ', icon: '☕', radius: 2, tags: ['amenity:cafe'] },
     { key: 'stay', label: 'Stay', tag: 'STAY', icon: '🛏', radius: 3, tags: ['tourism:hotel', 'tourism:guest_house', 'tourism:hostel'] },
   ]
+  // Car and motorbike routes come from VietMap (through Hedgora's server) inside Vietnam; walking, cycling and
+  // anything VietMap can't route use the OSRM endpoints.
   const ROUTE_MODES = {
     WALKING: { label: 'Walking', verb: 'on foot', endpoint: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving' },
-    DRIVING: { label: 'Driving', verb: 'by car', endpoint: 'https://router.project-osrm.org/route/v1/driving' },
+    DRIVING: { label: 'Driving', verb: 'by car', vehicle: 'car', endpoint: 'https://router.project-osrm.org/route/v1/driving' },
     BICYCLING: { label: 'Bicycling', verb: 'by bike', endpoint: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving' },
-    TWO_WHEELER: { label: 'Motorbike', verb: 'by motorbike', endpoint: 'https://router.project-osrm.org/route/v1/driving' },
+    TWO_WHEELER: { label: 'Motorbike', verb: 'by motorbike', vehicle: 'motorcycle', endpoint: 'https://router.project-osrm.org/route/v1/driving' },
   }
   const WEATHER_TEXT = { 0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Rime fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Dense drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 80: 'Rain showers', 81: 'Rain showers', 82: 'Heavy rain showers', 95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with hail' }
   const apiBase = String(window.CIRCLE_CONFIG?.apiBase || '').replace(/\/$/, '')
@@ -55,7 +57,12 @@
   function saveLocation(loc) {
     try { sessionStorage.setItem(LOCATION_KEY, JSON.stringify({ lat: loc.lat, lon: loc.lon, name: loc.name })) } catch {}
   }
+  // Inside Vietnam, VietMap names the ward and city; elsewhere it has nothing and Photon (then Nominatim) is used.
   async function reverseGeocode(lat, lon) {
+    try {
+      const r = await fetch(apiBase + '/api/map/reverse?' + new URLSearchParams({ lat, lon }))
+      if (r.ok) { const { name } = await r.json(); if (name) return name }
+    } catch {}
     try {
       const r = await fetch('https://photon.komoot.io/reverse?' + new URLSearchParams({ lat, lon, limit: '1', lang: 'en' }))
       if (!r.ok) throw new Error('Photon request failed')
@@ -178,11 +185,17 @@
   }
   async function route(points, modeKey = 'WALKING') {
     const mode = ROUTE_MODES[modeKey] || ROUTE_MODES.WALKING
+    if (mode.vehicle) {
+      try {
+        const r = await fetch(apiBase + '/api/map/route?' + new URLSearchParams({ vehicle: mode.vehicle, points: points.map((p) => `${p.lat},${p.lon}`).join(';') }))
+        if (r.ok) return await r.json()
+      } catch {}
+    }
     const coords = points.map((p) => `${p.lon},${p.lat}`).join(';')
     const r = await fetch(`${mode.endpoint}/${coords}?overview=full&geometries=geojson&steps=true`)
     const data = await r.json()
     if (data.code !== 'Ok' || !data.routes?.length) throw new Error('No route')
-    return data.routes[0]
+    return { ...data.routes[0], source: 'OSRM' }
   }
   // The route line draws itself along the path, then drops the dash so zooming redraws it normally.
   function drawRoute(line) {

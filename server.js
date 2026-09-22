@@ -10,6 +10,8 @@ const apiKey = process.env.CIRCLE_API_KEY
 const client = apiKey ? initiateUserControlledWalletsClient({ apiKey }) : null
 // DeepSeek's API is OpenAI-compatible; DeepSeek recommends the OpenAI SDK pointed at its base URL.
 const deepseek = process.env.DEEPSEEK_API_KEY ? new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY }) : null
+// VietMap covers Vietnam only (Vietnamese addresses, car and motorbike routes); outside it the pages use Photon and OSRM.
+const vietmapKey = process.env.VIETMAP_API_KEY
 const app = new Hono()
 
 function unavailable(c) {
@@ -22,7 +24,7 @@ function unavailable(c) {
 const homepage = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8')
 app.get('/', (c) => c.html(homepage))
 
-app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek) }))
+app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey) }))
 
 async function circleRequest(path, { userToken, body }) {
   const response = await fetch(`https://api.circle.com${path}`, {
@@ -166,16 +168,20 @@ Reply in the traveler's language (Vietnamese if they write in Vietnamese). Keep 
 
 The traveler can only type text here: there is no photo upload, and each question is answered on its own without memory of earlier ones. So don't end with a follow-up question, and if a request needs something you don't have, such as the dishes on a menu to translate, ask them to type it in their next question.`
 
-// Small in-memory limit so the public endpoint can't run up the DeepSeek bill.
-const aiHits = new Map()
-function aiRateLimited(c) {
-  const ip = c.req.header('x-forwarded-for')?.split(',')[0].trim() || c.env?.incoming?.socket?.remoteAddress || 'local'
-  const now = Date.now()
-  const recent = (aiHits.get(ip) || []).filter((t) => now - t < 60_000)
-  recent.push(now)
-  aiHits.set(ip, recent)
-  return recent.length > 10
+// Small in-memory per-IP limits so the public endpoints can't run up the DeepSeek or VietMap bills.
+function rateLimiter(perMinute) {
+  const hits = new Map()
+  return (c) => {
+    const ip = c.req.header('x-forwarded-for')?.split(',')[0].trim() || c.env?.incoming?.socket?.remoteAddress || 'local'
+    const now = Date.now()
+    const recent = (hits.get(ip) || []).filter((t) => now - t < 60_000)
+    recent.push(now)
+    hits.set(ip, recent)
+    return recent.length > perMinute
+  }
 }
+const aiRateLimited = rateLimiter(10)
+const mapRateLimited = rateLimiter(60)
 
 const clip = (value, max) => String(value ?? '').slice(0, max)
 
@@ -305,6 +311,65 @@ app.post('/api/ai/itinerary', async (c) => {
     else if (error instanceof OpenAI.APIError && error.status === 402) message = 'The DeepSeek account is out of balance.'
     console.error('Itinerary request failed:', error)
     return c.json({ message }, 502)
+  }
+})
+
+// Map endpoints: VietMap calls stay on the server so the key never reaches the browser.
+const isLat = (v) => Number.isFinite(v) && Math.abs(v) <= 90
+const isLon = (v) => Number.isFinite(v) && Math.abs(v) <= 180
+function mapGuard(c) {
+  if (!vietmapKey) return c.json({ message: 'VIETMAP_API_KEY is not configured on the backend.' }, 503)
+  if (mapRateLimited(c)) return c.json({ message: 'Too many map requests. Please wait a minute and try again.' }, 429)
+  return null
+}
+
+// Names a spot as "ward, district or city", e.g. "Phường Thắng Tam, Thành Phố Vũng Tàu". 404 outside Vietnam.
+app.get('/api/map/reverse', async (c) => {
+  const blocked = mapGuard(c)
+  if (blocked) return blocked
+  const lat = Number(c.req.query('lat')), lon = Number(c.req.query('lon'))
+  if (!isLat(lat) || !isLon(lon)) return c.json({ message: 'Invalid coordinates.' }, 400)
+  try {
+    const r = await fetch('https://maps.vietmap.vn/api/reverse/v3?' + new URLSearchParams({ apikey: vietmapKey, lat, lng: lon }))
+    const list = r.ok ? await r.json() : []
+    // Boundary types: 2 = ward, 1 = district or city, 0 = province.
+    const boundaries = (Array.isArray(list) && list[0]?.boundaries) || []
+    const level = (type) => boundaries.find((b) => b.type === type)?.full_name
+    const name = [level(2), level(1) || level(0)].filter(Boolean).join(', ')
+    if (!name) return c.json({ message: 'VietMap has no address for this spot.' }, 404)
+    return c.json({ name })
+  } catch {
+    return c.json({ message: 'VietMap is unavailable right now.' }, 502)
+  }
+})
+
+// Car or motorbike route through 2–8 points ("lat,lon;lat,lon"), returned in the same shape as an OSRM route:
+// metres, seconds, a GeoJSON line and one leg per stop. 404 when VietMap has no route (e.g. outside Vietnam).
+app.get('/api/map/route', async (c) => {
+  const blocked = mapGuard(c)
+  if (blocked) return blocked
+  const vehicle = c.req.query('vehicle') === 'car' ? 'car' : 'motorcycle'
+  const points = String(c.req.query('points') || '').split(';').map((p) => p.split(',').map(Number))
+  if (points.length < 2 || points.length > 8 || points.some(([lat, lon]) => !isLat(lat) || !isLon(lon))) return c.json({ message: 'Send 2 to 8 points as lat,lon;lat,lon.' }, 400)
+  const params = new URLSearchParams({ apikey: vietmapKey, vehicle, points_encoded: 'false' })
+  points.forEach(([lat, lon]) => params.append('point', `${lat},${lon}`))
+  try {
+    const r = await fetch('https://maps.vietmap.vn/api/route/v3?' + params)
+    const data = r.ok ? await r.json() : null
+    const path = data?.code === 'OK' && data.paths?.[0]
+    if (!path?.points?.coordinates) return c.json({ message: 'VietMap found no route here.' }, 404)
+    // VietMap marks each intermediate stop with sign 5 and the destination with sign 4.
+    const legs = [{ distance: 0, duration: 0, steps: [] }]
+    for (const step of path.instructions || []) {
+      const leg = legs[legs.length - 1]
+      leg.distance += step.distance
+      leg.duration += step.time / 1000
+      if (step.street_name) leg.steps.push({ name: step.street_name })
+      if (step.sign === 5) legs.push({ distance: 0, duration: 0, steps: [] })
+    }
+    return c.json({ source: 'VIETMAP', distance: path.distance, duration: path.time / 1000, geometry: path.points, legs })
+  } catch {
+    return c.json({ message: 'VietMap is unavailable right now.' }, 502)
   }
 })
 
