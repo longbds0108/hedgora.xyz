@@ -8,19 +8,11 @@ import { initiateUserControlledWalletsClient } from '@circle-fin/user-controlled
 
 const apiKey = process.env.CIRCLE_API_KEY
 const client = apiKey ? initiateUserControlledWalletsClient({ apiKey }) : null
-// Arc mainnet, where USDC is real money. Set CIRCLE_BLOCKCHAIN=ARC-TESTNET (with a TEST_API_KEY) to work on the
-// test network instead; pages follow whatever this says, through /api/health.
-const testnet = process.env.CIRCLE_BLOCKCHAIN === 'ARC-TESTNET'
-const NETWORK = {
-  blockchain: testnet ? 'ARC-TESTNET' : 'ARC',
-  name: testnet ? 'Arc Testnet' : 'Arc',
-  testnet,
-  explorer: testnet ? 'https://explorer.testnet.arc.io' : 'https://explorer.arc.io',
-}
-// A test key cannot touch mainnet and a live key cannot touch the test network, and Circle's error for that is
-// hard to read, so the mismatch is caught here instead.
-const keyMatchesNetwork = !apiKey || apiKey.startsWith(testnet ? 'TEST_API_KEY' : 'LIVE_API_KEY')
-if (apiKey && !keyMatchesNetwork) console.error(`CIRCLE_API_KEY is a ${testnet ? 'live' : 'test'} key but Hedgora is set to ${NETWORK.name}. Wallet features are switched off until they match.`)
+// Arc mainnet: the USDC here is real money.
+const NETWORK = { blockchain: 'ARC', name: 'Arc', explorer: 'https://explorer.arc.io' }
+// Circle's sandbox keys cannot touch mainnet, and its error for that is hard to read, so it is caught here.
+const keyMatchesNetwork = !apiKey || apiKey.startsWith('LIVE_API_KEY')
+if (apiKey && !keyMatchesNetwork) console.error('CIRCLE_API_KEY is a sandbox key; Arc mainnet needs a LIVE_API_KEY. Wallet features are switched off until it is replaced.')
 // DeepSeek's API is OpenAI-compatible; DeepSeek recommends the OpenAI SDK pointed at its base URL.
 const deepseek = process.env.DEEPSEEK_API_KEY ? new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY }) : null
 // VietMap covers Vietnam only (Vietnamese addresses, car and motorbike routes); outside it the pages use Photon and OSRM.
@@ -32,7 +24,7 @@ const viatorKey = process.env.VIATOR_API_KEY
 const app = new Hono()
 
 function unavailable(c) {
-  if (apiKey && !keyMatchesNetwork) return c.json({ message: `The Circle API key on the backend is for the other environment, so ${NETWORK.name} wallets are unavailable.` }, 503)
+  if (apiKey && !keyMatchesNetwork) return c.json({ message: 'The Circle API key on the backend is a sandbox key, so wallets are unavailable.' }, 503)
   return c.json({ message: 'CIRCLE_API_KEY is not configured on the Circle backend.' }, 503)
 }
 
@@ -50,14 +42,19 @@ const CSP_REPORT_ONLY = [
   "connect-src 'self' https://*.circle.com https://*.googleapis.com https://api.open-meteo.com https://photon.komoot.io https://nominatim.openstreetmap.org https://overpass-api.de https://overpass.private.coffee https://commons.wikimedia.org https://*.wikipedia.org https://api.openverse.org https://router.project-osrm.org https://routing.openstreetmap.de https://open.er-api.com",
   "frame-src https://*.circle.com https://accounts.google.com",
 ].join('; ')
+// Geolocation is the traveler's location; nothing here needs a camera or a microphone.
+// On Vercel these cover the function (the homepage and the API); vercel.json repeats them for the pages its CDN
+// serves, and circle-server.mjs applies them to everything it serves locally.
+export const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), payment=(), geolocation=(self)',
+  'Content-Security-Policy': "frame-ancestors 'none'",
+  'Content-Security-Policy-Report-Only': CSP_REPORT_ONLY,
+}
 app.use('*', async (c, next) => {
   await next()
-  c.header('X-Content-Type-Options', 'nosniff')
-  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
-  // Geolocation is the traveler's location; nothing here needs a camera or a microphone.
-  c.header('Permissions-Policy', 'camera=(), microphone=(), payment=(), geolocation=(self)')
-  c.header('Content-Security-Policy', "frame-ancestors 'none'")
-  c.header('Content-Security-Policy-Report-Only', CSP_REPORT_ONLY)
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) c.header(name, value)
 })
 
 // Circle bills per API call and per active wallet, so the wallet endpoints are limited per IP like the rest.

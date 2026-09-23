@@ -1,6 +1,4 @@
 const config = window.CIRCLE_CONFIG || {}
-// Circle keeps a separate App ID per environment, so it follows the network the server reports.
-const appId = () => (window.HedgoraNetwork?.testnet && config.testnetAppId) || config.appId
 const apiBase = String(config.apiBase || '').replace(/\/$/, '')
 const byId = (id) => document.getElementById(id)
 // Google redirects away and back, so the device credentials must survive the reload.
@@ -97,7 +95,7 @@ function signOut() {
 }
 
 function ensureAppId() {
-  if (appId()) return true
+  if (config.appId) return true
   byId('circleSetup').hidden = false
   byId('circleGoogle').disabled = true
   setStatus('Add your Circle App ID to public/circle-config.js before connecting.', true)
@@ -108,7 +106,7 @@ async function getSdk() {
   if (!ensureAppId()) throw new Error('Circle App ID is not configured')
   if (sdk) return sdk
   const { W3SSdk } = await loadSdkModule()
-  sdk = new W3SSdk({ appSettings: { appId: appId() } }, handleGoogleLogin)
+  sdk = new W3SSdk({ appSettings: { appId: config.appId } }, handleGoogleLogin)
   return sdk
 }
 
@@ -178,12 +176,12 @@ async function connectWithGoogle() {
     const device = { deviceToken, deviceEncryptionKey }
     sessionStorage.setItem(googleDeviceKey, JSON.stringify(device))
     if (!['/', '/index.html'].includes(window.location.pathname)) sessionStorage.setItem(returnKey, window.location.pathname + window.location.search)
-    walletSdk.updateConfigs({ appSettings: { appId: appId() }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
+    walletSdk.updateConfigs({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
     // The SDK does not export its SocialLoginProvider enum; 'Google' is its value.
     await walletSdk.performLogin('Google')
   } catch (error) {
     setStatus(`Couldn’t sign in with Google: ${formatError(error)}`, true)
-    button.disabled = !appId()
+    button.disabled = !config.appId
   }
 }
 
@@ -216,11 +214,11 @@ async function resumeGoogleLogin() {
   // Constructing the SDK with the saved device credentials makes it verify the returned Google token.
   const { W3SSdk } = await loadSdkModule()
   deviceReady = false
-  sdk = new W3SSdk({ appSettings: { appId: appId() }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
+  sdk = new W3SSdk({ appSettings: { appId: config.appId }, loginConfigs: googleLoginConfigs(device) }, handleGoogleLogin)
 }
 
 async function showWallet(userToken, encryptionKey) {
-  setStatus(`Loading your ${window.HedgoraNetwork?.name || 'Arc'} wallet…`)
+  setStatus('Loading your Arc wallet…')
   // A new wallet can take a few seconds to appear after the challenge completes.
   for (let attempt = 0; attempt < 10; attempt++) {
     const { wallets = [] } = await postJson('/api/wallets/list', { userToken })
@@ -230,7 +228,7 @@ async function showWallet(userToken, encryptionKey) {
       const session = { userToken, encryptionKey, walletId: wallet.id, address, blockchain: wallet.blockchain, expiresAt: Date.now() + sessionTtl }
       try { sessionStorage.setItem(sessionKey, JSON.stringify(session)) } catch {}
       announceWallet(session)
-      setStatus(`Circle wallet connected on ${window.HedgoraNetwork?.name || wallet.blockchain || 'Arc'}: ${address}`)
+      setStatus(`Circle wallet connected on Arc: ${address}`)
       let returnTo = null
       try { returnTo = sessionStorage.getItem(returnKey); sessionStorage.removeItem(returnKey) } catch {}
       if (/^\/[^/\\]/.test(returnTo || '')) return window.location.replace(returnTo)
@@ -250,7 +248,7 @@ byId('closeCircle')?.addEventListener('click', () => setOpen(false))
 byId('circleModal')?.addEventListener('click', (event) => { if (event.target.id === 'circleModal') setOpen(false) })
 byId('circleGoogle')?.addEventListener('click', () => void connectWithGoogle())
 byId('circleDisconnect')?.addEventListener('click', signOut)
-if (appId()) void resumeGoogleLogin()
+if (config.appId) void resumeGoogleLogin()
 
 // Used by payments.html (and the homepage wallet card) to act on the connected wallet.
 window.HedgoraCircle = {

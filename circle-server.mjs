@@ -2,10 +2,15 @@ import { existsSync } from 'node:fs'
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
-import app from './server.js'
+import app, { SECURITY_HEADERS } from './server.js'
 
 // Local development: serve the API and public/ from one origin, like Vercel does.
 const local = new Hono()
+// The same headers Vercel adds in production, so local pages behave like the deployed ones.
+local.use('*', async (c, next) => {
+  await next()
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) c.header(name, value)
+})
 // Mirror Vercel's cleanUrls: /payments.html redirects to /payments (and /index.html to /)...
 local.use('*', async (c, next) => {
   const { pathname, search } = new URL(c.req.url)

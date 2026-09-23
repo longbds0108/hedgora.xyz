@@ -163,7 +163,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <div class="table-wrap"><table>
             <thead><tr><th>Part</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
-              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc (<code>ARC</code>); set <code>CIRCLE_BLOCKCHAIN=ARC-TESTNET</code> with a test key to work on the test network instead</td></tr>
+              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc (<code>ARC</code>), created by Circle with a <code>LIVE_API_KEY</code></td></tr>
               <tr><td>Weather &amp; sunset</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap map and Overpass search; car and motorbike routes in Vietnam from VIETMAP, other routes from OSRM</td></tr>
               <tr><td>Location name</td><td><span class="status live">LIVE</span></td><td>VIETMAP in Vietnam, Photon or Nominatim elsewhere</td></tr>
@@ -222,15 +222,13 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <div class="table-wrap"><table>
             <thead><tr><th>Key</th><th>Where</th><th>Purpose</th></tr></thead>
             <tbody>
-              <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Circle API key. Secret, backend only.</td></tr>
+              <tr><td><code>CIRCLE_API_KEY</code></td><td><code>.env</code></td><td>Circle API key from the production environment (<code>LIVE_API_KEY…</code>), since Hedgora runs on Arc mainnet. Secret, backend only. A sandbox key switches wallet features off with a clear message.</td></tr>
               <tr><td><code>DEEPSEEK_API_KEY</code></td><td><code>.env</code></td><td>DeepSeek API key for Hedgora AI. Secret, backend only.</td></tr>
               <tr><td><code>VIETMAP_API_KEY</code></td><td><code>.env</code></td><td>VIETMAP API key for location names and car or motorbike routes in Vietnam. Secret, backend only. Without it, Hedgora uses Photon and OSRM everywhere.</td></tr>
               <tr><td><code>SERPAPI_API_KEY</code></td><td><code>.env</code></td><td>SerpApi key for opening hours, prices and photos from Google Maps on Explore. Secret, backend only. Without it, <b>Details</b> says the feature isn’t configured.</td></tr>
               <tr><td><code>VIATOR_API_KEY</code></td><td><code>.env</code></td><td>Viator Basic-access affiliate API key (Viator Partner dashboard) for tours and tickets on sights. Secret, backend only. Optional: without it, Details shows no tours.</td></tr>
-              <tr><td><code>CIRCLE_BLOCKCHAIN</code></td><td><code>.env</code></td><td>Which Arc network to use: unset (or <code>ARC</code>) for mainnet with a <code>LIVE_API_KEY</code>, <code>ARC-TESTNET</code> for the test network with a <code>TEST_API_KEY</code>. Pages follow this through <code>/api/health</code>. A key from the wrong environment switches wallet features off with a clear message instead of failing inside Circle.</td></tr>
               <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Local port, <code>5173</code> by default.</td></tr>
               <tr><td><code>appId</code></td><td><code>public/circle-config.js</code></td><td>Public App ID from Circle Console → Wallets → User Controlled → Configurator.</td></tr>
-              <tr><td><code>testnetAppId</code></td><td><code>public/circle-config.js</code></td><td>The sandbox App ID, used automatically when the server runs with <code>CIRCLE_BLOCKCHAIN=ARC-TESTNET</code>.</td></tr>
               <tr><td><code>googleClientId</code></td><td><code>public/circle-config.js</code></td><td>OAuth Client ID (Web application) from Google Cloud Console.</td></tr>
               <tr><td><code>googleRedirectUri</code></td><td><code>public/circle-config.js</code></td><td>Optional. Defaults to the page origin, e.g. <code>http://localhost:5173</code>.</td></tr>
               <tr><td><code>apiBase</code></td><td><code>public/circle-config.js</code></td><td>API base URL. Leave empty when the site and API share a domain (the default, locally and on Vercel).</td></tr>
@@ -253,7 +251,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <div class="table-wrap"><table>
             <thead><tr><th>Endpoint</th><th>Body</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map, places, tours, network: { blockchain, name, testnet, explorer } }</code></td></tr>
+              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map, places, tours, network: { blockchain, name, explorer } }</code></td></tr>
               <tr><td><code>GET /api/places/nearby</code></td><td><code>?lat=&amp;lon=</code></td><td><code>{ source, places: [{ name, lat, lon, group, kind, address }] }</code>, <code>group</code> being <code>sight</code>, <code>food</code>, <code>cafe</code> or <code>stay</code>; 30 requests per minute per IP</td></tr>
               <tr><td><code>GET /api/map/reverse</code></td><td><code>?lat=&amp;lon=</code></td><td><code>{ name }</code> such as “Phường Bến Nghé, Quận 1”; 404 outside Vietnam</td></tr>
               <tr><td><code>GET /api/map/route</code></td><td><code>?vehicle=car|motorcycle&amp;points=lat,lon;lat,lon</code> (2–8 points)</td><td>OSRM-shaped route: <code>{ source, distance, duration, geometry, legs }</code>; 404 when VIETMAP has no route. Map endpoints allow 60 requests per minute per IP.</td></tr>
