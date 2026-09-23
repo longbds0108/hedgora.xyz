@@ -219,10 +219,23 @@ async function resumeGoogleLogin() {
 
 async function showWallet(userToken, encryptionKey) {
   setStatus('Loading your Arc wallet…')
+  let askedForOwnAccount = false
   // A new wallet can take a few seconds to appear after the challenge completes.
   for (let attempt = 0; attempt < 10; attempt++) {
     const { wallets = [] } = await postJson('/api/wallets/list', { userToken })
-    const wallet = wallets[0]
+    // Smart contract accounts can only pay through Circle's paymaster; Hedgora uses ordinary accounts, which pay
+    // their own fee in USDC. Someone who signed in before that change is given one here.
+    const wallet = wallets.find((w) => w.accountType !== 'SCA')
+    if (!wallet && wallets.length && !askedForOwnAccount) {
+      askedForOwnAccount = true
+      setStatus('Setting up your Arc wallet…')
+      const { challengeId } = await postJson('/api/wallets/create', { userToken })
+      if (challengeId) {
+        const walletSdk = await getSdk()
+        await ensureDevice(walletSdk)
+        await executeChallenge(walletSdk, challengeId)
+      }
+    }
     if (wallet) {
       const address = wallet.address || 'Circle Wallet'
       const session = { userToken, encryptionKey, walletId: wallet.id, address, blockchain: wallet.blockchain, expiresAt: Date.now() + sessionTtl }

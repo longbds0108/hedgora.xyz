@@ -110,7 +110,9 @@ app.post('/api/user/initialize', async (c) => {
       userToken,
       body: {
         idempotencyKey: crypto.randomUUID(),
-        accountType: 'SCA',
+        // An ordinary account pays its own fee out of the USDC it holds, which on Arc is the gas token too.
+        // A smart contract account would need a funded Circle Gas Station policy to sponsor every payment.
+        accountType: 'EOA',
         blockchains: [NETWORK.blockchain],
       },
     })
@@ -133,6 +135,20 @@ app.post('/api/wallets/list', async (c) => {
     return c.json(data)
   } catch (error) {
     return c.json({ message: error instanceof Error ? error.message : String(error) }, 502)
+  }
+})
+
+// For a traveler whose wallet was made as a smart contract account: an ordinary wallet on the same account.
+app.post('/api/wallets/create', async (c) => {
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
+  try {
+    const { userToken } = await c.req.json()
+    const { data } = await client.createWallet({ userToken, blockchains: [NETWORK.blockchain], accountType: 'EOA' })
+    return c.json(data)
+  } catch (error) {
+    return circleError(c, error)
   }
 })
 

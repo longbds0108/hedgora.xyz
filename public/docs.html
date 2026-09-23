@@ -113,7 +113,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
             <li>Choose <b>Continue with Google</b> and sign in. You go to Google and come straight back to Hedgora.</li>
             <li>Circle creates an Arc wallet for you. If Circle’s secure window appears, confirm it to finish.</li>
             <li>When the top-right button shows an address like <code>0x…</code>, you’re ready. Signing in with the same Google account always reopens the same wallet.</li>
-            <li>Send USDC on Arc to your wallet address to fund it. USDC also pays the network fee on Arc, so keep a little spare.</li>
+            <li>Send USDC on Arc to your wallet address to fund it. USDC also pays the network fee on Arc, so keep a little spare: a payment needs the amount plus the fee.</li>
           </ol>
           <div class="note warn"><b>This is real money.</b> USDC on Arc has real value, payments cannot be undone, and nobody can reverse a payment sent to the wrong address.</div>
           <div class="note warn"><b>Keep your Google account safe:</b> your wallet is tied to it, and neither Hedgora nor Circle can recover the wallet if you lose access.</div>
@@ -163,7 +163,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <div class="table-wrap"><table>
             <thead><tr><th>Part</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
-              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc (<code>ARC</code>), created by Circle with a <code>LIVE_API_KEY</code></td></tr>
+              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real wallet on Arc (<code>ARC</code>), created by Circle with a <code>LIVE_API_KEY</code>. It is an ordinary account (EOA), so the network fee comes out of the USDC in the wallet; no gas sponsorship is involved.</td></tr>
               <tr><td>Weather &amp; sunset</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap map and Overpass search; car and motorbike routes in Vietnam from VIETMAP, other routes from OSRM</td></tr>
               <tr><td>Location name</td><td><span class="status live">LIVE</span></td><td>VIETMAP in Vietnam, Photon or Nominatim elsewhere</td></tr>
@@ -208,7 +208,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
             <li>The browser gets a <code>deviceId</code> from the Circle Web SDK and calls <code>POST /api/social/token</code> for a <code>deviceToken</code> and <code>deviceEncryptionKey</code>.</li>
             <li>The SDK redirects to Google, which returns an <code>id_token</code> to the page in the URL.</li>
             <li>The SDK verifies the token with Circle and receives a <code>userToken</code> and <code>encryptionKey</code>.</li>
-            <li><code>POST /api/user/initialize</code> creates an SCA wallet on the configured network (<code>ARC</code> by default) and returns a <code>challengeId</code> for the SDK to run, or <code>null</code> if the user already has a wallet.</li>
+            <li><code>POST /api/user/initialize</code> creates a wallet on Arc (an ordinary account, so it pays its own fee in USDC) and returns a <code>challengeId</code> for the SDK to run, or <code>null</code> if the user already has a wallet.</li>
             <li><code>POST /api/wallets/list</code> returns the wallet address to display.</li>
           </ol>
 
@@ -261,6 +261,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>POST /api/social/token</code></td><td><code>{ deviceId }</code></td><td><code>{ deviceToken, deviceEncryptionKey }</code></td></tr>
               <tr><td><code>POST /api/user/initialize</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code>, or <code>null</code> if the wallet exists</td></tr>
               <tr><td><code>POST /api/wallets/list</code></td><td><code>{ userToken }</code></td><td><code>{ wallets }</code></td></tr>
+              <tr><td><code>POST /api/wallets/create</code></td><td><code>{ userToken }</code></td><td><code>{ challengeId }</code> for an ordinary wallet on Arc. Used when a traveler's only wallet is a smart contract account, which cannot pay its own fee.</td></tr>
               <tr><td><code>POST /api/wallets/balances</code></td><td><code>{ userToken, walletId }</code></td><td>Token balances of the wallet</td></tr>
               <tr><td><code>POST /api/transactions/list</code></td><td><code>{ userToken, walletId, pageAfter?, destinationAddress?, pageSize? }</code></td><td><code>{ transactions }</code>, newest first; <code>pageAfter</code> loads more</td></tr>
               <tr><td><code>POST /api/transfers/estimate</code></td><td><code>{ userToken, walletId, destinationAddress, amount }</code></td><td>Fee estimate (<code>low / medium / high</code>)</td></tr>
