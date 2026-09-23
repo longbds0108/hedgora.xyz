@@ -8,6 +8,19 @@ import { initiateUserControlledWalletsClient } from '@circle-fin/user-controlled
 
 const apiKey = process.env.CIRCLE_API_KEY
 const client = apiKey ? initiateUserControlledWalletsClient({ apiKey }) : null
+// Arc mainnet, where USDC is real money. Set CIRCLE_BLOCKCHAIN=ARC-TESTNET (with a TEST_API_KEY) to work on the
+// test network instead; pages follow whatever this says, through /api/health.
+const testnet = process.env.CIRCLE_BLOCKCHAIN === 'ARC-TESTNET'
+const NETWORK = {
+  blockchain: testnet ? 'ARC-TESTNET' : 'ARC',
+  name: testnet ? 'Arc Testnet' : 'Arc',
+  testnet,
+  explorer: testnet ? 'https://explorer.testnet.arc.io' : 'https://explorer.arc.io',
+}
+// A test key cannot touch mainnet and a live key cannot touch the test network, and Circle's error for that is
+// hard to read, so the mismatch is caught here instead.
+const keyMatchesNetwork = !apiKey || apiKey.startsWith(testnet ? 'TEST_API_KEY' : 'LIVE_API_KEY')
+if (apiKey && !keyMatchesNetwork) console.error(`CIRCLE_API_KEY is a ${testnet ? 'live' : 'test'} key but Hedgora is set to ${NETWORK.name}. Wallet features are switched off until they match.`)
 // DeepSeek's API is OpenAI-compatible; DeepSeek recommends the OpenAI SDK pointed at its base URL.
 const deepseek = process.env.DEEPSEEK_API_KEY ? new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey: process.env.DEEPSEEK_API_KEY }) : null
 // VietMap covers Vietnam only (Vietnamese addresses, car and motorbike routes); outside it the pages use Photon and OSRM.
@@ -19,7 +32,41 @@ const viatorKey = process.env.VIATOR_API_KEY
 const app = new Hono()
 
 function unavailable(c) {
+  if (apiKey && !keyMatchesNetwork) return c.json({ message: `The Circle API key on the backend is for the other environment, so ${NETWORK.name} wallets are unavailable.` }, 503)
   return c.json({ message: 'CIRCLE_API_KEY is not configured on the Circle backend.' }, 503)
+}
+
+// Headers every response carries. The full content policy would need the inline scripts these pages use, so it is
+// sent in report-only mode for now; the part that blocks other sites from framing Hedgora is enforced.
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.circle.com https://*.googleapis.com https://api.open-meteo.com https://photon.komoot.io https://nominatim.openstreetmap.org https://overpass-api.de https://overpass.private.coffee https://commons.wikimedia.org https://*.wikipedia.org https://api.openverse.org https://router.project-osrm.org https://routing.openstreetmap.de https://open.er-api.com",
+  "frame-src https://*.circle.com https://accounts.google.com",
+].join('; ')
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  // Geolocation is the traveler's location; nothing here needs a camera or a microphone.
+  c.header('Permissions-Policy', 'camera=(), microphone=(), payment=(), geolocation=(self)')
+  c.header('Content-Security-Policy', "frame-ancestors 'none'")
+  c.header('Content-Security-Policy-Report-Only', CSP_REPORT_ONLY)
+})
+
+// Circle bills per API call and per active wallet, so the wallet endpoints are limited per IP like the rest.
+// Creating a payment is rarer than reading, and is limited harder.
+const walletRateLimited = rateLimiter(30)
+const transferRateLimited = rateLimiter(10)
+function walletGuard(c, sending = false) {
+  if (walletRateLimited(c) || (sending && transferRateLimited(c))) return c.json({ message: 'Too many requests. Please wait a minute and try again.' }, 429)
+  return null
 }
 
 // On Vercel the Hono function is deployed as the "index" route, which shadows public/index.html at "/",
@@ -28,7 +75,7 @@ function unavailable(c) {
 const homepage = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8')
 app.get('/', (c) => c.html(homepage))
 
-app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client), ai: Boolean(deepseek), map: Boolean(vietmapKey), places: Boolean(serpKey), tours: Boolean(viatorKey) }))
+app.get('/api/health', (c) => c.json({ ok: true, configured: Boolean(client) && keyMatchesNetwork, ai: Boolean(deepseek), map: Boolean(vietmapKey), places: Boolean(serpKey), tours: Boolean(viatorKey), network: NETWORK }))
 
 async function circleRequest(path, { userToken, body }) {
   const response = await fetch(`https://api.circle.com${path}`, {
@@ -44,7 +91,9 @@ async function circleRequest(path, { userToken, body }) {
 }
 
 app.post('/api/social/token', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { deviceId } = await c.req.json()
     const { data } = await client.createDeviceTokenForSocialLogin({ deviceId })
@@ -55,7 +104,9 @@ app.post('/api/social/token', async (c) => {
 })
 
 app.post('/api/user/initialize', async (c) => {
-  if (!apiKey) return unavailable(c)
+  if (!apiKey || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { userToken } = await c.req.json()
     const { status, body } = await circleRequest('/v1/w3s/user/initialize', {
@@ -63,7 +114,7 @@ app.post('/api/user/initialize', async (c) => {
       body: {
         idempotencyKey: crypto.randomUUID(),
         accountType: 'SCA',
-        blockchains: ['ARC-TESTNET'],
+        blockchains: [NETWORK.blockchain],
       },
     })
     // 155106: the user already has a wallet, nothing to set up.
@@ -76,7 +127,9 @@ app.post('/api/user/initialize', async (c) => {
 })
 
 app.post('/api/wallets/list', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { userToken } = await c.req.json()
     const { data } = await client.listWallets({ userToken })
@@ -87,7 +140,9 @@ app.post('/api/wallets/list', async (c) => {
 })
 
 app.post('/api/wallets/balances', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { userToken, walletId } = await c.req.json()
     const { data } = await client.getWalletTokenBalance({ userToken, walletId })
@@ -98,7 +153,8 @@ app.post('/api/wallets/balances', async (c) => {
 })
 
 // USDC is Arc's native gas token; Circle accepts its ERC-20 interface address for transfers (6 decimals).
-const ARC_USDC = { tokenAddress: '0x3600000000000000000000000000000000000000', blockchain: 'ARC-TESTNET' }
+// The address is the same on the test network and on mainnet.
+const ARC_USDC = { tokenAddress: '0x3600000000000000000000000000000000000000', blockchain: NETWORK.blockchain }
 const isAddress = (value) => /^0x[0-9a-fA-F]{40}$/.test(String(value ?? ''))
 const isAmount = (value) => /^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(String(value ?? '')) && Number(value) > 0
 
@@ -109,7 +165,9 @@ function circleError(c, error) {
 }
 
 app.post('/api/transactions/list', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { userToken, walletId, pageAfter, destinationAddress, pageSize } = await c.req.json()
     const { data } = await client.listTransactions({
@@ -128,7 +186,9 @@ app.post('/api/transactions/list', async (c) => {
 })
 
 app.post('/api/transfers/estimate', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c)
+  if (blocked) return blocked
   try {
     const { userToken, walletId, destinationAddress, amount } = await c.req.json()
     if (!isAddress(destinationAddress) || !isAmount(amount)) return c.json({ message: 'Invalid recipient address or amount.' }, 400)
@@ -141,7 +201,9 @@ app.post('/api/transfers/estimate', async (c) => {
 
 // Creates a transfer challenge only; nothing moves until the traveler approves it in Circle's hosted UI.
 app.post('/api/transfers/create', async (c) => {
-  if (!client) return unavailable(c)
+  if (!client || !keyMatchesNetwork) return unavailable(c)
+  const blocked = walletGuard(c, true)
+  if (blocked) return blocked
   try {
     const { userToken, walletId, destinationAddress, amount, note } = await c.req.json()
     if (!isAddress(destinationAddress) || !isAmount(amount)) return c.json({ message: 'Invalid recipient address or amount.' }, 400)
@@ -166,7 +228,7 @@ Each request includes the traveler's current location, local time, current weath
 
 You have no price, rating, opening-hours, or availability data. Never state or estimate any of these, not even as a range, a typical cost, or a budget total. If the traveler mentions a budget or asks what something costs, say briefly that you don't have verified prices and that they can check on site; the app shows the exact amount before they approve any payment. The distances are straight-line, so present them as approximate.
 
-The app can prepare USDC payments on Arc Testnet, but only the traveler can approve them. You cannot book or pay for anything yourself, so never say that something is booked or paid.
+The app can prepare USDC payments on ${NETWORK.name}, but only the traveler can approve them. You cannot book or pay for anything yourself, so never say that something is booked or paid.
 
 Reply in the traveler's language (Vietnamese if they write in Vietnamese). Keep answers short and practical: a sentence of context, then at most five suggestions or steps. Write plain text without Markdown headings, bold, or tables; start list items with "• ". For a plan, give each stop a time based on the local time and distances.
 

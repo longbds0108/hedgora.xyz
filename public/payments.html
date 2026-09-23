@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#071a18" />
-  <meta name="description" content="Send and receive test USDC on Arc Testnet with your Circle wallet. Hedgora prepares the payment, you approve it." />
+  <meta name="description" content="Send and receive USDC on Arc with your Circle wallet. Hedgora prepares the payment, you approve it." />
   <title>Hedgora Payments</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
@@ -54,7 +54,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
 /* Circle login modal (shared with the homepage) */
 .circle-modal{position:fixed;inset:0;background:#02100ddb;backdrop-filter:blur(8px);z-index:70;display:none;place-items:center;padding:20px}.circle-modal.open{display:grid}.circle-card{position:relative;background:#f5f6f1;color:#0b211d;width:min(450px,100%);padding:30px;border-radius:25px;text-align:center}.circle-card h2{font:800 24px Manrope;margin:12px 0 8px}.circle-card>p{font-size:13px;line-height:1.55;color:#5f6f6a}.circle-card .close{position:absolute;right:16px;top:14px;border:0;background:transparent;font-size:24px;color:#0b211d}.pay-icon{margin:auto;width:54px;height:54px;border-radius:16px;background:#d6faec;color:#08815f;display:grid;place-items:center;font-size:25px}.circle-card .step{margin-top:19px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:2px}.circle-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}.circle-actions button{border:0;border-radius:11px;padding:13px;font-weight:700;background:#0c3028;color:white}.circle-actions button:disabled{opacity:.5;cursor:not-allowed}.circle-connected{margin-top:12px;text-align:left}.circle-connected code{display:block;padding:10px 12px;border-radius:10px;background:#e8eee9;font-size:12px;overflow-wrap:anywhere;margin:6px 0 10px}.circle-connected button{width:100%;border:0;border-radius:11px;padding:12px;font-weight:700;background:var(--red-bg);color:var(--red)}.circle-status{min-height:38px;margin:14px 0 4px!important;padding:10px;background:#e5f7f0;border-radius:10px;color:#2d5d52!important;font-size:12px!important}.circle-setup{margin:12px 0;padding:12px;background:#fff0c9;border-radius:10px;color:#6b520f;font-size:12px;line-height:1.5}.circle-console{color:#08795a;font-size:12px;font-weight:700;text-decoration:none}
 .toast{position:fixed;right:24px;bottom:24px;background:#e4fff5;color:#083a2d;padding:14px 18px;border-radius:12px;box-shadow:0 10px 40px #0005;transform:translateY(160px);transition:.3s;z-index:80;max-width:calc(100vw - 48px)}.toast.show{transform:translateY(0)}
-[hidden]{display:none!important}
+[hidden]{display:none!important}:root:not([data-network="testnet"]) .testnet-only{display:none}
 @media(max-width:1000px){.pay-hero{grid-template-columns:minmax(0,1fr);gap:28px}.pay-workspace{grid-template-columns:1fr}}
 /* Phones: skip the marketing copy so the wallet and the send form come first */
 @media(max-width:620px){.brand-logo{height:30px}.topbar{padding:0 16px}.brand small{display:none}.wallet-btn{padding:9px 12px;font-size:13px}.pay-hero{padding:24px 16px 28px;gap:18px}.pay-hero h1{font-size:34px;margin:10px 0 0}.hero-desc,.trust{display:none}.wallet-card{padding:20px;border-radius:22px;min-height:0}.wallet-empty h3{margin-top:14px}.pay-workspace{padding:20px 16px 56px;border-radius:24px 24px 0 0}.panel{padding:20px;border-radius:18px}.stepper li{padding:8px 6px;font-size:11px;gap:5px;justify-content:center}.actions{grid-template-columns:1fr}.tx summary{grid-template-columns:36px minmax(0,1fr) auto;gap:10px}.tx-icon{width:36px;height:36px}.tx-detail{margin-left:0}.req-fields{grid-template-columns:1fr}.toast{left:16px;right:16px;bottom:16px}}
@@ -117,7 +117,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
       </div>
 
       <aside class="wallet-card" aria-live="polite">
-        <div class="wallet-top"><small>TRAVEL WALLET</small><span class="net-pill"><i></i>Arc Testnet</span></div>
+        <div class="wallet-top"><small>TRAVEL WALLET</small><span class="net-pill"><i></i><b data-net-name>Arc</b></span></div>
         <div class="wallet-empty" id="walletEmpty">
           <h3>No wallet connected</h3>
           <p>Sign in with Google to open your Circle wallet. The same Google account always opens the same wallet.</p>
@@ -130,7 +130,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
           <div class="session-note" id="sessionNote" hidden></div>
           <div class="address-row"><code id="address"></code><button class="icon-btn" id="copyBtn" aria-label="Copy wallet address">Copy</button></div>
           <div class="wallet-actions">
-            <button class="icon-btn" id="faucetBtn">Get test USDC ↗</button>
+            <button class="icon-btn testnet-only" id="faucetBtn">Get test USDC ↗</button>
             <a class="icon-btn" id="explorerLink" target="_blank" rel="noreferrer">Arc Explorer ↗</a>
             <button class="icon-btn" id="refreshBtn" aria-label="Refresh balance and activity">↻</button>
             <button class="icon-btn quiet" id="disconnectBtn">Disconnect</button>
@@ -156,7 +156,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
           <div class="field">
             <label for="toAddress">Recipient wallet address</label>
             <div class="input-row"><input id="toAddress" class="mono" autocomplete="off" spellcheck="false" placeholder="0x…" aria-describedby="toHint" /><button class="btn ghost small" type="button" id="pasteBtn">Paste</button></div>
-            <span class="hint" id="toHint">A 0x… address on Arc Testnet. If the merchant shows a Hedgora QR code, scan it with your phone camera to fill this in.</span>
+            <span class="hint" id="toHint">A 0x… address on <b data-net-name>Arc</b>. If the merchant shows a Hedgora QR code, scan it with your phone camera to fill this in.</span>
           </div>
           <div class="field">
             <label for="amount">Amount</label>
@@ -251,7 +251,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
         </div>
         <nav class="sf-col" aria-label="Product"><h4>Product</h4><a href="/explore">Explore nearby</a><a href="/trips">Trips &amp; saved places</a><a href="/payments">Payments</a><a href="/payments#receive">Get paid with QR</a></nav>
         <nav class="sf-col" aria-label="Resources"><h4>Resources</h4><a href="/docs">Docs</a><a href="/docs#quick-start">Quick start</a><a href="/docs#payments">Payments guide</a><a href="/docs#faq">FAQ</a><a href="/docs#developers">For developers</a></nav>
-        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://explorer.testnet.arc.io" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
+        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a class="testnet-only" href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://explorer.arc.io" data-net-explorer="" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
       </div>
       <div class="sf-bottom">
         <span>© 2026 Hedgora. All rights reserved.</span>
@@ -272,7 +272,7 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
       <div class="circle-actions"><button id="circleGoogle">Continue with Google</button></div>
       <div class="circle-connected" id="circleConnected" hidden><small>Connected wallet</small><code id="circleConnectedAddress"></code><button id="circleDisconnect" type="button">Disconnect</button></div>
       <p class="circle-status" id="circleStatus">Sign in with Google to create a wallet or reopen yours.</p>
-      <p>Need test USDC? Circle Faucet (Arc Testnet)<br><a class="circle-console" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a></p>
+      <p>Your wallet lives on <b data-net-name>Arc</b>, where USDC also pays the network fee, so keep a little USDC in it.</p><p class="testnet-only">Need test USDC? Circle Faucet<br><a class="circle-console" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a></p>
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -280,7 +280,8 @@ button,input{font:inherit}button{cursor:pointer}:focus-visible{outline:3px solid
   <script>
 const $ = (selector) => document.querySelector(selector)
 const $$ = (selector) => [...document.querySelectorAll(selector)]
-const EXPLORER = 'https://explorer.testnet.arc.io'
+let EXPLORER = window.HedgoraNetwork?.explorer || 'https://explorer.arc.io'
+window.addEventListener('hedgora:network', (event) => { EXPLORER = event.detail.explorer; renderWallet(); renderActivity() })
 const FINAL_OK = ['COMPLETE']
 const FINAL_BAD = ['FAILED', 'DENIED', 'CANCELLED']
 // Sending here destroys the funds, so they are refused outright.
@@ -412,7 +413,7 @@ async function loadBalance() {
     tokenBalances.forEach((b) => { if (b.token?.id) state.symbols[b.token.id] = b.token.symbol })
     const usdc = tokenBalances.find((b) => b.token?.symbol === 'USDC')
     state.balance = usdc ? usdc.amount : '0'
-    $('#balanceSub').textContent = Number(state.balance) > 0 ? 'Available balance · refreshes when you come back to this tab' : 'No USDC yet. Tap "Get test USDC"; the balance refreshes when you come back.'
+    $('#balanceSub').textContent = Number(state.balance) > 0 ? 'Available balance · refreshes when you come back to this tab' : (window.HedgoraNetwork?.testnet ? 'No USDC yet. Tap "Get test USDC"; the balance refreshes when you come back.' : 'No USDC yet. Send USDC to this address to start; the balance refreshes when you come back.')
   } catch (error) {
     state.balance = null
     $('#balanceSub').textContent = friendlyError(error)
@@ -465,7 +466,7 @@ function renderActivity() {
     return
   }
   const shown = state.txs.filter((tx) => state.filter === 'all' || (state.filter === 'out') === (tx.transactionType === 'OUTBOUND'))
-  const emptyText = state.txs.length ? 'No transactions in this view.' : 'No transactions yet. Get some test USDC to start.'
+  const emptyText = state.txs.length ? 'No transactions in this view.' : (window.HedgoraNetwork?.testnet ? 'No transactions yet. Get some test USDC to start.' : 'No transactions yet. Your payments will show up here.')
   body.innerHTML = (shown.length ? `<ul class="tx-list">${shown.map(txRow).join('')}</ul>` : `<div class="empty">${emptyText}</div>`)
     + (state.hasMore ? '<button class="btn ghost small more" id="moreBtn" type="button">Load more</button>' : '')
 }
@@ -635,7 +636,7 @@ function receiptRows(pending, tx) {
     ['Recipient', pending.to],
     ...(pending.note ? [['Note', pending.note]] : []),
     ['Time', new Date(tx?.firstConfirmDate || tx?.updateDate || Date.now()).toLocaleString('en-GB')],
-    ['Network', 'Arc Testnet (test USDC)'],
+    ['Network', (window.HedgoraNetwork?.name || 'Arc') + (window.HedgoraNetwork?.testnet ? ' (test USDC)' : '')],
     ...(tx?.networkFee ? [['Network fee', `${formatUsdc(tx.networkFee)} USDC`]] : []),
     ...(tx?.txHash ? [['Transaction hash', tx.txHash]] : []),
   ]
@@ -804,6 +805,7 @@ loadRate()
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/js-sha3/0.9.3/sha3.min.js" integrity="sha384-+JAeTqUiH9WuByObPHouP4rQKYUTLQ9AQW4HHJZ4uNmkA2+nkDpbssQNGsVXnJpe" crossorigin="anonymous"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1" crossorigin="anonymous"></script>
   <script src="circle-config.js"></script>
+  <script src="hedgora-network.js"></script>
   <script type="module" src="circle-wallet-client.js"></script>
   <script>
 // Mobile menu: toggles the collapsed nav; closes on link tap, outside tap, Escape, or when the screen gets wide.

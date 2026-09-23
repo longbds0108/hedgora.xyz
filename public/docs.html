@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#071a18" />
-  <meta name="description" content="Hedgora guide: open a Circle wallet with Google, get test USDC, explore real places nearby and pay on Arc Testnet." />
+  <meta name="description" content="Hedgora guide: open a Circle wallet with Google, explore real places nearby and pay locals in USDC on Arc." />
   <title>Hedgora Docs</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
@@ -75,8 +75,8 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
     <section class="docs-hero">
       <div class="eyebrow">✦ DOCUMENTATION</div>
       <h1>Hedgora <em>Docs</em></h1>
-      <p>Everything you need to explore with Hedgora: open a Circle wallet with Google, get test USDC, find real places nearby and pay on Arc Testnet.</p>
-      <div class="hero-links"><a class="primary" href="#quick-start">Quick start →</a><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Get test USDC ↗</a><a href="#developers">For developers</a></div>
+      <p>Everything you need to explore with Hedgora: open a Circle wallet with Google, find real places nearby and pay locals in USDC on Arc.</p>
+      <div class="hero-links"><a class="primary" href="#quick-start">Quick start →</a><a href="#payments">Payments guide</a><a href="#developers">For developers</a></div>
     </section>
 
     <div class="docs">
@@ -97,7 +97,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
         <section id="overview">
           <div class="kicker">OVERVIEW</div>
           <h2>What is Hedgora?</h2>
-          <p>Hedgora is an AI travel companion. It finds places worth visiting around you, plans your time, and lets you pay locals in USDC on <b>Arc Testnet</b>, but only when you approve.</p>
+          <p>Hedgora is an AI travel companion. It finds places worth visiting around you, plans your time, and lets you pay locals in USDC on <b>Arc</b>, Circle’s network where USDC is real money, but only when you approve.</p>
           <div class="pillars">
             <div class="pillar"><span>⌖</span><b>Explore like a local</b><p>Real food spots, sights and places to stay near you, with maps and directions.</p></div>
             <div class="pillar"><span>◈</span><b>Non-custodial wallet</b><p>Your wallet is created and secured by Circle. Hedgora never holds your keys.</p></div>
@@ -111,11 +111,11 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
           <ol class="steps">
             <li>Open Hedgora and click <b>Get Start</b> in the top-right corner.</li>
             <li>Choose <b>Continue with Google</b> and sign in. You go to Google and come straight back to Hedgora.</li>
-            <li>Circle creates an Arc Testnet wallet for you. If Circle’s secure window appears, confirm it to finish.</li>
+            <li>Circle creates an Arc wallet for you. If Circle’s secure window appears, confirm it to finish.</li>
             <li>When the top-right button shows an address like <code>0x…</code>, you’re ready. Signing in with the same Google account always reopens the same wallet.</li>
-            <li>Need USDC to try things out? Go to <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>, pick <b>Arc Testnet</b> and paste your wallet address to get free test tokens.</li>
+            <li>Send USDC on Arc to your wallet address to fund it. USDC also pays the network fee on Arc, so keep a little spare.</li>
           </ol>
-          <div class="note">Tokens on Arc Testnet are for testing only and have no real value.</div>
+          <div class="note warn"><b>This is real money.</b> USDC on Arc has real value, payments cannot be undone, and nobody can reverse a payment sent to the wrong address.</div>
           <div class="note warn"><b>Keep your Google account safe:</b> your wallet is tied to it, and neither Hedgora nor Circle can recover the wallet if you lose access.</div>
         </section>
 
@@ -138,9 +138,9 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
         <section id="payments">
           <div class="kicker">PAYMENTS &amp; SECURITY</div>
           <h2>Every payment needs your approval</h2>
-          <p>The <a href="/payments">Payments</a> page sends and receives test USDC on Arc Testnet with your Circle wallet.</p>
+          <p>The <a href="/payments">Payments</a> page sends and receives USDC on Arc with your Circle wallet.</p>
           <ol class="steps">
-            <li>Connect your wallet with Google. The page shows your USDC balance (with a VND estimate) and your address. <b>Get test USDC</b> copies your address and opens <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>; the balance refreshes when you come back.</li>
+            <li>Connect your wallet with Google. The page shows your USDC balance (with a VND estimate) and your address. Send USDC on Arc to that address to top it up; the balance refreshes when you come back.</li>
             <li>Enter or paste the recipient’s address, the amount and an optional note, then click <b>Review payment</b>. Hedgora checks the address (format, EIP-55 checksum, burn addresses), asks Circle for the fee and total, and warns you if this is your first payment to that address or if the amount is over 100 USDC.</li>
             <li>Click <b>Confirm in Circle</b> and approve in Circle’s secure window. If you close that window, nothing is sent. When the transfer is complete, you get a receipt you can copy, share (on devices that support sharing) or open on Arc Explorer.</li>
             <li>To get paid, use <b>Get paid with a QR code</b>: add an amount and note if you like. The payer scans the code with their phone camera and the Payments page opens with your address filled in.</li>
@@ -159,11 +159,11 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
         <section id="demo-status">
           <div class="kicker">STATUS</div>
           <h2>What’s live?</h2>
-          <p>Hedgora runs on Arc Testnet. Every part below uses real data or real testnet transactions; none of it is sample data.</p>
+          <p>Hedgora runs on Arc mainnet, so payments move real USDC. Every part below uses real data; none of it is sample data.</p>
           <div class="table-wrap"><table>
             <thead><tr><th>Part</th><th>Status</th><th>Details</th></tr></thead>
             <tbody>
-              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc Testnet</td></tr>
+              <tr><td>Google sign-in &amp; Circle wallet</td><td><span class="status live">LIVE</span></td><td>Real SCA wallet on Arc (<code>ARC</code>); set <code>CIRCLE_BLOCKCHAIN=ARC-TESTNET</code> with a test key to work on the test network instead</td></tr>
               <tr><td>Weather &amp; sunset</td><td><span class="status live">LIVE</span></td><td>Open-Meteo</td></tr>
               <tr><td>Map, nearby search, directions</td><td><span class="status live">LIVE</span></td><td>OpenStreetMap map and Overpass search; car and motorbike routes in Vietnam from VIETMAP, other routes from OSRM</td></tr>
               <tr><td>Location name</td><td><span class="status live">LIVE</span></td><td>VIETMAP in Vietnam, Photon or Nominatim elsewhere</td></tr>
@@ -176,7 +176,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
               <tr><td>Trips page</td><td><span class="status live">LIVE</span></td><td>Plan from DeepSeek using real places near you or your saved places; route and leg times from VIETMAP or OSRM</td></tr>
               <tr><td>Saved places</td><td><span class="status live">LIVE</span></td><td>Stored in this browser only (no account sync)</td></tr>
               <tr><td>USDC balance</td><td><span class="status live">LIVE</span></td><td>Read from your Circle wallet once connected</td></tr>
-              <tr><td>Payments page</td><td><span class="status live">LIVE</span></td><td>Sends USDC on Arc Testnet; history from Circle</td></tr>
+              <tr><td>Payments page</td><td><span class="status live">LIVE</span></td><td>Sends USDC on Arc; history from Circle</td></tr>
               <tr><td>Pay button on place cards</td><td><span class="status live">LIVE</span></td><td>Opens the Payments page; needs the merchant’s QR code or address</td></tr>
             </tbody>
           </table></div>
@@ -185,8 +185,8 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
         <section id="faq">
           <div class="kicker">FAQ</div>
           <h2>Frequently asked questions</h2>
-          <details><summary>Does Hedgora use real money?</summary><p>No. Hedgora runs on Arc Testnet. The USDC there is a test token with no real value, even though payments are real testnet transactions.</p></details>
-          <details><summary>Where do I get test USDC?</summary><p>Go to <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com ↗</a>, pick Arc Testnet and paste your Hedgora wallet address. The link is also at the bottom of the Circle sign-in window.</p></details>
+          <details><summary>Does Hedgora use real money?</summary><p>Yes. Hedgora runs on Arc, Circle’s network, and the USDC there is real money. A payment is final once you approve it: it cannot be cancelled or refunded by Hedgora or by Circle, so check the recipient before you confirm.</p></details>
+          <details><summary>How do I put USDC in my wallet?</summary><p>Send USDC on Arc to your Hedgora wallet address, which the <a href="/payments">Payments</a> page shows with a QR code. USDC also pays the network fee on Arc, so keep a little spare for fees.</p></details>
           <details><summary>Why sign in with Google?</summary><p>Circle uses your Google account to verify you and link the wallet to you. You don’t need another password, and the same Google account always opens the same wallet.</p></details>
           <details><summary>I signed in but don’t see my wallet address</summary><p>A new wallet can take a few seconds to appear. Wait a moment, then click <b>Get Start</b> to sign in again. If it still fails, the message under <b>Continue with Google</b> explains why.</p></details>
           <details><summary>Google sign-in says it was cancelled or failed</summary><p>This usually means the Google window was closed early, so try again.</p></details>
@@ -208,7 +208,7 @@ details[open]>:not(summary){animation:fadeUp .35s ease}
             <li>The browser gets a <code>deviceId</code> from the Circle Web SDK and calls <code>POST /api/social/token</code> for a <code>deviceToken</code> and <code>deviceEncryptionKey</code>.</li>
             <li>The SDK redirects to Google, which returns an <code>id_token</code> to the page in the URL.</li>
             <li>The SDK verifies the token with Circle and receives a <code>userToken</code> and <code>encryptionKey</code>.</li>
-            <li><code>POST /api/user/initialize</code> creates an SCA wallet on <code>ARC-TESTNET</code> and returns a <code>challengeId</code> for the SDK to run, or <code>null</code> if the user already has a wallet.</li>
+            <li><code>POST /api/user/initialize</code> creates an SCA wallet on the configured network (<code>ARC</code> by default) and returns a <code>challengeId</code> for the SDK to run, or <code>null</code> if the user already has a wallet.</li>
             <li><code>POST /api/wallets/list</code> returns the wallet address to display.</li>
           </ol>
 
@@ -227,8 +227,10 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>VIETMAP_API_KEY</code></td><td><code>.env</code></td><td>VIETMAP API key for location names and car or motorbike routes in Vietnam. Secret, backend only. Without it, Hedgora uses Photon and OSRM everywhere.</td></tr>
               <tr><td><code>SERPAPI_API_KEY</code></td><td><code>.env</code></td><td>SerpApi key for opening hours, prices and photos from Google Maps on Explore. Secret, backend only. Without it, <b>Details</b> says the feature isn’t configured.</td></tr>
               <tr><td><code>VIATOR_API_KEY</code></td><td><code>.env</code></td><td>Viator Basic-access affiliate API key (Viator Partner dashboard) for tours and tickets on sights. Secret, backend only. Optional: without it, Details shows no tours.</td></tr>
+              <tr><td><code>CIRCLE_BLOCKCHAIN</code></td><td><code>.env</code></td><td>Which Arc network to use: unset (or <code>ARC</code>) for mainnet with a <code>LIVE_API_KEY</code>, <code>ARC-TESTNET</code> for the test network with a <code>TEST_API_KEY</code>. Pages follow this through <code>/api/health</code>. A key from the wrong environment switches wallet features off with a clear message instead of failing inside Circle.</td></tr>
               <tr><td><code>PORT</code></td><td><code>.env</code></td><td>Local port, <code>5173</code> by default.</td></tr>
               <tr><td><code>appId</code></td><td><code>public/circle-config.js</code></td><td>Public App ID from Circle Console → Wallets → User Controlled → Configurator.</td></tr>
+              <tr><td><code>testnetAppId</code></td><td><code>public/circle-config.js</code></td><td>The sandbox App ID, used automatically when the server runs with <code>CIRCLE_BLOCKCHAIN=ARC-TESTNET</code>.</td></tr>
               <tr><td><code>googleClientId</code></td><td><code>public/circle-config.js</code></td><td>OAuth Client ID (Web application) from Google Cloud Console.</td></tr>
               <tr><td><code>googleRedirectUri</code></td><td><code>public/circle-config.js</code></td><td>Optional. Defaults to the page origin, e.g. <code>http://localhost:5173</code>.</td></tr>
               <tr><td><code>apiBase</code></td><td><code>public/circle-config.js</code></td><td>API base URL. Leave empty when the site and API share a domain (the default, locally and on Vercel).</td></tr>
@@ -251,7 +253,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
           <div class="table-wrap"><table>
             <thead><tr><th>Endpoint</th><th>Body</th><th>Returns</th></tr></thead>
             <tbody>
-              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map, places, tours }</code></td></tr>
+              <tr><td><code>GET /api/health</code></td><td>—</td><td><code>{ ok, configured, ai, map, places, tours, network: { blockchain, name, testnet, explorer } }</code></td></tr>
               <tr><td><code>GET /api/places/nearby</code></td><td><code>?lat=&amp;lon=</code></td><td><code>{ source, places: [{ name, lat, lon, group, kind, address }] }</code>, <code>group</code> being <code>sight</code>, <code>food</code>, <code>cafe</code> or <code>stay</code>; 30 requests per minute per IP</td></tr>
               <tr><td><code>GET /api/map/reverse</code></td><td><code>?lat=&amp;lon=</code></td><td><code>{ name }</code> such as “Phường Bến Nghé, Quận 1”; 404 outside Vietnam</td></tr>
               <tr><td><code>GET /api/map/route</code></td><td><code>?vehicle=car|motorcycle&amp;points=lat,lon;lat,lon</code> (2–8 points)</td><td>OSRM-shaped route: <code>{ source, distance, duration, geometry, legs }</code>; 404 when VIETMAP has no route. Map endpoints allow 60 requests per minute per IP.</td></tr>
@@ -264,7 +266,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
               <tr><td><code>POST /api/wallets/balances</code></td><td><code>{ userToken, walletId }</code></td><td>Token balances of the wallet</td></tr>
               <tr><td><code>POST /api/transactions/list</code></td><td><code>{ userToken, walletId, pageAfter?, destinationAddress?, pageSize? }</code></td><td><code>{ transactions }</code>, newest first; <code>pageAfter</code> loads more</td></tr>
               <tr><td><code>POST /api/transfers/estimate</code></td><td><code>{ userToken, walletId, destinationAddress, amount }</code></td><td>Fee estimate (<code>low / medium / high</code>)</td></tr>
-              <tr><td><code>POST /api/transfers/create</code></td><td><code>{ userToken, walletId, destinationAddress, amount, note }</code></td><td><code>{ challengeId }</code>. Funds only move after the user confirms in Circle.</td></tr>
+              <tr><td><code>POST /api/transfers/create</code></td><td><code>{ userToken, walletId, destinationAddress, amount, note }</code></td><td><code>{ challengeId }</code>. Funds only move after the user confirms in Circle. Wallet endpoints allow 30 requests per minute per IP, and creating a payment 10.</td></tr>
               <tr><td><code>POST /api/ai/itinerary</code></td><td><code>{ location, localTime, weather, places }</code></td><td><code>{ summary, stops: [{ place, start, minutes, activity, tip }] }</code>; <code>place</code> is an index into <code>places</code>, validated on the server.</td></tr>
               <tr><td><code>POST /api/ai/ask</code></td><td><code>{ question, location, localTime, weather, places }</code></td><td>NDJSON stream: <code>{type:"text"}</code>, <code>{type:"error"}</code>, <code>{type:"done"}</code>. Both AI endpoints share a limit of 10 requests per minute per IP, kept in memory on each server instance.</td></tr>
             </tbody>
@@ -296,7 +298,7 @@ npm start              <span class="c"># site + API: http://localhost:5173</span
         </div>
         <nav class="sf-col" aria-label="Product"><h4>Product</h4><a href="/explore">Explore nearby</a><a href="/trips">Trips &amp; saved places</a><a href="/payments">Payments</a><a href="/payments#receive">Get paid with QR</a></nav>
         <nav class="sf-col" aria-label="Resources"><h4>Resources</h4><a href="/docs">Docs</a><a href="/docs#quick-start">Quick start</a><a href="/docs#payments">Payments guide</a><a href="/docs#faq">FAQ</a><a href="/docs#developers">For developers</a></nav>
-        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://faucet.circle.com" target="_blank" rel="noreferrer">Circle Faucet ↗</a><a href="https://explorer.testnet.arc.io" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
+        <nav class="sf-col" aria-label="Network"><h4>Network</h4><a href="https://explorer.arc.io" target="_blank" rel="noreferrer">Arc Explorer ↗</a><a href="https://developers.circle.com/wallets" target="_blank" rel="noreferrer">Circle Wallets ↗</a><a href="https://docs.arc.io" target="_blank" rel="noreferrer">Arc docs ↗</a></nav>
       </div>
       <div class="sf-bottom">
         <span>© 2026 Hedgora. All rights reserved.</span>
