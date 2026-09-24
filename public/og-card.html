@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hedgora share card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+*{box-sizing:border-box;margin:0}
+body{width:1200px;height:630px;overflow:hidden;background:#061513;color:#ecf7f3;font-family:'DM Sans',sans-serif;position:relative}
+.glow{position:absolute;width:620px;height:620px;border-radius:50%;filter:blur(120px);opacity:.16;pointer-events:none}
+.glow-one{background:#28d7a4;top:-240px;right:-160px}
+.glow-two{background:#2ca9ff;bottom:-320px;left:-200px}
+.card{position:relative;height:100%;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between}
+.logo{height:56px;width:auto;display:block}
+h1{font:800 78px/1.04 Manrope;letter-spacing:-1px}
+h1 em{font-style:normal;color:#70efc0}
+p{margin-top:24px;font-size:26px;line-height:1.5;color:#a7bbb5;max-width:860px}
+.chips{display:flex;gap:12px;flex-wrap:wrap}
+.chip{padding:12px 20px;border:1px solid #25423d;border-radius:999px;background:#0b211e;font-size:20px;color:#c5d8d1}
+.chip b{color:#70efc0;font-weight:700}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+.url{font:700 24px 'DM Sans';color:#70efc0}
+  </style>
+</head>
+<body>
+  <div class="glow glow-one"></div><div class="glow glow-two"></div>
+  <div class="card">
+    <img class="logo" src="/hedgora-logo.png" alt="Hedgora">
+    <div>
+      <h1>Explore like a local.<br><em>Pay with confidence.</em></h1>
+      <p>AI travel companion: real places near you, a plan for your next few hours, and payments in USDC on Arc — only when you approve.</p>
+    </div>
+    <div class="foot">
+      <div class="chips">
+        <span class="chip">⌖ Real places nearby</span>
+        <span class="chip">◷ Plan your hours</span>
+        <span class="chip">◈ <b>USDC on Arc</b></span>
+      </div>
+      <span class="url">hedgora.xyz</span>
+    </div>
+  </div>
+</body>
+</html>
